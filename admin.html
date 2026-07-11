@@ -614,9 +614,7 @@ function listenMsgs(a, b, callback){
       event: '*', schema: 'public', table: 'chats',
       filter: 'key=eq.'+safeKey
     }, function(payload){
-      var msgs = (payload.new && payload.new.messages) || [];
-      lsSet('msg_'+key, msgs);
-      callback(msgs);
+      fetch();
     })
     .subscribe();
   SB_LISTENERS.push(ch);
@@ -764,8 +762,33 @@ function checkPin(){
 function enterAdmin(){
   document.getElementById('pg-pin').classList.remove('on');
   document.getElementById('pg-admin').classList.add('on');
+  startAdminListeners();
   refreshAll();
   setInterval(refreshAll,3000);
+}
+function startAdminListeners(){
+  if(!SB_READY) return;
+  stopAllListeners();
+  // Usuarios (llena cache 'users')
+  listenUsers();
+  // Presencia online/offline
+  listenPresence(function(presence){ _presence = presence; });
+  // Novedades / actualizaciones
+  listenUpdates(function(updates){});
+  // Config del bot
+  listenBotConfig(function(config){});
+  // Todos los pedidos (llena _allPedsCache con nombre/email del cliente)
+  listenPedidosAdmin(function(peds){
+    var users = getUsers();
+    peds.forEach(function(p){
+      p._owner = p.email || p.userEmail || '';
+      var u = users[p._owner];
+      p._ownerName = (u && u.name) ? u.name : (p._owner ? p._owner.split('@')[0] : 'Cliente');
+    });
+    _allPedsCache = peds;
+    lsSet('admin_all_peds', peds);
+    refreshAll();
+  });
 }
 function adminLogout(){
   localStorage.removeItem('ac_admin_session');

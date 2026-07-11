@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>APLI COP</title>
-<link rel="icon" type="image/png" href="COP.png">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--orange:#FF6B00;}
@@ -741,9 +740,7 @@ function listenMsgs(a, b, callback){
       event: '*', schema: 'public', table: 'chats',
       filter: 'key=eq.'+safeKey
     }, function(payload){
-      var msgs = (payload.new && payload.new.messages) || [];
-      lsSet('msg_'+key, msgs);
-      callback(msgs);
+      fetch();
     })
     .subscribe();
   SB_LISTENERS.push(ch);
