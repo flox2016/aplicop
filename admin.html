@@ -514,58 +514,67 @@ function getUsers(){ return lsGet('users') || {}; }
 function saveUsers(u){ lsSet('users', u); }
 
 function saveUser(email, data){
-  var users = getUsers();
-  users[email] = Object.assign(users[email]||{}, data);
+  var users=getUsers();
+  users[email]=Object.assign(users[email]||{}, data);
   saveUsers(users);
   if(!SB_READY) return;
-  SB.from('usuarios')
-    .upsert({
-      email:       email,
-      pass:        data.pass || (users[email]&&users[email].pass) || '',
-      nombre:      (data.name||'').split(' ')[0] || email.split('@')[0],
-      apellido:    (data.name||'').split(' ').slice(1).join(' ') || '',
-      online:      data.online !== undefined ? data.online : true,
-      last_seen:   new Date().toISOString(),
-      ultima_conexion: new Date().toISOString()
-    }, { onConflict: 'email' })
+  // Use upsert with the exact column names from Supabase
+  var row = {};
+  row['correo electronico'] = email;
+  row['nombre'] = (data.name||'').split(' ')[0]||email.split('@')[0];
+  row['aprobar'] = data.pass||(users[email]&&users[email].pass)||'';
+  row['en linea'] = data.online!==undefined?data.online:true;
+  row['ultima vez visto'] = new Date().toISOString();
+  SB.from('usuarios').upsert(row, {onConflict:'correo electronico'})
     .then(function(r){ if(r.error) console.warn('saveUser:', r.error.message); });
 }
 
 function listenUsers(){
   if(!SB_READY) return;
-  // Initial load
   SB.from('usuarios').select('*').then(function(r){
-    if(r.error){ console.warn('listenUsers load:', r.error.message); return; }
-    var users = {};
+    if(r.error){ console.warn('listenUsers error:', r.error.message); return; }
+    console.log('[APLI COP] Usuarios cargados:', r.data.length, r.data[0]);
+    var users={};
     (r.data||[]).forEach(function(u){
-      users[u.email] = {
-        name: (u.nombre||'') + (u.apellido?' '+u.apellido:''),
-        pass: u.pass||'',
-        online: u.online||false,
-        lastSeen: u.last_seen ? new Date(u.last_seen).getTime() : Date.now(),
-        creditos: u.creditos||0,
+      // Try all possible column name variations
+      var email = u['correo electronico']||u['correo_electronico']||u['correo electrónico']||u.email||u.correo||'';
+      if(!email) return;
+      var nombre = u.nombre||u['nombre']||email.split('@')[0];
+      var online = u['en linea']||u['en_linea']||u['en línea']||u.online||false;
+      var lastSeen = u['ultima vez visto']||u['ultima_vez_visto']||u['última vez visto']||u.last_seen||null;
+      users[email]={
+        name: nombre.trim(),
+        pass: u.aprobar||u.pass||'',
+        online: online,
+        lastSeen: lastSeen ? new Date(lastSeen).getTime() : Date.now(),
         id: u.id
       };
     });
     saveUsers(users);
+    if(document.getElementById('panel-users').classList.contains('on')) refreshUsersTable();
+    if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
+    if(document.getElementById('panel-chat').classList.contains('on')) refreshChatUsers();
   });
-  // Realtime
-  var ch = SB.channel('usuarios-changes')
-    .on('postgres_changes',{event:'*',schema:'public',table:'usuarios'}, function(payload){
-      var u = payload.new || payload.old;
-      if(!u||!u.email) return;
-      var users = getUsers();
-      users[u.email] = {
-        name: (u.nombre||'') + (u.apellido?' '+u.apellido:''),
-        pass: u.pass||'',
-        online: u.online||false,
-        lastSeen: u.last_seen ? new Date(u.last_seen).getTime() : Date.now(),
-        creditos: u.creditos||0,
-        id: u.id
-      };
-      saveUsers(users);
-    })
-    .subscribe();
+  var ch = SB.channel('usuarios-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'usuarios'}, function(){
+      SB.from('usuarios').select('*').then(function(r){
+        if(!r.error){
+          var users={};
+          (r.data||[]).forEach(function(u){
+            var email=u['correo electronico']||u['correo_electronico']||u['correo electrónico']||u.email||u.correo||'';
+            if(!email) return;
+            var nombre=u.nombre||email.split('@')[0];
+            var online=u['en linea']||u['en_linea']||u['en línea']||u.online||false;
+            var lastSeen=u['ultima vez visto']||u['ultima_vez_visto']||u['última vez visto']||u.last_seen||null;
+            users[email]={name:nombre.trim(),pass:u.aprobar||u.pass||'',online:online,lastSeen:lastSeen?new Date(lastSeen).getTime():Date.now(),id:u.id};
+          });
+          saveUsers(users);
+          if(document.getElementById('panel-users').classList.contains('on')) refreshUsersTable();
+          if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
+          if(document.getElementById('panel-chat').classList.contains('on')) refreshChatUsers();
+        }
+      });
+    }).subscribe();
   _sbChannels.push(ch);
 }
 
@@ -575,21 +584,34 @@ function listenUsers(){
 var _presence = {};
 
 function setPresence(email, online){
-  var u = getUsers()[email] || {};
-  if(u.online === online) return; // no cambió
-  saveUser(email, { online: online, lastSeen: Date.now() });
+  if(!SB_READY) return;
+  SB.from('presencia').upsert({
+    'correo_electronico': email,
+    'en_linea': online,
+    'ultima_vez_visto': new Date().toISOString()
+  }, {onConflict:'correo_electronico'})
+  .then(function(r){ if(r.error) console.warn('setPresence:', r.error.message); });
 }
 
 function listenPresence(callback){
   if(!SB_READY) return;
-  var ch = SB.channel('presence-changes')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'usuarios',filter:'online=neq.null'}, function(payload){
-      var u = payload.new;
-      if(!u||!u.email) return;
-      _presence[u.email] = { online: u.online, lastSeen: u.last_seen ? new Date(u.last_seen).getTime() : Date.now() };
+  // Load initial presence
+  SB.from('presencia').select('*').then(function(r){
+    if(r.error){ console.warn('presencia load:', r.error.message); return; }
+    (r.data||[]).forEach(function(p){
+      var email = p.correo_electronico||p.email||p.user_email||'';
+      if(email) _presence[email] = {online: p.en_linea||p.online||false, lastSeen: p.ultima_vez_visto ? new Date(p.ultima_vez_visto).getTime() : Date.now()};
+    });
+    callback(_presence);
+  });
+  // Realtime
+  var ch = SB.channel('presencia-ch')
+    .on('postgres_changes',{event:'*',schema:'public',table:'presencia'}, function(payload){
+      var p = payload.new||payload.old; if(!p) return;
+      var email = p.correo_electronico||p.email||p.user_email||''; if(!email) return;
+      _presence[email] = {online: p.en_linea||p.online||false, lastSeen: p.ultima_vez_visto ? new Date(p.ultima_vez_visto).getTime() : Date.now()};
       callback(_presence);
-    })
-    .subscribe();
+    }).subscribe();
   _sbChannels.push(ch);
 }
 
@@ -758,7 +780,7 @@ function saveMsgs(a,b,msgs){
   // Save only the last message to Supabase (avoid re-saving all on every message)
   var last = msgs[msgs.length-1];
   if(!last) return;
-  SB.from('mensajes').insert({
+  SB.from('chats').insert({
     chat_key:   key,
     from_email: last.from||a,
     texto:      last.type==='text' ? last.text : '',
@@ -772,30 +794,17 @@ function saveMsgs(a,b,msgs){
 function listenMsgs(a, b, callback){
   if(!SB_READY) return;
   var key = getChatKey(a,b);
-  // Load initial messages
-  SB.from('mensajes').select('*').eq('chat_key',key).order('fecha',{ascending:true})
+  var safeKey = key.replace(/[^a-zA-Z0-9]/g,'-');
+  SB.from('chats').select('mensajes').eq('llave', key).single()
     .then(function(r){
-      if(r.error){ console.warn('listenMsgs load:', r.error.message); return; }
-      var msgs = (r.data||[]).map(function(m){
-        return {
-          from: m.from_email,
-          type: m.tipo||'text',
-          text: m.texto||'',
-          data: m.data||undefined,
-          filename: m.filename||undefined,
-          time: m.time_str||''
-        };
-      });
+      if(r.error && r.error.code !== 'PGRST116'){ console.warn('listenMsgs:', r.error.message); return; }
+      var msgs = (r.data && r.data.mensajes) ? r.data.mensajes : [];
       lsSet('msg_'+key, msgs);
       callback(msgs);
     });
-  // Realtime
-  var ch = SB.channel('chat-'+key.replace(/[^a-zA-Z0-9]/g,'-'))
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'mensajes',filter:'chat_key=eq.'+key}, function(payload){
-      var m = payload.new;
-      var msgs = getMsgs(a,b);
-      var newMsg = { from:m.from_email, type:m.tipo||'text', text:m.texto||'', data:m.data||undefined, filename:m.filename||undefined, time:m.time_str||'' };
-      msgs.push(newMsg);
+  var ch = SB.channel('chat-'+safeKey)
+    .on('postgres_changes',{event:'*',schema:'public',table:'chats',filter:'llave=eq.'+key}, function(payload){
+      var msgs = (payload.new && payload.new.mensajes) ? payload.new.mensajes : [];
       lsSet('msg_'+key, msgs);
       callback(msgs);
     })
@@ -808,40 +817,31 @@ function listenMsgs(a, b, callback){
 // ══════════════════════════════════════════════════════════════
 function saveUpdate(update){
   var updates = lsGet('updates') || [];
-  updates.unshift(update);
-  lsSet('updates', updates);
+  updates.unshift(update); lsSet('updates', updates);
   if(!SB_READY) return;
-  SB.from('notificaciones').insert({
-    titulo:   update.type||'notif',
-    mensaje:  update.text||'',
-    tipo:     update.type||'notif',
-    text:     update.text||'',
-    date_str: update.date||'',
-    time_str: update.time||''
-  }).then(function(r){ if(r.error) console.warn('saveUpdate:', r.error.message); });
+  SB.from('actualizaciones').insert({texto:update.text||'',tipo:update.type||'notif',date_str:update.date||'',time_str:update.time||''})
+    .then(function(r){ if(r.error) console.warn('saveUpdate:', r.error.message); });
 }
 
 function listenUpdates(callback){
   if(!SB_READY) return;
-  SB.from('notificaciones').select('*').order('fecha',{ascending:false}).limit(50)
+  SB.from('actualizaciones').select('*').order('created_at',{ascending:false}).limit(50)
     .then(function(r){
-      if(r.error){ console.warn('listenUpdates load:', r.error.message); return; }
-      var updates=(r.data||[]).map(function(n){return{id:new Date(n.fecha).getTime(),text:n.mensaje||n.text||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};});
-      lsSet('updates', updates);
-      callback(updates);
+      if(r.error){ console.warn('listenUpdates:', r.error.message); return; }
+      var updates=(r.data||[]).map(function(n){
+        return{id:new Date(n.created_at||Date.now()).getTime(),text:n.texto||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};
+      });
+      lsSet('updates', updates); callback(updates);
     });
-  var ch = SB.channel('notificaciones-changes')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notificaciones'}, function(){
-      SB.from('notificaciones').select('*').order('fecha',{ascending:false}).limit(50)
-        .then(function(r){
-          if(!r.error){
-            var updates=(r.data||[]).map(function(n){return{id:new Date(n.fecha).getTime(),text:n.mensaje||n.text||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};});
-            lsSet('updates',updates);
-            callback(updates);
-          }
-        });
-    })
-    .subscribe();
+  var ch = SB.channel('act-ch')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'actualizaciones'}, function(){
+      SB.from('actualizaciones').select('*').order('created_at',{ascending:false}).limit(50).then(function(r){
+        if(!r.error){
+          var u=(r.data||[]).map(function(n){return{id:new Date(n.created_at||Date.now()).getTime(),text:n.texto||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};});
+          lsSet('updates',u); callback(u);
+        }
+      });
+    }).subscribe();
   _sbChannels.push(ch);
 }
 
@@ -851,37 +851,24 @@ function listenUpdates(callback){
 function saveBotConfig(key, value){
   lsSet(key, value);
   if(!SB_READY) return;
-  var update = {}; update[key] = value;
-  SB.from('configuracion').update(update).eq('id',1)
+  SB.from('configuracion_del_bot').upsert({llave:key, valor:value},{onConflict:'llave'})
     .then(function(r){ if(r.error) console.warn('saveBotConfig:', r.error.message); });
 }
 
 function listenBotConfig(callback){
   if(!SB_READY) return;
-  SB.from('configuracion').select('*').eq('id',1).single()
-    .then(function(r){
-      if(r.error){ console.warn('listenBotConfig load:', r.error.message); return; }
-      if(r.data){
-        var cfg = r.data;
-        if(cfg.bot_api_key)    lsSet('bot_api_key',    cfg.bot_api_key);
-        if(cfg.bot_model)      lsSet('bot_model',      cfg.bot_model);
-        if(cfg.bot_extra_info) lsSet('bot_extra_info', cfg.bot_extra_info);
-        if(cfg.bot_system_extra) lsSet('bot_system_extra', cfg.bot_system_extra);
-        if(cfg.bot_tone)       lsSet('bot_tone',       cfg.bot_tone);
-        callback(cfg);
-      }
-    });
-  var ch = SB.channel('config-changes')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'configuracion',filter:'id=eq.1'}, function(payload){
-      var cfg = payload.new||{};
-      if(cfg.bot_api_key)    lsSet('bot_api_key',    cfg.bot_api_key);
-      if(cfg.bot_model)      lsSet('bot_model',      cfg.bot_model);
-      if(cfg.bot_extra_info) lsSet('bot_extra_info', cfg.bot_extra_info);
-      if(cfg.bot_system_extra) lsSet('bot_system_extra', cfg.bot_system_extra);
-      if(cfg.bot_tone)       lsSet('bot_tone',       cfg.bot_tone);
-      callback(cfg);
-    })
-    .subscribe();
+  SB.from('configuracion_del_bot').select('llave,valor').then(function(r){
+    if(r.error){ console.warn('listenBotConfig:', r.error.message); return; }
+    var cfg={};
+    (r.data||[]).forEach(function(row){ cfg[row.llave]=row.valor; lsSet(row.llave,row.valor); });
+    callback(cfg);
+  });
+  var ch = SB.channel('botcfg-ch')
+    .on('postgres_changes',{event:'*',schema:'public',table:'configuracion_del_bot'}, function(){
+      SB.from('configuracion_del_bot').select('llave,valor').then(function(r){
+        if(!r.error){var cfg={};(r.data||[]).forEach(function(row){cfg[row.llave]=row.valor;lsSet(row.llave,row.valor);});callback(cfg);}
+      });
+    }).subscribe();
   _sbChannels.push(ch);
 }
 
@@ -893,7 +880,7 @@ function saveCredito(email, cantidad, motivo){
   var users = getUsers();
   var userId = users[email]&&users[email].id;
   if(!userId) return;
-  SB.from('creditos').insert({ usuario_id:userId, cantidad:cantidad, motivo:motivo||'' })
+  SB.from('usuarios').insert({ usuario_id:userId, cantidad:cantidad, motivo:motivo||'' })
     .then(function(r){ if(r.error) console.warn('saveCredito:', r.error.message); });
 }
 
@@ -978,6 +965,10 @@ function showPanel(name,el){
   document.getElementById('panel-title').textContent=t[0];
   document.getElementById('panel-sub').textContent=t[1];
   refreshAll();
+  // Force fresh Supabase load for users panel
+  if(name==='users') listenUsers();
+  if(name==='pedidos') refreshPeds();
+  if(name==='chat') refreshChatUsers();
 }
 
 // ── REFRESH ─────────────────────────────────────────────────
@@ -1003,6 +994,40 @@ function startAdminListeners(){
     if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
   });
   listenBotConfig(function(){});
+}
+
+function refreshDash(){
+  var users=getUsers(); var all=getAllPeds();
+  var su=document.getElementById('s-users'); if(su)su.textContent=Object.keys(users).length;
+  var sp=document.getElementById('s-peds'); if(sp)sp.textContent=all.length;
+  var spn=document.getElementById('s-pend'); if(spn)spn.textContent=all.filter(function(p){return !p.resolved;}).length;
+  var sr=document.getElementById('s-res'); if(sr)sr.textContent=all.filter(function(p){return p.resolved;}).length;
+  // Recent pedidos
+  var dr=document.getElementById('d-recent');
+  if(dr){
+    var rec=all.slice(0,3);
+    dr.innerHTML=rec.length?rec.map(function(p){
+      var colors={pending:'#FBB724',progress:'#60A5FA',done:'#4ADE80',resolved:'#4ADE80'};
+      var labels={pending:'⏳ Pendiente',progress:'🔧 En proceso',done:'✅ Listo',resolved:'✅ Resuelto'};
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2E2E2E;">'
+        +'<span style="font-size:1.4rem">'+p.icon+'</span>'
+        +'<div style="flex:1"><div style="font-size:.82rem;font-weight:600">'+p.name+'</div>'
+        +'<div style="font-size:.7rem;color:#9CA3AF">'+(p._ownerName||p.owner_name||'')+'  · '+(p.date||'')+'</div></div>'
+        +'<span style="font-size:.7rem;color:'+(colors[p.status]||'#FBB724')+';font-weight:700">'+(labels[p.status]||'⏳ Pendiente')+'</span></div>';
+    }).join(''):'<div style="color:#9CA3AF;font-size:.82rem;">Sin pedidos todavía</div>';
+  }
+  // Online users
+  var dol=document.getElementById('d-online');
+  if(dol){
+    var onlineEmails=Object.keys(users).filter(function(e){return isOnline(e);});
+    dol.innerHTML=onlineEmails.length?onlineEmails.map(function(e){
+      var u=users[e];
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2E2E2E;">'
+        +'<div class="user-av-admin" style="background:'+avColor(e)+';width:32px;height:32px;font-size:.8rem;">'+(u.name||e)[0].toUpperCase()+'</div>'
+        +'<div><div style="font-size:.82rem;font-weight:600">'+(u.name||e)+'</div><div style="font-size:.7rem;color:#9CA3AF">'+e+'</div></div>'
+        +'<span class="online-pill op-on" style="margin-left:auto">● en línea</span></div>';
+    }).join(''):'<div style="color:#9CA3AF;font-size:.82rem;">Ningún usuario en línea ahora</div>';
+  }
 }
 
 function refreshAll(){
@@ -1195,15 +1220,29 @@ function refreshUsersTable(){
   var users=getUsers(); var emails=Object.keys(users);
   document.getElementById('users-count').textContent=emails.length+' usuarios';
   var tbody=document.getElementById('users-tbody');
-  if(!emails.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Sin usuarios registrados</td></tr>';return;}
-  tbody.innerHTML=emails.map(function(email){
-    var u=users[email]; var online=isOnline(email); var peds=(lsGet('peds_'+email)||[]).length;
-    return '<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="user-av-admin" style="background:'+avColor(email)+';width:30px;height:30px;font-size:.75rem;">'+(u.name||email)[0].toUpperCase()+'</div><span>'+(u.name||'-')+'</span></div></td>'
+  if(!emails.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Cargando usuarios...</td></tr>';
+    listenUsers();
+    return;
+  }
+  var rows='';
+  emails.forEach(function(email){
+    var u=users[email];
+    var online=isOnline(email);
+    var peds=_allPedsCache.filter(function(p){return p._owner===email||p.userEmail===email;}).length;
+    if(!peds) peds=(lsGet('peds_'+email)||[]).length;
+    var name=u.name||'-';
+    var initial=(u.name||email)[0].toUpperCase();
+    var av='<div class="user-av-admin" style="background:'+avColor(email)+';width:30px;height:30px;font-size:.75rem;">'+initial+'</div>';
+    rows+='<tr>'
+      +'<td><div style="display:flex;align-items:center;gap:8px;">'+av+'<span>'+name+'</span></div></td>'
       +'<td style="color:#9CA3AF">'+email+'</td>'
       +'<td><span class="online-pill '+(online?'op-on':'op-off')+'">'+(online?'● en línea':'○ offline')+'</span></td>'
       +'<td>'+peds+'</td>'
-      +'<td><button class="admin-btn btn-chat" onclick="openChatWithUser(\''+email+'\',\''+(u.name||email.split('@')[0])+'\')">💬 Chatear</button></td></tr>';
-  }).join('');
+      +'<td><button class="admin-btn btn-chat" onclick="openChatWithUser(this.dataset.email,this.dataset.name)" data-email="'+email+'" data-name="'+name+'">💬 Chatear</button></td>'
+      +'</tr>';
+  });
+  tbody.innerHTML=rows;
 }
 
 // ── UPDATES ─────────────────────────────────────────────────
