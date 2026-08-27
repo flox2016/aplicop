@@ -1,6 +1,8 @@
-# APLI COP
+#ERROR
 
-App de gestion de pedidos con backend Supabase, desplegada en GitHub Pages.
+Si UsTeD/UsTeDeS esta/Estan Viendo esto
+Es que hubo un error 
+si no cambia la ayuda esta aqui
 
-- App principal: index.html
-- Panel admin: admin.html
+
+Ayuda: flox2102@gmail.com
