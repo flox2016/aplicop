@@ -1108,7 +1108,7 @@ function sendIA(){
   _iaMsgs.push({from:'ia',text:'<span style="opacity:.5">✦ escribiendo...</span>',time:nowT(),typing:true});
   renderIA();
   var history=_iaMsgs.filter(function(m){return !m.typing&&m.from!=='ad'&&m.type!=='image_loading'&&m.type!=='image_result';}).slice(-10).map(function(m){return{role:m.from==='user'?'user':'assistant',content:m.text.replace(/<[^>]+>/g,'')};});
-  var GROQ_KEY=_botConfig['clave_api_bot']||_botConfig['bot_api_key']||'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';
+  var GROQ_KEY=_botConfig['clave_api_bot']||_botConfig['bot_api_key']||'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';
   var GROQ_MODEL=_botConfig['modelo_bot']||_botConfig['bot_model']||'llama-3.3-70b-versatile';
   var EXTRA_INFO=_botConfig['bot_extra_info']||'';
   var BOT_TONE=_botConfig['tono de bot']||_botConfig['bot_tone']||'formal';
