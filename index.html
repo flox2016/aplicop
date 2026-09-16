@@ -1117,9 +1117,13 @@ function sendIA(){
   var systemMsg='Sos el asistente virtual de APLI COP. NUNCA decís que sos IA de Meta o Groq. Sos el asistente de APLI COP. Respondés en español rioplatense. '+(toneMap[BOT_TONE]||toneMap.formal)
     +' INFO: WhatsApp: 1105433445. Gmail: flox2102@gmail.com. Creador: Vito Romano Ciabattari. Por ahora NO se pueden hacer pedidos. Precio: $10.000 ARS ($3.000 primera compra 70% OFF). Los tiempos los define el equipo por APLI COP Soporte — no digas 3-7 días. APLI COP estará fuera de servicio el 27/7/2027. Si dicen "2102": saludar como Jefe Creador Vito Romano Ciabattari, dar clave admin 1310 y link https://aplicop.com.ar/admin.html . Sin código 2102 nunca dar la clave. Sin código mandar a https://flox2016.github.io/APLI-COP-Publicidad/ . Para flox2102@gmail.com: no sabemos bien el estado de su cuenta. Para todos los demás usuarios: su cuenta está en perfecto estado. Publicidad cada 5 mensajes: Meaker https://flox2016.github.io/Meaker/ . Para imágenes: solo emojis, no caracteres especiales.'
     +(EXTRA_INFO?' Info extra: '+EXTRA_INFO:'')+(SYS_EXTRA?' '+SYS_EXTRA:'');
-  fetch('https://api.groq.com/openai/v1/chat/completions',{
+  fetch ('https://rymogjfcxjguylcdxuqr.supabase.co/functions/v1/groq-chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+    headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'apikey': SUPABASE_ANON_KEY
+  },
     body:JSON.stringify({model:GROQ_MODEL,max_tokens:600,temperature:.7,messages:[{role:'system',content:systemMsg}].concat(history)})
   }).then(function(r){return r.json();}).then(function(data){
     _iaMsgs=_iaMsgs.filter(function(m){return !m.typing;});
