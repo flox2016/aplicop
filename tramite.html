@@ -115,12 +115,20 @@
     display: flex; align-items: center; gap: 14px;
     background: #fafafa; border: 1px solid #eee; border-radius: 14px;
     padding: 16px; cursor: pointer; transition: background .15s, transform .1s;
+    position: relative;
   }
   .menu-item:hover { background: #f0f0f0; }
   .menu-item:active { transform: scale(0.98); }
   .menu-item .icon { font-size: 24px; width: 34px; text-align: center; }
   .menu-item .label { font-size: 16px; font-weight: 500; color: #222; }
   .menu-item .arrow { margin-left: auto; color: #999; }
+  .menu-item .badge-count {
+    position: absolute; top: -8px; right: 8px;
+    background: #e74c3c; color: #fff; border-radius: 50%;
+    width: 24px; height: 24px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
 
   .logout-link { text-align: center; padding: 14px; color: #999; font-size: 13px; cursor: pointer; }
 
@@ -190,16 +198,36 @@
   }
   .btn-primary { background: #f39c12; color: #fff; }
   .btn-secondary { background: #eee; color: #555; }
+  .status.error { color: #e74c3c; font-size: 13px; margin-bottom: 10px; }
 
-  .email-block { text-align: center; padding: 40px 20px; }
-  .email-block .icon-big { font-size: 48px; margin-bottom: 16px; }
-  .email-block .warn { color: #e74c3c; font-weight: 600; font-size: 15px; margin-bottom: 20px; }
-
-  #screen-admin-login { align-items: center; justify-content: center; gap: 12px; text-align: center; }
-  #screen-admin-login input {
-    width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px;
+  /* Mensajes */
+  .mensajes-container { display: flex; flex-direction: column; gap: 12px; }
+  .mensaje {
+    padding: 12px 14px; border-radius: 12px; max-width: 80%;
+    font-size: 14px; line-height: 1.4;
   }
-  .admin-link { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #ccc; cursor: pointer; }
+  .mensaje.admin {
+    background: #e3f2fd; color: #1565c0;
+    align-self: flex-start;
+  }
+  .mensaje.usuario {
+    background: #f39c12; color: #fff;
+    align-self: flex-end;
+  }
+  .mensaje-time { font-size: 11px; opacity: 0.7; margin-top: 4px; }
+
+  .chat-input-area {
+    padding: 14px 0 0; border-top: 1px solid #eee;
+    display: flex; gap: 10px;
+  }
+  .chat-input-area input {
+    flex: 1; padding: 11px; border: 1px solid #ddd; border-radius: 10px;
+    font-size: 14px;
+  }
+  .chat-input-area button {
+    width: 40px; height: 40px; background: #f39c12; color: #fff;
+    border: none; border-radius: 50%; cursor: pointer; font-size: 18px;
+  }
 
   .oauth-popup {
     position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
@@ -226,6 +254,8 @@
     flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer;
   }
   .oauth-error { color: #e74c3c; font-size: 13px; margin-top: 10px; }
+
+  .admin-link { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #ccc; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -291,15 +321,16 @@
         <div class="label">Panel de control</div>
         <div class="arrow">›</div>
       </div>
-      <div class="menu-item" onclick="abrirSeccion('email')">
-        <div class="icon">📧</div>
-        <div class="label">Email mandados</div>
-        <div class="arrow">›</div>
-      </div>
       <div class="menu-item" onclick="abrirSeccion('tramites')">
         <div class="icon">📄</div>
         <div class="label">Trámites</div>
         <div class="arrow">›</div>
+      </div>
+      <div class="menu-item" onclick="abrirSeccion('mensajes')">
+        <div class="icon">💬</div>
+        <div class="label">Mensajes</div>
+        <div class="arrow">›</div>
+        <div class="badge-count" id="badge-mensajes" style="display:none;">0</div>
       </div>
     </div>
     <div class="logout-link" onclick="cerrarSesion()">Cerrar sesión</div>
@@ -330,26 +361,85 @@
     <div class="sub-body" id="tramites-list">
       <div class="empty-state">Cargando trámites...</div>
     </div>
-    <button class="fab" id="fab-nuevo-tramite" onclick="abrirModalNuevoTramite()">+</button>
+    <button class="fab" id="fab-nuevo-tramite" onclick="abrirModalNuevoTramite()" style="display:none;">+</button>
   </div>
 
-  <!-- EMAIL -->
-  <div class="screen" id="screen-email">
+  <!-- MENSAJES -->
+  <div class="screen" id="screen-mensajes">
     <div class="sub-header">
       <button class="back-btn" onclick="volverAlMenu()">‹</button>
-      <h2>Email mandados</h2>
+      <h2>Mensajes</h2>
     </div>
-    <div class="sub-body">
-      <div class="email-block">
-        <div class="icon-big">📧</div>
-        <p class="warn">No se puede saber cuántos Emails hay enviados, necesita confirmar.</p>
-        <button class="btn-continuar" onclick="confirmarGmail()" style="background:#EA4335;justify-content:center;">
-          Confirmar acceso a Gmail
-        </button>
-      </div>
+    <div class="sub-body" id="mensajes-list">
+      <div class="empty-state">Cargando mensajes...</div>
     </div>
   </div>
 
+</div>
+
+<!-- MODAL NUEVO TRAMITE (ADMIN) -->
+<div class="modal-overlay" id="modal-nuevo-tramite">
+  <div class="modal-box">
+    <h3>Nuevo trámite</h3>
+    <input type="text" id="nt-titulo" placeholder="Título del trámite">
+    <textarea id="nt-descripcion" placeholder="Descripción"></textarea>
+    <input type="text" id="nt-codigo" placeholder="Código (auto-generado)">
+    <input type="email" id="nt-email-usuario" placeholder="Email del usuario">
+    <p class="status error" id="nt-error"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarModalNuevoTramite()">Cancelar</button>
+      <button class="btn-primary" onclick="crearTramite()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER TRAMITE (USUARIO) -->
+<div class="modal-overlay" id="modal-ver-tramite">
+  <div class="modal-box">
+    <h3 id="mvt-titulo">Trámite</h3>
+    <p id="mvt-desc" style="color:#666;font-size:14px;margin-bottom:12px;"></p>
+    <p style="font-size:12px;color:#999;margin-bottom:12px;">Estado: <span id="mvt-estado" style="font-weight:600;"></span></p>
+    <p style="font-size:12px;color:#999;margin-bottom:14px;">Emails enviados: <span id="mvt-emails">0</span></p>
+    <input type="text" id="mvt-codigo-input" placeholder="Ingresá el código">
+    <p class="status error" id="mvt-error"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarModalVerTramite()">Cerrar</button>
+      <button class="btn-primary" onclick="enviarCodigoTramite()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER TRAMITE (ADMIN) -->
+<div class="modal-overlay" id="modal-admin-tramite">
+  <div class="modal-box">
+    <h3 id="mat-titulo">Trámite</h3>
+    <p id="mat-desc" style="color:#666;font-size:14px;margin-bottom:12px;"></p>
+    <p style="font-size:12px;color:#999;margin-bottom:8px;">Email: <span id="mat-email"></span></p>
+    <p style="font-size:12px;color:#999;margin-bottom:8px;">Código: <span id="mat-codigo" style="font-weight:700;color:#f39c12;"></span></p>
+    <input type="number" id="mat-emails-input" placeholder="Emails enviados" value="0">
+    <select id="mat-estado-select">
+      <option value="pendiente">Pendiente</option>
+      <option value="proceso">En proceso</option>
+      <option value="aprobado">Aprobado</option>
+      <option value="rechazado">Rechazado</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarModalAdminTramite()">Cerrar</button>
+      <button class="btn-primary" onclick="guardarTramiteAdmin()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHAT -->
+<div class="modal-overlay" id="modal-chat">
+  <div class="modal-box" style="max-height:70vh;display:flex;flex-direction:column;">
+    <h3 id="chat-titulo">Chat</h3>
+    <div id="chat-mensajes" class="mensajes-container" style="flex:1;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Mensaje">
+      <button onclick="enviarMensajeChat()">➤</button>
+    </div>
+  </div>
 </div>
 
 <!-- OAUTH POPUP -->
@@ -368,37 +458,6 @@
   </div>
 </div>
 
-<!-- MODAL NUEVO TRAMITE -->
-<div class="modal-overlay" id="modal-nuevo-tramite">
-  <div class="modal-box">
-    <h3>Nuevo trámite</h3>
-    <input type="text" id="nt-titulo" placeholder="Título del trámite">
-    <textarea id="nt-descripcion" placeholder="Descripción"></textarea>
-    <p class="status error" id="nt-error"></p>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="cerrarModalNuevoTramite()">Cancelar</button>
-      <button class="btn-primary" onclick="crearTramite()">Enviar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL ESTADO TRAMITE -->
-<div class="modal-overlay" id="modal-estado-tramite">
-  <div class="modal-box">
-    <h3>Cambiar estado</h3>
-    <select id="estado-select">
-      <option value="pendiente">Pendiente</option>
-      <option value="proceso">En proceso</option>
-      <option value="aprobado">Aprobado</option>
-      <option value="rechazado">Rechazado</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="cerrarModalEstado()">Cancelar</button>
-      <button class="btn-primary" onclick="guardarEstadoTramite()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const SUPABASE_URL = "https://rymogjfcxjguylcdxuqr.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5bW9namZjeGpndXlsY2R4dXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTg3MjYsImV4cCI6MjA5OTIzNDcyNn0.ImyyyKpx1tdLrwfw5gBF0NxQKNYfv78lnEVBkwNr9ws";
@@ -408,12 +467,33 @@ const ADMIN_PASS = "MfloxMflox";
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let sesion = { esAdmin: false, email: null, nombre: null };
 let tramiteEnEdicion = null;
+let chatTramiteId = null;
 
 function mostrarPantalla(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+function generarCodigo() {
+  return Math.random().toString(36).substr(2, 9).toUpperCase();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function formatearFecha(f) {
+  if (!f) return '';
+  const d = new Date(f);
+  return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function etiquetaEstado(e) {
+  const map = { pendiente: 'Pendiente', proceso: 'En proceso', aprobado: 'Aprobado', rechazado: 'Rechazado' };
+  return map[e] || 'Pendiente';
+}
+
+// Inicialización
 window.addEventListener('DOMContentLoaded', iniciar);
 
 async function iniciar() {
@@ -434,6 +514,7 @@ async function iniciar() {
   }, 900);
 }
 
+// OAuth Popup
 document.getElementById('btn-continuar-aplicop').addEventListener('click', abrirOAuthPopup);
 
 function abrirOAuthPopup() {
@@ -477,7 +558,6 @@ async function validarOAuth() {
     }
 
     sesion = { esAdmin: false, email: email, nombre: u.name || u.nombre || email };
-    
     supa.from('usuarios')
       .update({ 'ultima vez visto': new Date().toISOString(), 'en linea': 'true' })
       .eq('email', email)
@@ -535,7 +615,7 @@ function loginAdmin() {
   const u = document.getElementById('admin-user').value.trim();
   const p = document.getElementById('admin-pass').value.trim();
   if (u === ADMIN_USER && p === ADMIN_PASS) {
-    sesion = { esAdmin: true, email: null, nombre: 'Admin' };
+    sesion = { esAdmin: true, email: 'admin@apli.cop', nombre: 'Admin' };
     entrarAlMenu();
   } else {
     document.getElementById('admin-error').textContent = 'Usuario o contraseña incorrectos.';
@@ -546,10 +626,12 @@ function entrarAlMenu() {
   document.getElementById('menu-userline').textContent = sesion.esAdmin
     ? 'Ingresaste como Admin'
     : `Hola, ${sesion.nombre}`;
+  document.getElementById('fab-nuevo-tramite').style.display = sesion.esAdmin ? 'flex' : 'none';
+  actualizarBadgeMensajes();
   mostrarPantalla('screen-menu');
 }
 
-function volverAlMenu() { mostrarPantalla('screen-menu'); }
+function volverAlMenu() { mostrarPantalla('screen-menu'); actualizarBadgeMensajes(); }
 
 async function cerrarSesion() {
   if (!sesion.esAdmin) {
@@ -562,13 +644,13 @@ async function cerrarSesion() {
 function abrirSeccion(nombre) {
   if (nombre === 'panel') { mostrarPantalla('screen-panel'); cargarPanel(); }
   if (nombre === 'tramites') { mostrarPantalla('screen-tramites'); cargarTramites(); }
-  if (nombre === 'email') { mostrarPantalla('screen-email'); }
+  if (nombre === 'mensajes') { mostrarPantalla('screen-mensajes'); cargarMensajesList(); }
 }
 
 async function cargarPanel() {
   try {
     let query = supa.from('tramites').select('estado');
-    if (!sesion.esAdmin) query = query.eq('email', sesion.email);
+    if (!sesion.esAdmin) query = query.eq('email_usuario', sesion.email);
     const { data, error } = await query;
     if (error) throw error;
 
@@ -589,11 +671,10 @@ async function cargarPanel() {
 async function cargarTramites() {
   const listEl = document.getElementById('tramites-list');
   listEl.innerHTML = '<div class="empty-state">Cargando trámites...</div>';
-  document.getElementById('fab-nuevo-tramite').style.display = sesion.esAdmin ? 'none' : 'flex';
 
   try {
     let query = supa.from('tramites').select('*').order('created_at', { ascending: false });
-    if (!sesion.esAdmin) query = query.eq('email', sesion.email);
+    if (!sesion.esAdmin) query = query.eq('email_usuario', sesion.email);
     const { data, error } = await query;
     if (error) throw error;
 
@@ -603,13 +684,13 @@ async function cargarTramites() {
     }
 
     listEl.innerHTML = data.map(t => `
-      <div class="tramite-card" ${sesion.esAdmin ? `onclick="abrirModalEstado('${t.id}','${t.estado || 'pendiente'}')"` : ''}>
+      <div class="tramite-card" onclick="abrirTramite('${t.id}', ${sesion.esAdmin ? 'true' : 'false'})">
         <div class="top-row">
           <div class="titulo">${escapeHtml(t.titulo || 'Sin título')}</div>
           <span class="badge ${t.estado || 'pendiente'}">${etiquetaEstado(t.estado)}</span>
         </div>
         <div class="desc">${escapeHtml(t.descripcion || '')}</div>
-        <div class="meta">${sesion.esAdmin ? escapeHtml(t.email || '') + ' · ' : ''}${formatearFecha(t.created_at)}</div>
+        <div class="meta">${sesion.esAdmin ? escapeHtml(t.email_usuario || '') + ' · ' : ''}${formatearFecha(t.created_at)}</div>
       </div>
     `).join('');
   } catch (e) {
@@ -618,24 +699,132 @@ async function cargarTramites() {
   }
 }
 
-function etiquetaEstado(e) {
-  const map = { pendiente: 'Pendiente', proceso: 'En proceso', aprobado: 'Aprobado', rechazado: 'Rechazado' };
-  return map[e] || 'Pendiente';
+function abrirTramite(tramiteId, esAdmin) {
+  if (esAdmin) {
+    cargarTramiteAdmin(tramiteId);
+  } else {
+    cargarTramiteUsuario(tramiteId);
+  }
 }
 
-function formatearFecha(f) {
-  if (!f) return '';
-  const d = new Date(f);
-  return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+async function cargarTramiteUsuario(tramiteId) {
+  try {
+    const { data, error } = await supa
+      .from('tramites')
+      .select('*')
+      .eq('id', tramiteId)
+      .single();
+    
+    if (error) throw error;
+
+    tramiteEnEdicion = tramiteId;
+    document.getElementById('mvt-titulo').textContent = escapeHtml(data.titulo || 'Trámite');
+    document.getElementById('mvt-desc').textContent = escapeHtml(data.descripcion || '');
+    document.getElementById('mvt-estado').textContent = etiquetaEstado(data.estado);
+    document.getElementById('mvt-emails').textContent = data.emails_enviados || 0;
+    document.getElementById('mvt-codigo-input').value = '';
+    document.getElementById('mvt-error').textContent = '';
+    document.getElementById('modal-ver-tramite').classList.add('active');
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function cargarTramiteAdmin(tramiteId) {
+  try {
+    const { data, error } = await supa
+      .from('tramites')
+      .select('*')
+      .eq('id', tramiteId)
+      .single();
+    
+    if (error) throw error;
+
+    tramiteEnEdicion = tramiteId;
+    document.getElementById('mat-titulo').textContent = escapeHtml(data.titulo || 'Trámite');
+    document.getElementById('mat-desc').textContent = escapeHtml(data.descripcion || '');
+    document.getElementById('mat-email').textContent = escapeHtml(data.email_usuario || '');
+    document.getElementById('mat-codigo').textContent = data.codigo || '';
+    document.getElementById('mat-emails-input').value = data.emails_enviados || 0;
+    document.getElementById('mat-estado-select').value = data.estado || 'pendiente';
+    document.getElementById('modal-admin-tramite').classList.add('active');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function cerrarModalVerTramite() {
+  document.getElementById('modal-ver-tramite').classList.remove('active');
+  tramiteEnEdicion = null;
+}
+
+function cerrarModalAdminTramite() {
+  document.getElementById('modal-admin-tramite').classList.remove('active');
+  tramiteEnEdicion = null;
+}
+
+async function enviarCodigoTramite() {
+  const codigo = document.getElementById('mvt-codigo-input').value.trim();
+  const errorEl = document.getElementById('mvt-error');
+
+  if (!codigo) { errorEl.textContent = 'Ingresá el código.'; return; }
+
+  try {
+    // Verificar que el código sea correcto
+    const { data: tramite, error: errT } = await supa
+      .from('tramites')
+      .select('*')
+      .eq('id', tramiteEnEdicion)
+      .single();
+    
+    if (errT) throw errT;
+    if (tramite.codigo !== codigo) {
+      errorEl.textContent = 'Código incorrecto.';
+      return;
+    }
+
+    // Enviar mensaje
+    const { error } = await supa.from('tramite_mensajes').insert({
+      tramite_id: tramiteEnEdicion,
+      email_remitente: sesion.email,
+      mensaje: `Código enviado: ${codigo}`
+    });
+
+    if (error) throw error;
+    cerrarModalVerTramite();
+    cargarTramites();
+  } catch (e) {
+    console.error(e);
+    errorEl.textContent = 'Error al enviar el código.';
+  }
+}
+
+async function guardarTramiteAdmin() {
+  if (!tramiteEnEdicion) return;
+
+  const emails = parseInt(document.getElementById('mat-emails-input').value) || 0;
+  const estado = document.getElementById('mat-estado-select').value;
+
+  try {
+    const { error } = await supa
+      .from('tramites')
+      .update({ estado, emails_enviados: emails })
+      .eq('id', tramiteEnEdicion);
+    
+    if (error) throw error;
+    cerrarModalAdminTramite();
+    cargarTramites();
+  } catch (e) {
+    console.error(e);
+    alert('Error al guardar.');
+  }
 }
 
 function abrirModalNuevoTramite() {
   document.getElementById('nt-titulo').value = '';
   document.getElementById('nt-descripcion').value = '';
+  document.getElementById('nt-codigo').value = generarCodigo();
+  document.getElementById('nt-email-usuario').value = '';
   document.getElementById('nt-error').textContent = '';
   document.getElementById('modal-nuevo-tramite').classList.add('active');
 }
@@ -647,52 +836,152 @@ function cerrarModalNuevoTramite() {
 async function crearTramite() {
   const titulo = document.getElementById('nt-titulo').value.trim();
   const descripcion = document.getElementById('nt-descripcion').value.trim();
+  const codigo = document.getElementById('nt-codigo').value.trim();
+  const email_usuario = document.getElementById('nt-email-usuario').value.trim();
   const errEl = document.getElementById('nt-error');
 
   if (!titulo) { errEl.textContent = 'Poné un título.'; return; }
+  if (!codigo) { errEl.textContent = 'Poné un código.'; return; }
+  if (!email_usuario) { errEl.textContent = 'Poné un email de usuario.'; return; }
 
   try {
     const { error } = await supa.from('tramites').insert({
-      titulo, descripcion, estado: 'pendiente',
-      email: sesion.email, creado_por: sesion.nombre
+      titulo, descripcion, codigo,
+      email_usuario, estado: 'pendiente',
+      creado_por: sesion.nombre
     });
+
     if (error) throw error;
     cerrarModalNuevoTramite();
     cargarTramites();
   } catch (e) {
     console.error(e);
-    errEl.textContent = 'No se pudo enviar el trámite.';
+    errEl.textContent = 'Error al crear el trámite.';
   }
 }
 
-function abrirModalEstado(id, estadoActual) {
-  tramiteEnEdicion = id;
-  document.getElementById('estado-select').value = estadoActual;
-  document.getElementById('modal-estado-tramite').classList.add('active');
-}
+// Mensajes
+async function cargarMensajesList() {
+  const listEl = document.getElementById('mensajes-list');
+  listEl.innerHTML = '<div class="empty-state">Cargando mensajes...</div>';
 
-function cerrarModalEstado() {
-  document.getElementById('modal-estado-tramite').classList.remove('active');
-  tramiteEnEdicion = null;
-}
-
-async function guardarEstadoTramite() {
-  if (!tramiteEnEdicion) return;
-  const nuevoEstado = document.getElementById('estado-select').value;
   try {
-    const { error } = await supa.from('tramites').update({ estado: nuevoEstado }).eq('id', tramiteEnEdicion);
-    if (error) throw error;
-    cerrarModalEstado();
-    cargarTramites();
+    let query = supa.from('tramites').select('id, titulo, email_usuario');
+    if (!sesion.esAdmin) query = query.eq('email_usuario', sesion.email);
+    
+    const { data: tramites, error: errT } = await query;
+    if (errT) throw errT;
+
+    if (!tramites || tramites.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No hay trámites.</div>';
+      return;
+    }
+
+    let html = '';
+    for (const t of tramites) {
+      const { count: numMensajes } = await supa
+        .from('tramite_mensajes')
+        .select('id', { count: 'exact', head: true })
+        .eq('tramite_id', t.id);
+
+      html += `
+        <div class="tramite-card" onclick="abrirChat('${t.id}', '${escapeHtml(t.titulo)}')" style="cursor:pointer;">
+          <div class="titulo">${escapeHtml(t.titulo)}</div>
+          <div class="meta">${sesion.esAdmin ? escapeHtml(t.email_usuario) + ' · ' : ''}${numMensajes || 0} mensajes</div>
+        </div>
+      `;
+    }
+
+    listEl.innerHTML = html;
   } catch (e) {
     console.error(e);
-    alert('No se pudo actualizar el estado.');
+    listEl.innerHTML = '<div class="empty-state">Error al cargar.</div>';
   }
 }
 
-function confirmarGmail() {
-  alert('La conexión con Gmail todavía no está configurada. Próximamente.');
+async function abrirChat(tramiteId, titulo) {
+  chatTramiteId = tramiteId;
+  document.getElementById('chat-titulo').textContent = `Chat - ${titulo}`;
+  document.getElementById('chat-input').value = '';
+
+  try {
+    const { data, error } = await supa
+      .from('tramite_mensajes')
+      .select('*')
+      .eq('tramite_id', tramiteId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    const chatEl = document.getElementById('chat-mensajes');
+    chatEl.innerHTML = (data || []).map(m => `
+      <div class="mensaje ${m.email_remitente === sesion.email ? 'usuario' : 'admin'}">
+        ${escapeHtml(m.mensaje)}
+        <div class="mensaje-time">${formatearFecha(m.created_at)}</div>
+      </div>
+    `).join('');
+
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    // Marcar como leído
+    await supa
+      .from('tramite_mensajes')
+      .update({ leido: true })
+      .eq('tramite_id', tramiteId);
+
+    document.getElementById('modal-chat').classList.add('active');
+    actualizarBadgeMensajes();
+  } catch (e) {
+    console.error(e);
+  }
 }
+
+async function enviarMensajeChat() {
+  const msg = document.getElementById('chat-input').value.trim();
+  if (!msg || !chatTramiteId) return;
+
+  try {
+    await supa.from('tramite_mensajes').insert({
+      tramite_id: chatTramiteId,
+      email_remitente: sesion.email,
+      mensaje: msg
+    });
+
+    document.getElementById('chat-input').value = '';
+    abrirChat(chatTramiteId, document.getElementById('chat-titulo').textContent.replace('Chat - ', ''));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function cerrarChat() {
+  document.getElementById('modal-chat').classList.remove('active');
+  chatTramiteId = null;
+}
+
+async function actualizarBadgeMensajes() {
+  try {
+    const { count } = await supa
+      .from('tramite_mensajes')
+      .select('id', { count: 'exact', head: true })
+      .eq('leido', false);
+
+    const badge = document.getElementById('badge-mensajes');
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// Cerrar chat desde afuera
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'modal-chat') cerrarChat();
+});
 </script>
 </body>
 </html>
