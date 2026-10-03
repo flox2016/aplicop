@@ -1257,17 +1257,22 @@ doLogout = function(){
 // ══════════════════════════════════════════════════════════════
 // ASISTENTE POR VOZ — "Ok Asistente"
 // Usa el asistente IA que ya existe (sendIA): solo agrega el micrófono y la voz.
+// Una sola sesión de escucha continua: no se corta al detectar la frase ni al hablar el asistente.
 // ══════════════════════════════════════════════════════════════
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 var _voiceAsk = false;        // true = la pregunta en curso vino por voz → la respuesta se lee en voz alta
 var voiceOn = false;          // switch activado
-var voiceRec = null;          // instancia actual de reconocimiento
-var voiceMode = 'wake';       // 'wake' = esperando "Ok Asistente" | 'question' = escuchando la pregunta
+var voiceRec = null;          // sesión de reconocimiento actual
+var voiceMode = 'wake';       // 'wake' = esperando "Ok Asistente" | 'question' = la próxima frase es la pregunta
 var voiceRunning = false;
 var voiceSpeaking = false;
+var voiceIgnoreUntil = 0;     // ignora lo que escucha mientras el asistente habla (y un momento después)
 var voiceRestartTimer = null;
 var voiceQuestionTimer = null;
 var voiceFails = 0;
+var voiceQuick = 0;           // sesiones seguidas que terminaron enseguida (para espaciar los reinicios)
+var voiceStartedAt = 0;
+var voicePerm = null;         // estado del permiso del navegador
 
 var WAKE_RAW  = /(?:\bok(?:ey|ay)?\b|\boke\b|\boka\b|\bo\.?\s?k\.?|\bhey\b|\boye\b)[\s,.!¡:;-]*(?:asistente|asistent|a sistente)[\s,.!¡?:;-]*/i;
 var WAKE_NORM = /\b(?:ok|okey|okay|oke|oka|o k|hey|oye)\s+(?:asistente|asistent|a sistente)\b/;
@@ -1276,27 +1281,29 @@ function vNorm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u
 function voiceKey() { return 'apli_voz_on_' + (CU ? CU.email : ''); }
 function voiceSaved() { try { return localStorage.getItem(voiceKey()) === 'true'; } catch(e) { return false; } }
 function voiceSave(on) { try { localStorage.setItem(voiceKey(), on ? 'true' : 'false'); } catch(e) {} }
+// En file:// o http:// Chrome NO guarda el permiso y vuelve a preguntar; con https sí
+function voiceSecure() { return location.protocol === 'https:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); }
 
 function setVoiceStatus() {
-  const st = document.getElementById('voz-status');
+  var st = document.getElementById('voz-status');
   if (!st) return;
-  let t = 'Apagado';
+  var t = 'Apagado';
   if (voiceOn) t = voiceSpeaking ? 'Hablando…' : (voiceMode === 'question' ? 'Te escucho, preguntame…' : 'Escuchando… decí "Ok Asistente"');
   st.textContent = t;
 }
 function syncVoiceUI() {
-  const cb = document.getElementById('voz-toggle');
+  var cb = document.getElementById('voz-toggle');
   if (cb) cb.checked = voiceOn;
   setVoiceStatus();
 }
 
 function voiceBeep(freq) {
   try {
-    const AC = window.AudioContext || window.webkitAudioContext;
+    var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    const ctx = new AC();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
+    var ctx = new AC();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
     o.type = 'sine'; o.frequency.value = freq; g.gain.value = 0.08;
     o.connect(g); g.connect(ctx.destination); o.start();
     setTimeout(function() { try { o.stop(); ctx.close(); } catch(e) {} }, 140);
@@ -1308,25 +1315,38 @@ function scheduleVoiceRestart(ms) {
   voiceRestartTimer = setTimeout(startVoiceRec, ms);
 }
 
+// Si el permiso se revoca desde el navegador, apaga el switch sin volver a pedirlo
+function watchMicPermission() {
+  try {
+    if (!(navigator.permissions && navigator.permissions.query)) return;
+    navigator.permissions.query({ name:'microphone' }).then(function(p) {
+      voicePerm = p;
+      p.onchange = function() { if (p.state === 'denied' && voiceOn) disableVoice('Permiso de micrófono revocado'); };
+    }).catch(function() {});
+  } catch(e) {}
+}
+
 function startVoiceRec() {
-  if (!voiceOn || voiceRunning || voiceSpeaking || !SR || !CU) return;
+  if (!voiceOn || voiceRunning || !SR || !CU) return;
   clearTimeout(voiceRestartTimer);
-  const rec = new SR();
+  var rec = new SR();
   rec.lang = 'es-AR';
   rec.interimResults = false;
-  rec.continuous = (voiceMode === 'wake');
+  rec.continuous = true;          // siempre continuo: una sola sesión para la frase y la pregunta
   rec.maxAlternatives = 3;
+  rec.onstart = function() { voiceStartedAt = Date.now(); };
   rec.onresult = function(e) {
     voiceFails = 0;
-    for (let i = e.resultIndex; i < e.results.length; i++) {
+    for (var i = e.resultIndex; i < e.results.length; i++) {
       if (!e.results[i].isFinal) continue;
-      const alts = [];
-      for (let k = 0; k < e.results[i].length; k++) alts.push(e.results[i][k].transcript);
+      if (voiceSpeaking || Date.now() < voiceIgnoreUntil) continue;   // es el propio asistente hablando
+      var alts = [];
+      for (var k = 0; k < e.results[i].length; k++) alts.push(e.results[i][k].transcript);
       handleHeard(alts);
     }
   };
   rec.onerror = function(e) {
-    const err = e && e.error;
+    var err = e && e.error;
     if (err === 'not-allowed' || err === 'service-not-allowed') { disableVoice('Permiso de micrófono denegado'); return; }
     if (err === 'audio-capture') { disableVoice('No se encontró ningún micrófono'); return; }
     if (err === 'no-speech' || err === 'aborted') return;
@@ -1336,28 +1356,32 @@ function startVoiceRec() {
   rec.onend = function() {
     voiceRunning = false;
     if (voiceRec === rec) voiceRec = null;
-    if (!voiceOn || voiceSpeaking) return;
-    scheduleVoiceRestart(voiceFails > 2 ? 3000 : 350);
+    if (!voiceOn) return;
+    // El navegador corta la escucha solo (silencio, red). Reiniciamos espaciando más si corta seguido.
+    var lived = voiceStartedAt ? Date.now() - voiceStartedAt : 0;
+    voiceQuick = (lived < 4000) ? Math.min(voiceQuick + 1, 4) : 0;
+    scheduleVoiceRestart(Math.min(800 * Math.pow(2, voiceQuick), 8000));
   };
   voiceRec = rec;
   voiceRunning = true;
+  voiceStartedAt = Date.now();
   try { rec.start(); }
-  catch(e) { voiceRunning = false; voiceRec = null; scheduleVoiceRestart(1000); }
+  catch(e) { voiceRunning = false; voiceRec = null; scheduleVoiceRestart(2000); }
 }
 
 function handleHeard(alts) {
   if (!voiceOn || !CU) return;
   if (voiceMode === 'wake') {
-    for (let a = 0; a < alts.length; a++) {
-      const raw = alts[a] || '';
-      let m = raw.match(WAKE_RAW);
+    for (var a = 0; a < alts.length; a++) {
+      var raw = alts[a] || '';
+      var m = raw.match(WAKE_RAW);
       if (m) { onWake(raw.slice(m.index + m[0].length).trim()); return; }
-      const n = vNorm(raw);
+      var n = vNorm(raw);
       m = n.match(WAKE_NORM);
       if (m) { onWake(n.slice(m.index + m[0].length).trim()); return; }
     }
   } else {
-    const q = (alts[0] || '').trim();
+    var q = (alts[0] || '').trim();
     if (q) finishQuestion(q);
   }
 }
@@ -1366,16 +1390,13 @@ function onWake(rest) {
   voiceBeep(880);
   openIA();
   if (rest && rest.length > 2) { finishQuestion(rest); return; }
+  // Seguimos en la MISMA sesión: lo próximo que escuche es la pregunta (sin reiniciar el micrófono)
   voiceMode = 'question';
   toast('🎙️', 'Te escucho… preguntame');
   setVoiceStatus();
-  try { if (voiceRec) voiceRec.stop(); } catch(e) {}
   clearTimeout(voiceQuestionTimer);
   voiceQuestionTimer = setTimeout(function() {
-    if (voiceMode === 'question') {
-      voiceMode = 'wake'; setVoiceStatus();
-      try { if (voiceRec) voiceRec.stop(); } catch(e) {}
-    }
+    if (voiceMode === 'question') { voiceMode = 'wake'; setVoiceStatus(); }
   }, 9000);
 }
 
@@ -1384,7 +1405,7 @@ function finishQuestion(q) {
   clearTimeout(voiceQuestionTimer);
   voiceMode = 'wake';
   setVoiceStatus();
-  const input = document.getElementById('ia-input');
+  var input = document.getElementById('ia-input');
   if (!input || !CU) return;
   openIA();
   input.value = q;
@@ -1394,21 +1415,25 @@ function finishQuestion(q) {
 
 function speakText(text) {
   if (!('speechSynthesis' in window)) return;
-  const clean = String(text).replace(/<[^>]+>/g,' ').replace(/\*\*/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s+/g,' ').trim();
+  var clean = String(text).replace(/<[^>]+>/g,' ').replace(/\*\*/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s+/g,' ').trim();
   if (!clean) return;
   try {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(clean);
+    var u = new SpeechSynthesisUtterance(clean);
     u.lang = 'es-AR'; u.rate = 1.02;
-    const vs = speechSynthesis.getVoices() || [];
-    const v = vs.find(function(x) { return x.lang === 'es-AR'; }) || vs.find(function(x) { return x.lang === 'es-US'; }) || vs.find(function(x) { return x.lang === 'es-MX'; }) || vs.find(function(x) { return /^es/i.test(x.lang); });
+    var vs = speechSynthesis.getVoices() || [];
+    var v = vs.find(function(x) { return x.lang === 'es-AR'; }) || vs.find(function(x) { return x.lang === 'es-US'; }) || vs.find(function(x) { return x.lang === 'es-MX'; }) || vs.find(function(x) { return /^es/i.test(x.lang); });
     if (v) u.voice = v;
-    const done = function() { voiceSpeaking = false; setVoiceStatus(); if (voiceOn) scheduleVoiceRestart(400); };
+    var done = function() {
+      voiceSpeaking = false;
+      voiceIgnoreUntil = Date.now() + 1200;    // margen para no tomar la cola de su propia voz
+      setVoiceStatus();
+      if (voiceOn && !voiceRunning) scheduleVoiceRestart(400);   // solo si el navegador ya había cortado la escucha
+    };
     u.onend = done; u.onerror = done;
     voiceSpeaking = true;
     setVoiceStatus();
-    try { if (voiceRec) voiceRec.abort(); } catch(e) {}   // que no se escuche a sí mismo
-    speechSynthesis.speak(u);
+    speechSynthesis.speak(u);       // el micrófono NO se corta: simplemente ignora lo que escucha mientras habla
   } catch(e) { voiceSpeaking = false; }
 }
 
@@ -1416,7 +1441,7 @@ function stopVoice() {
   voiceOn = false; _voiceAsk = false;
   clearTimeout(voiceRestartTimer);
   clearTimeout(voiceQuestionTimer);
-  voiceMode = 'wake';
+  voiceMode = 'wake'; voiceQuick = 0; voiceIgnoreUntil = 0;
   try { if (voiceRec) voiceRec.abort(); } catch(e) {}
   voiceRec = null; voiceRunning = false;
   try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
@@ -1431,8 +1456,17 @@ function disableVoice(msg) {
   if (msg) toast('🚫', msg);
 }
 
+function voiceTurnOn() {
+  voiceOn = true; voiceMode = 'wake'; voiceFails = 0; voiceQuick = 0;
+  if (CU) voiceSave(true);
+  try { if ('speechSynthesis' in window) speechSynthesis.getVoices(); } catch(e) {}
+  watchMicPermission();
+  startVoiceRec();
+  syncVoiceUI();
+}
+
 async function toggleVoiceAssistant(on) {
-  const cb = document.getElementById('voz-toggle');
+  var cb = document.getElementById('voz-toggle');
   if (!on) {
     stopVoice();
     if (CU) voiceSave(false);
@@ -1450,41 +1484,48 @@ async function toggleVoiceAssistant(on) {
     toast('⚠️', 'El micrófono necesita que la app esté abierta con https.');
     return;
   }
+  // Permiso: se pide UNA sola vez. Si ya está concedido no se vuelve a pedir.
+  var state = 'unknown';
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });   // acá el navegador pide permiso
-    stream.getTracks().forEach(function(t) { t.stop(); });
-  } catch(e) {
+    if (navigator.permissions && navigator.permissions.query) {
+      var p = await navigator.permissions.query({ name:'microphone' });
+      state = p.state;
+    }
+  } catch(e) {}
+  if (state === 'denied') {
     if (cb) cb.checked = false;
-    toast('🚫', 'Sin permiso de micrófono. Habilitalo desde los ajustes del navegador.');
+    toast('🚫', 'El micrófono está bloqueado. Habilitalo desde los ajustes del sitio en el navegador.');
     return;
   }
-  voiceOn = true; voiceMode = 'wake'; voiceFails = 0;
-  if (CU) voiceSave(true);
-  try { if ('speechSynthesis' in window) speechSynthesis.getVoices(); } catch(e) {}
-  startVoiceRec();
-  syncVoiceUI();
-  toast('🎙️', 'Listo. Decí "Ok Asistente"');
+  if (state !== 'granted') {
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });   // acá el navegador pide permiso
+      stream.getTracks().forEach(function(t) { t.stop(); });
+    } catch(e) {
+      if (cb) cb.checked = false;
+      toast('🚫', 'Sin permiso de micrófono. Habilitalo desde los ajustes del navegador.');
+      return;
+    }
+  }
+  voiceTurnOn();
+  toast('🎙️', voiceSecure() ? 'Listo. Decí "Ok Asistente"' : 'Listo. Para que no pida permiso cada vez, abrí la app desde https');
 }
 
-// Se llama al entrar a la app: reactiva la escucha si estaba activada y el permiso sigue concedido
+// Se llama al entrar a la app: reactiva la escucha si estaba activada y el permiso sigue concedido (sin volver a pedirlo)
 function initVoiceAssistant() {
   stopVoice();
   syncVoiceUI();
   if (!CU || !SR || !voiceSaved()) return;
   if (!(navigator.permissions && navigator.permissions.query)) return;
   navigator.permissions.query({ name:'microphone' }).then(function(p) {
-    if (p.state === 'granted' && CU) {
-      voiceOn = true; voiceMode = 'wake'; voiceFails = 0;
-      startVoiceRec(); syncVoiceUI();
-    } else {
-      voiceSave(false); syncVoiceUI();
-    }
+    if (p.state === 'granted' && CU) { voiceTurnOn(); }
+    else { voiceSave(false); syncVoiceUI(); }
   }).catch(function() {});
 }
 
-// Al volver a la pestaña, retoma la escucha
+// Al volver a la pestaña, retoma la escucha solo si el navegador la había cortado
 document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && voiceOn) scheduleVoiceRestart(500);
+  if (!document.hidden && voiceOn && !voiceRunning) scheduleVoiceRestart(500);
 });
 
 
