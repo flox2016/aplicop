@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="COP.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>APLI COP — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -117,7 +116,8 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 .amsg-img{max-width:180px;border-radius:8px;display:block;margin-bottom:4px;cursor:pointer;}
 .convo-input-admin{background:#1A1A1A;padding:.75rem 1rem;display:flex;gap:8px;align-items:center;}
 .convo-input-admin input{flex:1;background:#242424;border:1px solid #1A1A1A;color:#fff;border-radius:20px;padding:.6rem 1rem;font-family:Poppins,sans-serif;font-size:.85rem;outline:none;}
-.send-btn-admin{background:#FF6B00;border:none;border-radius:50%;width:38px;height:38px;color:#fff;font-size:1rem;cursor:pointer;}
+.convo-input-admin input{min-width:0;}
+.send-btn-admin{flex-shrink:0;background:#FF6B00;border:none;border-radius:50%;width:38px;height:38px;color:#fff;font-size:1rem;cursor:pointer;}
 .att-btn-admin{width:36px;height:36px;background:#242424;border:none;border-radius:50%;font-size:1rem;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0;}
 .att-btn-admin input{position:absolute;inset:0;opacity:0;cursor:pointer;}
 
@@ -164,8 +164,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
   .sb-bottom{display:none;}
 }
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -182,7 +181,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
   <div class="pin-sub">Panel de Administración</div>
   <div class="pin-dots" id="pin-dots">
     <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div><div class="pin-dot" id="d4"></div>
   </div>
   <div class="pin-err" id="pin-err"></div>
   <div class="pin-pad">
@@ -262,7 +261,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
             <div class="convo-msgs-admin" id="ac-msgs"></div>
             <div class="convo-input-admin">
               <label class="att-btn-admin">🖼️<input type="file" accept="image/*" onchange="adminSendImg(event)"></label>
-              <input type="text" id="ac-input" placeholder="Escribile al usuario..." onkeydown="if(event.key==='Enter')adminSendMsg()">
+              <input type="text" id="ac-input" maxlength="2000" placeholder="Escribile al usuario..." onkeydown="if(event.key==='Enter')adminSendMsg()">
               <button class="send-btn-admin" onclick="adminSendMsg()">➤</button>
             </div>
           </div>
@@ -288,7 +287,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
           <div class="card-head"><h3>📢 Publicar actualización</h3></div>
           <div class="card-body">
             <div class="update-form">
-              <textarea rows="3" id="upd-text" placeholder="Escribí el mensaje para todos los usuarios..."></textarea>
+              <textarea rows="3" id="upd-text" maxlength="1000" placeholder="Escribí el mensaje para todos los usuarios..."></textarea>
               <div class="update-form-row">
                 <select class="update-type" id="upd-type">
                   <option value="notif">🔔 Notificación</option>
@@ -338,7 +337,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
                 <a href="https://console.groq.com" target="_blank" style="color:#FF6B00;">console.groq.com</a>
               </div>
               <div style="display:flex;gap:8px;">
-                <input type="text" id="bot-api-key" placeholder="gsk_..."
+                <input type="password" id="bot-api-key" autocomplete="off" placeholder="gsk_..."
                   style="flex:1;background:#242424;border:1.5px solid #2E2E2E;color:#fff;border-radius:10px;padding:.65rem 1rem;font-family:Poppins,sans-serif;font-size:.85rem;outline:none;">
                 <button onclick="saveBotKey()"
                   style="background:#FF6B00;color:#fff;border:none;border-radius:10px;padding:.65rem 1.25rem;font-family:Poppins,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">
@@ -379,7 +378,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
                   Obtené tu key gratis en <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#FF6B00;">aistudio.google.com</a>
                 </div>
                 <div style="display:flex;gap:8px;">
-                  <input type="text" id="gemini-api-key" placeholder="AIza..."
+                  <input type="password" id="gemini-api-key" autocomplete="off" placeholder="AIza..."
                     style="flex:1;background:#242424;border:1.5px solid #2E2E2E;color:#fff;border-radius:10px;padding:.65rem 1rem;font-family:Poppins,sans-serif;font-size:.85rem;outline:none;">
                   <button onclick="saveGeminiKey()"
                     style="background:#FF6B00;color:#fff;border:none;border-radius:10px;padding:.65rem 1.25rem;font-family:Poppins,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">
@@ -395,9 +394,11 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
           <div class="card">
             <div class="card-head"><h3>🧠 Modelo de IA</h3></div>
             <div class="card-body">
-              <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:.75rem;">Elegí qué modelo usa el bot. Llama 3.3 70B es el más inteligente.</div>
+              <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:.75rem;">Elegí qué modelo usa el bot. GPT-OSS 120B (OpenAI) es el más inteligente.</div>
               <select id="bot-model"
                 style="width:100%;background:#242424;border:1.5px solid #2E2E2E;color:#fff;border-radius:10px;padding:.65rem 1rem;font-family:Poppins,sans-serif;font-size:.85rem;outline:none;cursor:pointer;margin-bottom:.75rem;">
+                <option value="openai/gpt-oss-120b">⭐ GPT-OSS 120B (OpenAI) — Más inteligente</option>
+                <option value="openai/gpt-oss-20b">⚡ GPT-OSS 20B (OpenAI) — Más rápido</option>
                 <option value="llama-3.3-70b-versatile">⭐ Llama 3.3 70B — Más inteligente</option>
                 <option value="llama-3.1-8b-instant">⚡ Llama 3.1 8B — Más rápido</option>
                 <option value="mixtral-8x7b-32768">🧠 Mixtral 8x7B</option>
@@ -470,1015 +471,928 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 
 <script>
 // ══════════════════════════════════════════════════════════════
-// FIREBASE CONFIG — reemplazá con tu config real de Firebase
+// APLI COP — PANEL ADMIN
+// Usa las MISMAS tablas y el MISMO formato que la app de usuarios:
+//   usuarios · presencia · chats · pedidos · actualizaciones · configuracion_del_bot
 // ══════════════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════════════
-// SUPABASE CONFIG — Reemplaza Firebase y localStorage
-// ══════════════════════════════════════════════════════════════
-var SUPABASE_URL  = 'https://rymogjfcxjguylcdxuqr.supabase.co';
-var SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5bW9namZjeGpndXlsY2R4dXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTg3MjYsImV4cCI6MjA5OTIzNDcyNn0.ImyyyKpx1tdLrwfw5gBF0NxQKNYfv78lnEVBkwNr9ws';
-
+var SUPABASE_URL = 'https://rymogjfcxjguylcdxuqr.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5bW9namZjeGpndXlsY2R4dXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTg3MjYsImV4cCI6MjA5OTIzNDcyNn0.ImyyyKpx1tdLrwfw5gBF0NxQKNYfv78lnEVBkwNr9ws';
 var SB = null;
-var SB_READY = false;
-var _sbChannels = [];
+try { SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+catch(e){ console.error('[APLI COP] No se pudo cargar Supabase:', e); }
 
-(function initSupabase(){
-  try {
-    SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    SB_READY = true;
-    console.log('[APLI COP] Supabase conectado ✅');
-  } catch(e) {
-    console.warn('[APLI COP] Supabase no disponible, usando localStorage:', e.message);
-  }
-})();
-
-// ══════════════════════════════════════════════════════════════
-// CACHE LOCAL (rápido, siempre en sync con Supabase)
-// ══════════════════════════════════════════════════════════════
-function lsGet(k){ try{return JSON.parse(localStorage.getItem('ac_'+k));}catch(e){return null;} }
-function lsSet(k,v){ localStorage.setItem('ac_'+k,JSON.stringify(v)); }
-function lsDel(k){ localStorage.removeItem('ac_'+k); }
-
-// ══════════════════════════════════════════════════════════════
-// STOP ALL REALTIME CHANNELS
-// ══════════════════════════════════════════════════════════════
-function stopAllListeners(){
-  _sbChannels.forEach(function(ch){ try{ SB.removeChannel(ch); }catch(e){} });
-  _sbChannels = [];
-}
-
-// ══════════════════════════════════════════════════════════════
-// USUARIOS
-// ══════════════════════════════════════════════════════════════
-function getUsers(){ return lsGet('users') || {}; }
-function saveUsers(u){ lsSet('users', u); }
-
-function saveUser(email, data){
-  var users=getUsers();
-  users[email]=Object.assign(users[email]||{}, data);
-  saveUsers(users);
-  if(!SB_READY) return;
-  // Use upsert with the exact column names from Supabase
-  var row = {};
-  row['correo electronico'] = email;
-  row['nombre'] = (data.name||'').split(' ')[0]||email.split('@')[0];
-  row['aprobar'] = data.pass||(users[email]&&users[email].pass)||'';
-  row['en linea'] = data.online!==undefined?data.online:true;
-  row['ultima vez visto'] = new Date().toISOString();
-  SB.from('usuarios').upsert(row, {onConflict:'correo electronico'})
-    .then(function(r){ if(r.error) console.warn('saveUser:', r.error.message); });
-}
-
-function listenUsers(){
-  if(!SB_READY) return;
-  SB.from('usuarios').select('*').then(function(r){
-    if(r.error){ console.warn('listenUsers error:', r.error.message); return; }
-    console.log('[APLI COP] Usuarios cargados:', r.data.length, r.data[0]);
-    var users={};
-    (r.data||[]).forEach(function(u){
-      // Try all possible column name variations
-      var email = u['correo electronico']||u['correo_electronico']||u['correo electrónico']||u.email||u.correo||'';
-      if(!email) return;
-      var nombre = u.nombre||u['nombre']||email.split('@')[0];
-      var online = u['en linea']||u['en_linea']||u['en línea']||u.online||false;
-      var lastSeen = u['ultima vez visto']||u['ultima_vez_visto']||u['última vez visto']||u.last_seen||null;
-      users[email]={
-        name: nombre.trim(),
-        pass: u.aprobar||u.pass||'',
-        online: online,
-        lastSeen: lastSeen ? new Date(lastSeen).getTime() : Date.now(),
-        id: u.id
-      };
-    });
-    saveUsers(users);
-    if(document.getElementById('panel-users').classList.contains('on')) refreshUsersTable();
-    if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
-    if(document.getElementById('panel-chat').classList.contains('on')) refreshChatUsers();
-  });
-  var ch = SB.channel('usuarios-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'usuarios'}, function(){
-      SB.from('usuarios').select('*').then(function(r){
-        if(!r.error){
-          var users={};
-          (r.data||[]).forEach(function(u){
-            var email=u['correo electronico']||u['correo_electronico']||u['correo electrónico']||u.email||u.correo||'';
-            if(!email) return;
-            var nombre=u.nombre||email.split('@')[0];
-            var online=u['en linea']||u['en_linea']||u['en línea']||u.online||false;
-            var lastSeen=u['ultima vez visto']||u['ultima_vez_visto']||u['última vez visto']||u.last_seen||null;
-            users[email]={name:nombre.trim(),pass:u.aprobar||u.pass||'',online:online,lastSeen:lastSeen?new Date(lastSeen).getTime():Date.now(),id:u.id};
-          });
-          saveUsers(users);
-          if(document.getElementById('panel-users').classList.contains('on')) refreshUsersTable();
-          if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
-          if(document.getElementById('panel-chat').classList.contains('on')) refreshChatUsers();
-        }
-      });
-    }).subscribe();
-  _sbChannels.push(ch);
-}
-
-// ══════════════════════════════════════════════════════════════
-// PRESENCIA
-// ══════════════════════════════════════════════════════════════
-var _presence = {};
-
-function setPresence(email, online){
-  if(!SB_READY) return;
-  SB.from('presencia').upsert({
-    'correo_electronico': email,
-    'en_linea': online,
-    'ultima_vez_visto': new Date().toISOString()
-  }, {onConflict:'correo_electronico'})
-  .then(function(r){ if(r.error) console.warn('setPresence:', r.error.message); });
-}
-
-function listenPresence(callback){
-  if(!SB_READY) return;
-  // Load initial presence
-  SB.from('presencia').select('*').then(function(r){
-    if(r.error){ console.warn('presencia load:', r.error.message); return; }
-    (r.data||[]).forEach(function(p){
-      var email = p.correo_electronico||p.email||p.user_email||'';
-      if(email) _presence[email] = {online: p.en_linea||p.online||false, lastSeen: p.ultima_vez_visto ? new Date(p.ultima_vez_visto).getTime() : Date.now()};
-    });
-    callback(_presence);
-  });
-  // Realtime
-  var ch = SB.channel('presencia-ch')
-    .on('postgres_changes',{event:'*',schema:'public',table:'presencia'}, function(payload){
-      var p = payload.new||payload.old; if(!p) return;
-      var email = p.correo_electronico||p.email||p.user_email||''; if(!email) return;
-      _presence[email] = {online: p.en_linea||p.online||false, lastSeen: p.ultima_vez_visto ? new Date(p.ultima_vez_visto).getTime() : Date.now()};
-      callback(_presence);
-    }).subscribe();
-  _sbChannels.push(ch);
-}
-
-function isOnline(email){
-  if(_presence[email]) return _presence[email].online && (Date.now()-(_presence[email].lastSeen||0))<60000;
-  var u = getUsers()[email];
-  return u && u.online && (Date.now()-(u.lastSeen||0))<30000;
-}
-
-function markOnline(on){
-  if(!CU) return;
-  var users = getUsers();
-  if(!users[CU.email]) users[CU.email] = {};
-  users[CU.email].online = on;
-  users[CU.email].lastSeen = Date.now();
-  saveUsers(users);
-  setPresence(CU.email, on);
-}
-
-// ══════════════════════════════════════════════════════════════
-// PEDIDOS
-// ══════════════════════════════════════════════════════════════
-function savePedidoSB(email, pedido){
-  if(!SB_READY) return;
-  var users = getUsers();
-  var u = users[email]||{};
-  SB.from('pedidos')
-    .upsert({
-      id:            pedido.supaId || undefined,
-      owner_email:   email,
-      owner_name:    u.name || email.split('@')[0],
-      icon:          pedido.icon||'✨',
-      app_name:      pedido.name||pedido.app_name||'App',
-      titulo:        pedido.name||pedido.app_name||'App',
-      descripcion:   pedido.desc||'',
-      style:         pedido.style||'',
-      phone:         pedido.phone||'',
-      pay:           pedido.pay||'Mercado Pago',
-      precio:        pedido.price||10000,
-      estado:        pedido.status||'pending',
-      credits:       pedido.credits!==undefined ? pedido.credits : 10,
-      resolved:      pedido.resolved||false,
-      first_purchase:pedido.firstPurchase||false,
-      imgs:          JSON.stringify(pedido.imgs||[]),
-      numero:        String(pedido.id||Date.now()),
-      fecha:         pedido.supaCreated || new Date().toISOString()
-    }, { onConflict: 'numero' })
-    .select()
-    .then(function(r){
-      if(r.error){ console.warn('savePedido:', r.error.message); return; }
-      // Store Supabase UUID back in local pedido
-      if(r.data && r.data[0]){
-        pedido.supaId = r.data[0].id;
-        pedido.supaCreated = r.data[0].fecha;
-        lsSet('peds_'+email, pedidos);
-      }
-    });
-}
-
-function deletePedidoSB(email, pedidoId){
-  lsSet('peds_'+email, (lsGet('peds_'+email)||[]).filter(function(p){ return p.id!==pedidoId; }));
-  if(!SB_READY) return;
-  SB.from('pedidos').delete().eq('numero', String(pedidoId)).then(function(r){
-    if(r.error) console.warn('deletePedido:', r.error.message);
-  });
-}
-
-// Alias para compatibilidad
-function savePedidoFS(email, pedido){ savePedidoSB(email, pedido); }
-function deletePedidoFS(email, id){ deletePedidoSB(email, id); }
-
-function sbPedToLocal(p){
-  return {
-    id:           parseInt(p.numero)||Date.now(),
-    supaId:       p.id,
-    supaCreated:  p.fecha,
-    icon:         p.icon||'✨',
-    name:         p.app_name||p.titulo||'App',
-    desc:         p.descripcion||'',
-    style:        p.style||'',
-    phone:        p.phone||'',
-    pay:          p.pay||'Mercado Pago',
-    price:        p.precio||10000,
-    status:       p.estado||'pending',
-    credits:      p.credits!==undefined ? p.credits : 10,
-    resolved:     p.resolved||false,
-    firstPurchase:p.first_purchase||false,
-    imgs:         typeof p.imgs==='string' ? JSON.parse(p.imgs||'[]') : (p.imgs||[]),
-    date:         p.fecha ? new Date(p.fecha).toLocaleDateString('es-AR') : new Date().toLocaleDateString('es-AR'),
-    _owner:       p.owner_email||'',
-    _ownerName:   p.owner_name||''
-  };
-}
-
-function listenPedidosUser(email, callback){
-  if(!SB_READY){ callback(lsGet('peds_'+email)||[]); return; }
-  // Load initial
-  SB.from('pedidos').select('*').eq('owner_email', email).order('fecha',{ascending:false})
-    .then(function(r){
-      if(r.error){ console.warn('listenPedsUser:', r.error.message); return; }
-      var peds = (r.data||[]).map(sbPedToLocal);
-      lsSet('peds_'+email, peds);
-      callback(peds);
-    });
-  // Realtime
-  var ch = SB.channel('pedidos-user-'+email)
-    .on('postgres_changes',{event:'*',schema:'public',table:'pedidos',filter:'owner_email=eq.'+email}, function(payload){
-      SB.from('pedidos').select('*').eq('owner_email',email).order('fecha',{ascending:false})
-        .then(function(r){
-          if(!r.error){
-            var peds=(r.data||[]).map(sbPedToLocal);
-            lsSet('peds_'+email,peds);
-            callback(peds);
-          }
-        });
-    })
-    .subscribe();
-  _sbChannels.push(ch);
-}
-
-var _allPedsCache = [];
-
-function getAllPeds(){ return _allPedsCache.length ? _allPedsCache : (lsGet('admin_all_peds')||[]); }
-
-function listenPedidosAdmin(callback){
-  if(!SB_READY){ callback(getAllPeds()); return; }
-  SB.from('pedidos').select('*').order('fecha',{ascending:false})
-    .then(function(r){
-      if(r.error){ console.warn('listenPedsAdmin:', r.error.message); return; }
-      _allPedsCache = (r.data||[]).map(sbPedToLocal);
-      lsSet('admin_all_peds', _allPedsCache);
-      callback(_allPedsCache);
-    });
-  var ch = SB.channel('pedidos-admin')
-    .on('postgres_changes',{event:'*',schema:'public',table:'pedidos'}, function(){
-      SB.from('pedidos').select('*').order('fecha',{ascending:false})
-        .then(function(r){
-          if(!r.error){
-            _allPedsCache=(r.data||[]).map(sbPedToLocal);
-            lsSet('admin_all_peds',_allPedsCache);
-            callback(_allPedsCache);
-          }
-        });
-    })
-    .subscribe();
-  _sbChannels.push(ch);
-}
-
-function savePedsFor(email, peds){
-  lsSet('peds_'+email, peds);
-  if(SB_READY) peds.forEach(function(p){ savePedidoSB(email, p); });
-}
-
-// ══════════════════════════════════════════════════════════════
-// MENSAJES / CHAT
-// ══════════════════════════════════════════════════════════════
-var ADMIN = '__admin__';
-
-function getChatKey(a,b){ return [a,b].sort().join('|'); }
-function getMsgs(a,b){ return lsGet('msg_'+getChatKey(a,b)) || []; }
-
-function saveMsgs(a,b,msgs){
-  var key = getChatKey(a,b);
-  lsSet('msg_'+key, msgs);
-  if(!SB_READY) return;
-  // Save only the last message to Supabase (avoid re-saving all on every message)
-  var last = msgs[msgs.length-1];
-  if(!last) return;
-  SB.from('chats').insert({
-    chat_key:   key,
-    from_email: last.from||a,
-    texto:      last.type==='text' ? last.text : '',
-    tipo:       last.type||'texto',
-    data:       last.data||null,
-    filename:   last.filename||null,
-    time_str:   last.time||nowT()
-  }).then(function(r){ if(r.error) console.warn('saveMsgs:', r.error.message); });
-}
-
-function listenMsgs(a, b, callback){
-  if(!SB_READY) return;
-  var key = getChatKey(a,b);
-  var safeKey = key.replace(/[^a-zA-Z0-9]/g,'-');
-  SB.from('chats').select('mensajes').eq('llave', key).single()
-    .then(function(r){
-      if(r.error && r.error.code !== 'PGRST116'){ console.warn('listenMsgs:', r.error.message); return; }
-      var msgs = (r.data && r.data.mensajes) ? r.data.mensajes : [];
-      lsSet('msg_'+key, msgs);
-      callback(msgs);
-    });
-  var ch = SB.channel('chat-'+safeKey)
-    .on('postgres_changes',{event:'*',schema:'public',table:'chats',filter:'llave=eq.'+key}, function(payload){
-      var msgs = (payload.new && payload.new.mensajes) ? payload.new.mensajes : [];
-      lsSet('msg_'+key, msgs);
-      callback(msgs);
-    })
-    .subscribe();
-  _sbChannels.push(ch);
-}
-
-// ══════════════════════════════════════════════════════════════
-// NOTIFICACIONES / UPDATES
-// ══════════════════════════════════════════════════════════════
-function saveUpdate(update){
-  var updates = lsGet('updates') || [];
-  updates.unshift(update); lsSet('updates', updates);
-  if(!SB_READY) return;
-  SB.from('actualizaciones').insert({texto:update.text||'',tipo:update.type||'notif',date_str:update.date||'',time_str:update.time||''})
-    .then(function(r){ if(r.error) console.warn('saveUpdate:', r.error.message); });
-}
-
-function listenUpdates(callback){
-  if(!SB_READY) return;
-  SB.from('actualizaciones').select('*').order('created_at',{ascending:false}).limit(50)
-    .then(function(r){
-      if(r.error){ console.warn('listenUpdates:', r.error.message); return; }
-      var updates=(r.data||[]).map(function(n){
-        return{id:new Date(n.created_at||Date.now()).getTime(),text:n.texto||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};
-      });
-      lsSet('updates', updates); callback(updates);
-    });
-  var ch = SB.channel('act-ch')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'actualizaciones'}, function(){
-      SB.from('actualizaciones').select('*').order('created_at',{ascending:false}).limit(50).then(function(r){
-        if(!r.error){
-          var u=(r.data||[]).map(function(n){return{id:new Date(n.created_at||Date.now()).getTime(),text:n.texto||'',type:n.tipo||'notif',date:n.date_str||'',time:n.time_str||''};});
-          lsSet('updates',u); callback(u);
-        }
-      });
-    }).subscribe();
-  _sbChannels.push(ch);
-}
-
-// ══════════════════════════════════════════════════════════════
-// BOT CONFIG
-// ══════════════════════════════════════════════════════════════
-function saveBotConfig(key, value){
-  lsSet(key, value);
-  if(!SB_READY) return;
-  SB.from('configuracion_del_bot').upsert({llave:key, valor:value},{onConflict:'llave'})
-    .then(function(r){ if(r.error) console.warn('saveBotConfig:', r.error.message); });
-}
-
-function listenBotConfig(callback){
-  if(!SB_READY) return;
-  SB.from('configuracion_del_bot').select('llave,valor').then(function(r){
-    if(r.error){ console.warn('listenBotConfig:', r.error.message); return; }
-    var cfg={};
-    (r.data||[]).forEach(function(row){ cfg[row.llave]=row.valor; lsSet(row.llave,row.valor); });
-    callback(cfg);
-  });
-  var ch = SB.channel('botcfg-ch')
-    .on('postgres_changes',{event:'*',schema:'public',table:'configuracion_del_bot'}, function(){
-      SB.from('configuracion_del_bot').select('llave,valor').then(function(r){
-        if(!r.error){var cfg={};(r.data||[]).forEach(function(row){cfg[row.llave]=row.valor;lsSet(row.llave,row.valor);});callback(cfg);}
-      });
-    }).subscribe();
-  _sbChannels.push(ch);
-}
-
-// ══════════════════════════════════════════════════════════════
-// CRÉDITOS
-// ══════════════════════════════════════════════════════════════
-function saveCredito(email, cantidad, motivo){
-  if(!SB_READY) return;
-  var users = getUsers();
-  var userId = users[email]&&users[email].id;
-  if(!userId) return;
-  SB.from('usuarios').insert({ usuario_id:userId, cantidad:cantidad, motivo:motivo||'' })
-    .then(function(r){ if(r.error) console.warn('saveCredito:', r.error.message); });
-}
-
-// ══════════════════════════════════════════════════════════════
-// LEGACY ALIAS (para compatibilidad con código existente)
-// ══════════════════════════════════════════════════════════════
-var FB_READY = false; // ya no usamos Firebase, pero dejamos la var para no romper nada
-
-function emailId(email){ return (email||'').replace(/\./g,'_').replace(/@/g,'__at__'); }
-function idToEmail(id){ return (id||'').replace(/__at__/g,'@').replace(/_/g,'.'); }
-
+var T_USERS='usuarios', T_PRES='presencia', T_CHATS='chats', T_PEDS='pedidos', T_UPD='actualizaciones', T_BOT='configuracion_del_bot';
 var ADMIN='__admin__';
 
-// ── getAllPeds for admin — reads from Firestore cache ─────────
-var _allPedsCache = [];
+// PIN y clave del bot guardados como "huella" (hash): ya no se pueden leer mirando el código.
+// Para cambiarlos ver el documento de cambios (sección "Cambiar el PIN").
+var PIN_HASH='ace8aca73a41064125bf7f46aedefc7c705ca03f0658d448e639308e0a5bc503';
+var BOT_KEY_HASH='facac0afa44f97825cc96978697987318b177527d605cda292076363524a241c';
 
-function getAllPeds(){
-  return _allPedsCache.length ? _allPedsCache : (lsGet('admin_all_peds')||[]);
-}
+// Estado en memoria
+var _users={};          // email -> {name, online, lastSeen}
+var _presence={};       // email -> {online, lastSeen}
+var _peds=[];           // pedidos
+var _updates=[];        // actualizaciones
+var _chats={};          // email del usuario -> lista de mensajes con soporte
+var _chatStamp={};      // llave -> actualizado_en (para no bajar todo cada vez)
+var _botCfg={};
+var _sbChannels=[];
+var _pollTimer=null;
+var currentChatUser=null;
+var pedsFilter='all';
+var adminOn=false;
 
-function savePedsFor(email, peds){
-  lsSet('peds_'+email, peds);
-  if(FB_READY) peds.forEach(function(p){ savePedidoFS(email, p); });
-}
+// ══════════════════════════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════════════════════════
+function nowT(){return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});}
+function nowD(){return new Date().toLocaleDateString('es-AR');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escBr(s){return esc(s).replace(/\n/g,'<br>');}
+function safeSrc(s){s=String(s||'');return (/^data:(image|video|application|text|audio)\//i.test(s)||/^https:\/\//i.test(s))?s:'';}
+function avColor(email){email=String(email||'');var c=['#FF6B00','#3A8FC7','#6B48FF','#E91E8C','#00897B','#F57C00'];var s=0;for(var i=0;i<email.length;i++)s+=email.charCodeAt(i);return c[s%c.length];}
+function initialOf(s){return (String(s||'?').trim().charAt(0)||'?').toUpperCase();}
+function isPanelOn(name){var p=document.getElementById('panel-'+name);return !!(p&&p.classList.contains('on'));}
 
-
-// ── PIN ─────────────────────────────────────────────────────
-var pinVal='';
-window.onload=function(){
-  if(localStorage.getItem('ac_admin_session')==='1') enterAdmin();
-  document.addEventListener('keydown',function(e){
-    if(document.getElementById('pg-pin').classList.contains('on')){
-      if(e.key>='0'&&e.key<='9') pinPress(e.key);
-      if(e.key==='Backspace') pinDel();
+// SHA-256 en JavaScript puro (por si el navegador no tiene crypto.subtle, por ejemplo abriendo el archivo sin https)
+function sha256Fallback(str){
+  function rr(n,x){return (x>>>n)|(x<<(32-n));}
+  var K=[],H=[],p=2,c=0;
+  function isP(n){for(var f=2;f*f<=n;f++)if(n%f===0)return false;return true;}
+  while(c<64){if(isP(p)){if(c<8)H[c]=(Math.pow(p,1/2)*4294967296)|0;K[c]=(Math.pow(p,1/3)*4294967296)|0;c++;}p++;}
+  var bytes=Array.from(new TextEncoder().encode(str)), bl=bytes.length*8;
+  bytes.push(0x80); while(bytes.length%64!==56) bytes.push(0);
+  for(var i=7;i>=0;i--) bytes.push(i>=4?0:(bl>>>(i*8))&255);
+  var w=new Array(64);
+  for(var j=0;j<bytes.length;j+=64){
+    for(var t=0;t<16;t++) w[t]=(bytes[j+t*4]<<24)|(bytes[j+t*4+1]<<16)|(bytes[j+t*4+2]<<8)|bytes[j+t*4+3];
+    for(t=16;t<64;t++){var s0=rr(7,w[t-15])^rr(18,w[t-15])^(w[t-15]>>>3),s1=rr(17,w[t-2])^rr(19,w[t-2])^(w[t-2]>>>10);w[t]=(w[t-16]+s0+w[t-7]+s1)|0;}
+    var a=H[0],b=H[1],cc=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(t=0;t<64;t++){
+      var S1=rr(6,e)^rr(11,e)^rr(25,e),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[t]+w[t])|0;
+      var S0=rr(2,a)^rr(13,a)^rr(22,a),mj=(a&b)^(a&cc)^(b&cc),t2=(S0+mj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=cc;cc=b;b=a;a=(t1+t2)|0;
     }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+cc)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  return H.map(function(x){return ('00000000'+(x>>>0).toString(16)).slice(-8);}).join('');
+}
+function sha256Hex(text){
+  if(!(window.crypto&&crypto.subtle)) return Promise.resolve(sha256Fallback(text));
+  return crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)).then(function(b){
+    return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+  }).catch(function(){return sha256Fallback(text);});
+}
+
+// Guarda tolerando columnas que no existan en la tabla (igual que la app de usuarios)
+function sbSafe(table, op, row, opts, tries){
+  tries=tries||0; opts=opts||{};
+  var q=SB.from(table), p;
+  if(op==='insert') p=q.insert(row);
+  else if(op==='upsert') p=q.upsert(row, opts.upsert||{});
+  else { p=q.update(row); if(opts.eq) p=p.eq(opts.eq[0],opts.eq[1]); }
+  return p.then(function(r){
+    if(!r.error || tries>12) return r;
+    var msg=r.error.message||'';
+    var m=msg.match(/Could not find the '([^']+)' column/);
+    if(m && Object.prototype.hasOwnProperty.call(row,m[1])){
+      var row2=Object.assign({},row); delete row2[m[1]];
+      if(!Object.keys(row2).length) return r;
+      console.warn('[APLI COP] La tabla '+table+' no tiene la columna "'+m[1]+'", se guarda sin ese dato.');
+      return sbSafe(table,op,row2,opts,tries+1);
+    }
+    // La tabla no tiene la columna marcada como "única": se actualiza y, si no existía, se crea
+    if(op==='upsert' && (r.error.code==='42P10'||/no unique or exclusion constraint/i.test(msg)) && opts.upsert && opts.upsert.onConflict){
+      var col=opts.upsert.onConflict;
+      return sbSafe(table,'update',row,{eq:[col,row[col]],select:true},tries+1).then(function(u){
+        if(u.error) return u;
+        if(u.data&&u.data.length) return u;
+        return sbSafe(table,'insert',row,{},tries+1);
+      });
+    }
+    if(/invalid input syntax for type (timestamp|date)/i.test(msg) && typeof row.actualizado_en==='number'){
+      var row3=Object.assign({},row); row3.actualizado_en=new Date(row.actualizado_en).toISOString();
+      return sbSafe(table,op,row3,opts,tries+1);
+    }
+    return r;
   });
-};
+}
+
+function compressImage(file, maxSide, quality){
+  maxSide=maxSide||1280; quality=quality||0.75;
+  return new Promise(function(resolve,reject){
+    var r=new FileReader(); r.onerror=reject;
+    r.onload=function(ev){
+      var img=new Image();
+      img.onerror=function(){resolve(ev.target.result);};
+      img.onload=function(){
+        var w=img.width,h=img.height,s=Math.min(1,maxSide/Math.max(w,h));
+        var c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        try{resolve(c.toDataURL('image/jpeg',quality));}catch(e){resolve(ev.target.result);}
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+var toastTimer;
+function toast(ico,msg){
+  var t=document.getElementById('toast-admin'); t.textContent=ico+' '+msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('on');},3500);
+}
+function openLB(src){document.getElementById('lb-admin-img').src=src;document.getElementById('lb-admin').classList.add('on');}
+function closeLB(){document.getElementById('lb-admin').classList.remove('on');}
+
+// ══════════════════════════════════════════════════════════════
+// PIN
+// ══════════════════════════════════════════════════════════════
+var pinVal='', pinFails=0, pinLockUntil=0;
 function pinPress(n){
-  if(pinVal.length>=4) return;
+  if(Date.now()<pinLockUntil){document.getElementById('pin-err').textContent='⏳ Esperá unos segundos';return;}
+  if(pinVal.length>=5) return;
   pinVal+=n; updateDots();
-  if(pinVal.length===4) setTimeout(checkPin,200);
+  if(pinVal.length===5) setTimeout(checkPin,150);
 }
 function pinDel(){pinVal=pinVal.slice(0,-1);updateDots();document.getElementById('pin-err').textContent='';}
-function updateDots(){for(var i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinVal.length);}
+function updateDots(){for(var i=0;i<5;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinVal.length);}
 function checkPin(){
-  if(pinVal==='1310'){
-    localStorage.setItem('ac_admin_session','1'); enterAdmin();
-  } else {
-    document.getElementById('pin-err').textContent='❌ PIN incorrecto';
-    pinVal=''; updateDots();
-    var d=document.getElementById('pin-dots'); d.style.animation='none'; d.offsetHeight; d.style.animation='shake .4s ease';
-  }
+  var tryPin=pinVal;
+  sha256Hex('aplicop-pin:'+tryPin).then(function(h){
+    if(h&&h===PIN_HASH){
+      pinFails=0;
+      try{sessionStorage.setItem('ac_admin_session',PIN_HASH);}catch(e){}
+      enterAdmin();
+    } else {
+      pinFails++;
+      if(pinFails>=5){pinLockUntil=Date.now()+30000;pinFails=0;document.getElementById('pin-err').textContent='❌ Demasiados intentos. Esperá 30 segundos';}
+      else document.getElementById('pin-err').textContent='❌ PIN incorrecto';
+      pinVal=''; updateDots();
+      var d=document.getElementById('pin-dots'); d.style.animation='none'; void d.offsetHeight; d.style.animation='shake .4s ease';
+    }
+  });
 }
+
 function enterAdmin(){
+  if(adminOn) return;
+  adminOn=true;
   document.getElementById('pg-pin').classList.remove('on');
   document.getElementById('pg-admin').classList.add('on');
-  refreshAll();
-  setInterval(refreshAll,3000);
+  startAdminListeners();
+  renderAll();
 }
 function adminLogout(){
-  localStorage.removeItem('ac_admin_session');
+  adminOn=false;
+  try{sessionStorage.removeItem('ac_admin_session');localStorage.removeItem('ac_admin_session');}catch(e){}
+  stopAllListeners();
+  botUnlocked=false; hideBotContent();
+  currentChatUser=null;
   pinVal=''; updateDots(); document.getElementById('pin-err').textContent='';
   document.getElementById('pg-admin').classList.remove('on');
   document.getElementById('pg-pin').classList.add('on');
 }
 
-// ── NAV ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CARGA DE DATOS + TIEMPO REAL
+// (Antes estas funciones existían pero NUNCA se llamaban, y usaban tablas con otro nombre)
+// ══════════════════════════════════════════════════════════════
+function stopAllListeners(){
+  _sbChannels.forEach(function(ch){try{SB.removeChannel(ch);}catch(e){}});
+  _sbChannels=[]; clearInterval(_pollTimer); _pollTimer=null;
+}
+
+function startAdminListeners(){
+  stopAllListeners();
+  if(!SB){toast('❌','No se pudo conectar con la base de datos');return;}
+  loadUsers(); loadPresence(); loadPeds(); loadUpdates(); loadBotConfig(); loadAdminChats(true);
+
+  _sbChannels.push(SB.channel('adm-peds').on('postgres_changes',{event:'*',schema:'public',table:T_PEDS},function(){loadPeds();}).subscribe());
+  _sbChannels.push(SB.channel('adm-users').on('postgres_changes',{event:'*',schema:'public',table:T_USERS},function(){loadUsers();}).subscribe());
+  _sbChannels.push(SB.channel('adm-upd').on('postgres_changes',{event:'*',schema:'public',table:T_UPD},function(){loadUpdates();}).subscribe());
+  _sbChannels.push(SB.channel('adm-bot').on('postgres_changes',{event:'*',schema:'public',table:T_BOT},function(){loadBotConfig();}).subscribe());
+  _sbChannels.push(SB.channel('adm-pres').on('postgres_changes',{event:'*',schema:'public',table:T_PRES},function(payload){
+    var p=payload.new||{}; var e=p.correo_electronico||p.email||''; if(!e) return;
+    _presence[e]={online:!!p.en_linea,lastSeen:p.ultima_vez_visto?new Date(p.ultima_vez_visto).getTime():Date.now()};
+    renderPresenceViews();
+  }).subscribe());
+  _sbChannels.push(SB.channel('adm-chats').on('postgres_changes',{event:'*',schema:'public',table:T_CHATS},function(payload){
+    var row=payload.new||{};
+    if(row.llave&&String(row.llave).split('|').indexOf(ADMIN)>=0&&row.mensajes) applyAdminChat(row.llave,row.mensajes);
+  }).subscribe());
+
+  // Revisión periódica por si el tiempo real falla: chats cada 6 s, el resto cada 30 s
+  var tick=0;
+  _pollTimer=setInterval(function(){
+    if(!adminOn||document.hidden) return;
+    loadAdminChats(false); tick++;
+    if(tick%5===0){loadPeds();loadUsers();loadPresence();loadUpdates();}
+  },6000);
+}
+
+function loadUsers(){
+  SB.from(T_USERS).select('*').then(function(r){
+    if(r.error){console.warn('usuarios:',r.error.message);return;}
+    var users={};
+    (r.data||[]).forEach(function(u){
+      var email=(u['correo electronico']||u['correo_electronico']||u.email||'').toLowerCase();
+      if(!email) return;
+      var ls=u['ultima vez visto']||u['ultima_vez_visto']||null;
+      users[email]={name:String(u.nombre||email.split('@')[0]).trim(),online:!!(u['en linea']||u['en_linea']),lastSeen:ls?new Date(ls).getTime():0};
+    });
+    _users=users;
+    renderDash(); renderUsersTable(); renderChatUsers();
+  });
+}
+
+function loadPresence(){
+  SB.from(T_PRES).select('*').then(function(r){
+    if(r.error) return;
+    (r.data||[]).forEach(function(p){
+      var e=p.correo_electronico||p.email||''; if(!e) return;
+      _presence[e]={online:!!p.en_linea,lastSeen:p.ultima_vez_visto?new Date(p.ultima_vez_visto).getTime():0};
+    });
+    renderPresenceViews();
+  });
+}
+
+function isOnline(email){
+  var p=_presence[email];
+  if(p) return p.online&&(Date.now()-(p.lastSeen||0))<150000;
+  var u=_users[email];
+  return !!(u&&u.online&&(Date.now()-(u.lastSeen||0))<150000);
+}
+function renderPresenceViews(){
+  renderDash(); renderUsersTable(); renderChatUsers();
+  if(currentChatUser) renderConvoStatus();
+}
+
+function parseImgs(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v;
+  try{var a=JSON.parse(v);return Array.isArray(a)?a:[];}catch(e){return [];}
+}
+function sbPedToLocal(p){
+  var fecha=p.fecha||p.created_at||null;
+  return {
+    key:p.id!==undefined&&p.id!==null?['id',p.id]:['numero',p.numero],
+    icon:p.icon||'✨', name:p.app_name||p.titulo||'App',
+    desc:p.descripcion||'', style:p.style||'', phone:p.phone||'', email:p.email||'',
+    pay:p.pay||'Mercado Pago', price:p.precio||10000,
+    status:p.estado||'pending', credits:(p.credits!==undefined&&p.credits!==null)?p.credits:10,
+    resolved:!!p.resolved||p.estado==='resolved', firstPurchase:!!p.first_purchase,
+    imgs:parseImgs(p.imgs),
+    date:fecha?new Date(fecha).toLocaleDateString('es-AR'):'',
+    sortKey:fecha?new Date(fecha).getTime():(Number(p.id)||Number(p.numero)||0),
+    _owner:(p.owner_email||'').toLowerCase(), _ownerName:p.owner_name||''
+  };
+}
+function pedUid(p){return p.key[0]+':'+p.key[1];}
+function findPed(uid){return _peds.find(function(p){return pedUid(p)===uid;});}
+
+function loadPeds(){
+  // Se ordena acá (antes se pedía ordenar por una columna que podía no existir y no se veía nada)
+  SB.from(T_PEDS).select('*').then(function(r){
+    if(r.error){console.warn('pedidos:',r.error.message);return;}
+    _peds=(r.data||[]).map(sbPedToLocal).sort(function(a,b){return b.sortKey-a.sortKey;});
+    renderDash(); renderPeds(); renderBadges(); renderUsersTable();
+  });
+}
+
+function loadUpdates(){
+  SB.from(T_UPD).select('*').then(function(r){
+    if(r.error){console.warn('actualizaciones:',r.error.message);return;}
+    _updates=(r.data||[]).map(function(n){
+      return {rowId:n.id, created:n.created_at, ts:new Date(n.created_at||0).getTime()||0, text:n.texto||'', type:n.tipo||'notif', date:n.date_str||'', time:n.time_str||''};
+    }).sort(function(a,b){return b.ts-a.ts;}).slice(0,100);
+    renderUpdates();
+  });
+}
+
+function loadBotConfig(){
+  SB.from(T_BOT).select('llave,valor').then(function(r){
+    if(r.error){console.warn('configuracion_del_bot:',r.error.message);return;}
+    _botCfg={};
+    (r.data||[]).forEach(function(row){_botCfg[row.llave]=row.valor;});
+    if(botUnlocked) loadBotSettings();
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHAT (mismo formato que la app: tabla "chats", llave "__admin__|correo", lista de mensajes)
+// ══════════════════════════════════════════════════════════════
+function getChatKey(a,b){return [a,b].sort().join('|');}
+function userOfKey(key){var p=String(key).split('|');return p[0]===ADMIN?p[1]:p[0];}
+function newMsgId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function msgKey(m){return m.id||(m.from+'|'+m.time+'|'+String(m.text||m.filename||'').slice(0,60));}
+function mergeMsgs(server,local){
+  var seen={},out=[];
+  (server||[]).concat(local||[]).forEach(function(m){if(!m)return;var k=msgKey(m);if(!seen[k]){seen[k]=1;out.push(m);}});
+  return out;
+}
+function lastRead(email){return parseInt(localStorage.getItem('admin_lr_'+email)||'0');}
+function setLastRead(email,n){try{localStorage.setItem('admin_lr_'+email,String(n));}catch(e){}}
+function unreadOf(email){
+  var msgs=_chats[email]||[]; var lr=lastRead(email);
+  return msgs.filter(function(m,i){return i>=lr&&m.from!==ADMIN;}).length;
+}
+
+var _firstChatLoad=true;
+function applyAdminChat(key,msgs){
+  var email=userOfKey(key); if(!email) return;
+  var prev=_chats[email]||[];
+  var pending=prev.filter(function(m){return m._pending||m._failed;});
+  var merged=mergeMsgs(msgs||[],pending);
+  var before=unreadOf(email);
+  var changed=merged.length!==prev.length;
+  _chats[email]=merged;
+  if(currentChatUser===email&&isPanelOn('chat')) setLastRead(email,merged.length);
+  var after=unreadOf(email);
+  if(!_firstChatLoad&&after>before){
+    var last=merged[merged.length-1]||{};
+    var name=(_users[email]&&_users[email].name)||email;
+    toast('💬',name+': '+(last.type==='text'?String(last.text||'').substring(0,60):'📎 Archivo'));
+  }
+  if(changed&&currentChatUser===email) renderAdminConvo();
+  renderChatUsers(); renderBadges();
+}
+
+function loadAdminChats(full){
+  // Primero se fija qué conversaciones cambiaron y baja solo esas
+  var q=full?SB.from(T_CHATS).select('llave,mensajes,actualizado_en'):SB.from(T_CHATS).select('llave,actualizado_en');
+  q.like('llave','%'+ADMIN+'%').then(function(r){
+    if(r.error){
+      // La tabla no tiene "actualizado_en": se baja todo
+      SB.from(T_CHATS).select('llave,mensajes').like('llave','%'+ADMIN+'%').then(function(r2){
+        if(r2.error){console.warn('chats:',r2.error.message);return;}
+        (r2.data||[]).forEach(function(row){if(String(row.llave).split('|').indexOf(ADMIN)>=0) applyAdminChat(row.llave,row.mensajes||[]);});
+        _firstChatLoad=false;
+      });
+      return;
+    }
+    var changedKeys=[];
+    (r.data||[]).forEach(function(row){
+      if(String(row.llave).split('|').indexOf(ADMIN)<0) return;
+      var stamp=String(row.actualizado_en||'');
+      if(full&&row.mensajes){_chatStamp[row.llave]=stamp;applyAdminChat(row.llave,row.mensajes||[]);return;}
+      if(_chatStamp[row.llave]!==stamp||!stamp) changedKeys.push(row.llave);
+      _chatStamp[row.llave]=stamp;
+    });
+    if(full){_firstChatLoad=false;return;}
+    if(!changedKeys.length) return;
+    SB.from(T_CHATS).select('llave,mensajes').in('llave',changedKeys).then(function(r3){
+      if(r3.error) return;
+      (r3.data||[]).forEach(function(row){applyAdminChat(row.llave,row.mensajes||[]);});
+    });
+  });
+}
+
+function loadOneChat(email){
+  var key=getChatKey(ADMIN,email);
+  SB.from(T_CHATS).select('mensajes').eq('llave',key).maybeSingle().then(function(r){
+    if(r.error) return;
+    applyAdminChat(key,(r.data&&r.data.mensajes)||[]);
+    renderAdminConvo();
+  });
+}
+
+// ENVÍO DE MENSAJES (igual que en la app): usa la función "agregar_mensaje" si existe;
+// si no, guarda y verifica que el mensaje haya quedado (reintenta si se cruzó con otro).
+var _outbox={}, _flushing={}, _waiters={}, _noRpc=false;
+function cleanMsg(m){var c=Object.assign({},m);delete c._pending;delete c._failed;return c;}
+function sendViaRpc(key,msg){
+  if(_noRpc) return Promise.resolve(false);
+  return SB.rpc('agregar_mensaje',{p_llave:key,p_mensaje:cleanMsg(msg)}).then(function(r){
+    if(r.error){_noRpc=true;return false;}
+    return true;
+  },function(){_noRpc=true;return false;});
+}
+function markSent(email,key,ids){
+  var out=_outbox[key]||{};
+  ids.forEach(function(i){delete out[i];});
+  (_chats[email]||[]).forEach(function(m){if(ids.indexOf(m.id)>=0){delete m._pending;delete m._failed;}});
+  if(currentChatUser===email) renderAdminConvo();
+}
+function adminSaveMsg(email,msg){
+  var key=getChatKey(ADMIN,email);
+  msg.id=newMsgId(); msg.ts=Date.now(); msg.from=ADMIN; msg.time=msg.time||nowT(); msg._pending=true;
+  _chats[email]=(_chats[email]||[]).concat([msg]);
+  setLastRead(email,_chats[email].length);
+  if(currentChatUser===email) renderAdminConvo();
+  (_outbox[key]=_outbox[key]||{})[msg.id]=cleanMsg(msg);
+  return new Promise(function(resolve){
+    sendViaRpc(key,msg).then(function(ok){
+      if(ok){markSent(email,key,[msg.id]);resolve(true);return;}
+      (_waiters[key]=_waiters[key]||[]).push(resolve);
+      flushChat(email,key,0);
+    });
+  });
+}
+function finishWaiters(key,ok){var w=_waiters[key]||[];_waiters[key]=[];w.forEach(function(f){f(ok);});}
+function flushChat(email,key,attempt){
+  if(_flushing[key]){_flushing[key]=2;return;}
+  _flushing[key]=1;
+  var ids=[];
+  SB.from(T_CHATS).select('mensajes').eq('llave',key).maybeSingle().then(function(r){
+    if(r.error) throw r.error;
+    var server=(r.data&&r.data.mensajes)||[];
+    var out=_outbox[key]||{}; ids=Object.keys(out);
+    var merged=mergeMsgs(server,ids.map(function(i){return out[i];}));
+    return sbSafe(T_CHATS,'upsert',{llave:key,mensajes:merged,participantes:[ADMIN,email],actualizado_en:Date.now()},{upsert:{onConflict:'llave'}});
+  }).then(function(r2){
+    if(r2.error) throw r2.error;
+    return new Promise(function(res){setTimeout(res,600+Math.random()*700);});
+  }).then(function(){
+    return SB.from(T_CHATS).select('mensajes').eq('llave',key).maybeSingle();
+  }).then(function(r3){
+    var list=(r3.data&&r3.data.mensajes)||[]; var have={};
+    list.forEach(function(m){have[msgKey(m)]=1;});
+    var ok=ids.filter(function(i){return have[i];});
+    markSent(email,key,ok); applyAdminChat(key,list);
+    var again=_flushing[key]===2; _flushing[key]=0;
+    if((ok.length<ids.length&&attempt<6)||again){flushChat(email,key,attempt+1);return;}
+    finishWaiters(key,ok.length===ids.length);
+  }).catch(function(err){
+    _flushing[key]=0;
+    console.warn('chat:',err&&err.message);
+    if(attempt<2){setTimeout(function(){flushChat(email,key,attempt+1);},1500);return;}
+    var out=_outbox[key]||{};
+    (_chats[email]||[]).forEach(function(m){if(out[m.id]){m._failed=true;delete m._pending;delete out[m.id];}});
+    toast('❌','No se pudo enviar el mensaje: '+((err&&err.message)||'sin conexión'));
+    if(currentChatUser===email) renderAdminConvo();
+    finishWaiters(key,false);
+  });
+}
+
+function chatEmails(){
+  var set={};
+  Object.keys(_users).forEach(function(e){set[e]=1;});
+  Object.keys(_chats).forEach(function(e){set[e]=1;});
+  return Object.keys(set).sort(function(a,b){
+    var ua=unreadOf(a),ub=unreadOf(b); if(ua!==ub) return ub-ua;
+    var la=_chats[a]&&_chats[a].length?(_chats[a][_chats[a].length-1].ts||0):0;
+    var lb=_chats[b]&&_chats[b].length?(_chats[b][_chats[b].length-1].ts||0):0;
+    if(la!==lb) return lb-la;
+    return a.localeCompare(b);
+  });
+}
+function nameOf(email){return (_users[email]&&_users[email].name)||String(email).split('@')[0];}
+
+function renderChatUsers(){
+  var el=document.getElementById('admin-users'); if(!el) return;
+  var emails=chatEmails();
+  if(!emails.length){el.innerHTML='<div style="color:#9CA3AF;font-size:.82rem;">Sin usuarios registrados todavía</div>';return;}
+  el.innerHTML=emails.map(function(email){
+    var online=isOnline(email); var msgs=_chats[email]||[]; var unread=unreadOf(email);
+    var lastM=msgs[msgs.length-1];
+    var last=lastM?(lastM.type==='text'?String(lastM.text||'').substring(0,60):(lastM.type==='image'?'🖼️ Imagen':'📎 Archivo')):'Sin mensajes';
+    return '<div class="user-item-admin'+(currentChatUser===email?' on':'')+'" data-email="'+esc(email)+'" data-name="'+esc(nameOf(email))+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">'
+      +'<div class="user-av-admin" style="background:'+avColor(email)+'">'+esc(initialOf(nameOf(email)))+'<span class="uod '+(online?'uod-on':'uod-off')+'"></span></div>'
+      +'<div style="flex:1;min-width:0"><div class="uia-name">'+esc(nameOf(email))+' <span style="font-size:.68rem;color:#9CA3AF;font-weight:400">'+esc(email)+'</span></div><div class="uia-last">'+esc(last)+'</div></div>'
+      +'<span class="unread-admin'+(unread>0?' on':'')+'">'+unread+'</span></div>';
+  }).join('');
+}
+
+function openChatWithUser(email,name){
+  if(!email) return;
+  currentChatUser=email;
+  document.getElementById('chat-list-view').style.display='none';
+  document.getElementById('chat-convo-view').style.display='';
+  document.getElementById('ac-av').textContent=initialOf(name||email);
+  document.getElementById('ac-av').style.background=avColor(email);
+  document.getElementById('ac-name').textContent=(name||email)+' · '+email;
+  showPanel('chat',document.querySelectorAll('.nav-link')[2]);
+  renderAdminConvo();
+  loadOneChat(email);
+  setTimeout(function(){var i=document.getElementById('ac-input');if(i)i.focus();},50);
+}
+function closeAdminConvo(){
+  currentChatUser=null;
+  document.getElementById('chat-list-view').style.display='';
+  document.getElementById('chat-convo-view').style.display='none';
+  renderChatUsers();
+}
+function renderConvoStatus(){
+  var online=isOnline(currentChatUser);
+  var st=document.getElementById('ac-status');
+  st.textContent=online?'● en línea':'○ no en línea';
+  st.style.color=online?'#22C55E':'#9CA3AF';
+}
+function renderAdminConvo(){
+  if(!currentChatUser) return;
+  renderConvoStatus();
+  var msgs=_chats[currentChatUser]||[];
+  if(isPanelOn('chat')) setLastRead(currentChatUser,msgs.length);
+  renderBadges();
+  var c=document.getElementById('ac-msgs');
+  if(!msgs.length){c.innerHTML='<div style="text-align:center;color:#666;font-size:.75rem;padding:2rem">Iniciá la conversación</div>';return;}
+  var nearBottom=c.scrollHeight-c.scrollTop-c.clientHeight<120;
+  c.innerHTML=msgs.map(function(m){
+    var out=m.from===ADMIN; var src=safeSrc(m.data); var content;
+    if(m.type==='text') content=escBr(m.text);
+    else if(m.type==='image') content=src?'<img class="amsg-img" src="'+esc(src)+'" onclick="openLB(this.src)">':'🖼️ Imagen no disponible';
+    else if(m.type==='video') content=src?'<video style="max-width:200px;border-radius:8px" controls src="'+esc(src)+'"></video>':'🎥 Video no disponible';
+    else content='<a '+(src?'href="'+esc(src)+'" download="'+esc(m.filename||'archivo')+'"':'')+' style="display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.05);padding:8px;border-radius:8px;color:#fff;text-decoration:none"><span>📎</span><span style="font-size:.75rem">'+esc(m.filename||'archivo')+'</span></a>';
+    var mark=out?(m._pending?' 🕓':(m._failed?' ⚠️ no enviado':' ✓')):'';
+    return '<div class="amsg '+(out?'amsg-out':'amsg-in')+'">'+content+'<div class="amsg-time">'+esc(m.time||'')+mark+'</div></div>';
+  }).join('');
+  if(nearBottom||(msgs.length&&msgs[msgs.length-1].from===ADMIN)) c.scrollTop=c.scrollHeight;
+}
+function adminSendMsg(){
+  var input=document.getElementById('ac-input');var text=input.value.trim();
+  if(!text||!currentChatUser)return;
+  if(text.length>2000) text=text.substring(0,2000);
+  input.value='';
+  adminSaveMsg(currentChatUser,{type:'text',text:text});
+}
+function adminSendImg(event){
+  var file=event.target.files[0]; event.target.value='';
+  if(!file||!currentChatUser)return;
+  var to=currentChatUser;
+  compressImage(file,1280,0.75).then(function(data){
+    adminSaveMsg(to,{type:'image',data:data,filename:file.name});
+  }).catch(function(){toast('❌','No se pudo leer la imagen');});
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════════════════════
 var panelTitles={
   dashboard:['Dashboard','Resumen general de APLI COP'],
   pedidos:['Pedidos','Todos los pedidos recibidos'],
   chat:['Chat con usuarios','Conversaciones en tiempo real'],
   users:['Usuarios','Todos los usuarios registrados'],
   updates:['Actualizaciones','Publicar novedades para los usuarios'],
-  bot:['🤖 Bot IA','Control del asistente virtual de APLI COP'],
+  bot:['🤖 Bot IA','Control del asistente virtual de APLI COP']
 };
 function showPanel(name,el){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-link').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+name).classList.add('on');
-  el.classList.add('on');
+  if(el) el.classList.add('on');
   var t=panelTitles[name]||[name,''];
   document.getElementById('panel-title').textContent=t[0];
   document.getElementById('panel-sub').textContent=t[1];
-  refreshAll();
-  // Force fresh Supabase load for users panel
-  if(name==='users') listenUsers();
-  if(name==='pedidos') refreshPeds();
-  if(name==='chat') refreshChatUsers();
+  if(name==='chat'&&currentChatUser) renderAdminConvo();
+  if(name==='chat') renderChatUsers();
+  if(name==='users') renderUsersTable();
+  if(name==='pedidos') renderPeds();
+  if(name==='updates') renderUpdates();
+  if(name==='dashboard') renderDash();
 }
 
-// ── REFRESH ─────────────────────────────────────────────────
-var currentChatUser=null;
-var pedsFilter='all';
-var _presence={};
-function startAdminListeners(){
-  stopAllListeners();
-  listenPedidosAdmin(function(peds){
-    _allPedsCache=peds;
-    lsSet('admin_all_peds',peds);
-    if(document.getElementById('panel-pedidos').classList.contains('on')) refreshPeds();
-    if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
-    refreshBadges();
-  });
-  listenUsers();
-  listenUpdates(function(){
-    if(document.getElementById('panel-updates').classList.contains('on')) refreshUpdates();
-  });
-  listenPresence(function(presence){
-    _presence=presence;
-    if(document.getElementById('panel-chat').classList.contains('on')) refreshChatUsers();
-    if(document.getElementById('panel-dashboard').classList.contains('on')) refreshDash();
-  });
-  listenBotConfig(function(){});
-}
+function renderAll(){renderDash();renderPeds();renderChatUsers();renderUsersTable();renderUpdates();renderBadges();}
 
-function refreshDash(){
-  var users=getUsers(); var all=getAllPeds();
-  var su=document.getElementById('s-users'); if(su)su.textContent=Object.keys(users).length;
-  var sp=document.getElementById('s-peds'); if(sp)sp.textContent=all.length;
-  var spn=document.getElementById('s-pend'); if(spn)spn.textContent=all.filter(function(p){return !p.resolved;}).length;
-  var sr=document.getElementById('s-res'); if(sr)sr.textContent=all.filter(function(p){return p.resolved;}).length;
-  // Recent pedidos
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+var ST_COLORS={pending:'#FBB724',progress:'#60A5FA',done:'#4ADE80',resolved:'#4ADE80'};
+var ST_LABELS={pending:'⏳ Pendiente',progress:'🔧 En proceso',done:'✅ Listo',resolved:'✅ Resuelto'};
+function renderDash(){
+  var su=document.getElementById('s-users'); if(su)su.textContent=Object.keys(_users).length;
+  var sp=document.getElementById('s-peds'); if(sp)sp.textContent=_peds.length;
+  var spn=document.getElementById('s-pend'); if(spn)spn.textContent=_peds.filter(function(p){return !p.resolved;}).length;
+  var sr=document.getElementById('s-res'); if(sr)sr.textContent=_peds.filter(function(p){return p.resolved;}).length;
   var dr=document.getElementById('d-recent');
   if(dr){
-    var rec=all.slice(0,3);
+    var rec=_peds.slice(0,5);
     dr.innerHTML=rec.length?rec.map(function(p){
-      var colors={pending:'#FBB724',progress:'#60A5FA',done:'#4ADE80',resolved:'#4ADE80'};
-      var labels={pending:'⏳ Pendiente',progress:'🔧 En proceso',done:'✅ Listo',resolved:'✅ Resuelto'};
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2E2E2E;">'
-        +'<span style="font-size:1.4rem">'+p.icon+'</span>'
-        +'<div style="flex:1"><div style="font-size:.82rem;font-weight:600">'+p.name+'</div>'
-        +'<div style="font-size:.7rem;color:#9CA3AF">'+(p._ownerName||p.owner_name||'')+'  · '+(p.date||'')+'</div></div>'
-        +'<span style="font-size:.7rem;color:'+(colors[p.status]||'#FBB724')+';font-weight:700">'+(labels[p.status]||'⏳ Pendiente')+'</span></div>';
+        +'<span style="font-size:1.4rem">'+esc(p.icon)+'</span>'
+        +'<div style="flex:1"><div style="font-size:.82rem;font-weight:600">'+esc(p.name)+'</div>'
+        +'<div style="font-size:.7rem;color:#9CA3AF">'+esc(p._ownerName||p._owner)+' · '+esc(p.date)+'</div></div>'
+        +'<span style="font-size:.7rem;color:'+(ST_COLORS[p.status]||'#FBB724')+';font-weight:700">'+(ST_LABELS[p.status]||'⏳ Pendiente')+'</span></div>';
     }).join(''):'<div style="color:#9CA3AF;font-size:.82rem;">Sin pedidos todavía</div>';
   }
-  // Online users
   var dol=document.getElementById('d-online');
   if(dol){
-    var onlineEmails=Object.keys(users).filter(function(e){return isOnline(e);});
+    var onlineEmails=Object.keys(_users).filter(isOnline);
     dol.innerHTML=onlineEmails.length?onlineEmails.map(function(e){
-      var u=users[e];
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2E2E2E;">'
-        +'<div class="user-av-admin" style="background:'+avColor(e)+';width:32px;height:32px;font-size:.8rem;">'+(u.name||e)[0].toUpperCase()+'</div>'
-        +'<div><div style="font-size:.82rem;font-weight:600">'+(u.name||e)+'</div><div style="font-size:.7rem;color:#9CA3AF">'+e+'</div></div>'
+        +'<div class="user-av-admin" style="background:'+avColor(e)+';width:32px;height:32px;font-size:.8rem;">'+esc(initialOf(nameOf(e)))+'</div>'
+        +'<div><div style="font-size:.82rem;font-weight:600">'+esc(nameOf(e))+'</div><div style="font-size:.7rem;color:#9CA3AF">'+esc(e)+'</div></div>'
         +'<span class="online-pill op-on" style="margin-left:auto">● en línea</span></div>';
     }).join(''):'<div style="color:#9CA3AF;font-size:.82rem;">Ningún usuario en línea ahora</div>';
   }
 }
 
-function refreshAll(){
-  refreshDash(); refreshPeds(); refreshChatUsers(); refreshUsersTable(); refreshUpdates(); refreshBadges();
-  if(currentChatUser) refreshAdminConvo();
-}
-function avColor(email){var c=['#FF6B00','#3A8FC7','#6B48FF','#E91E8C','#00897B','#F57C00'];var s=0;for(var i=0;i<email.length;i++)s+=email.charCodeAt(i);return c[s%c.length];}
-
-function miniPed(p){
-  var colors={pending:'#FBB724',progress:'#60A5FA',done:'#4ADE80',resolved:'#4ADE80'};
-  var labels={pending:'⏳ Pendiente',progress:'🔧 En proceso',done:'✅ Listo',resolved:'✅ Resuelto'};
-  return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2E2E2E;">'
-    +'<span style="font-size:1.4rem">'+p.icon+'</span>'
-    +'<div style="flex:1"><div style="font-size:.82rem;font-weight:600">'+p.name+'</div><div style="font-size:.7rem;color:#9CA3AF">'+p._ownerName+' · '+p.date+'</div></div>'
-    +'<span style="font-size:.7rem;color:'+(colors[p.status]||'#FBB724')+';font-weight:700">'+(labels[p.status]||'⏳ Pendiente')+'</span></div>';
-}
-
-// ── PEDIDOS ─────────────────────────────────────────────────
-function filterPeds(f){pedsFilter=f;refreshPeds();}
-function refreshPeds(){
-  var all=getAllPeds();
+// ══════════════════════════════════════════════════════════════
+// PEDIDOS
+// ══════════════════════════════════════════════════════════════
+function filterPeds(f){pedsFilter=f;renderPeds();}
+function renderPeds(){
+  var el=document.getElementById('peds-list'); if(!el) return;
+  var all=_peds;
   if(pedsFilter==='resolved') all=all.filter(function(p){return p.resolved;});
   else if(pedsFilter==='pending') all=all.filter(function(p){return !p.resolved&&p.status==='pending';});
   else if(pedsFilter==='progress') all=all.filter(function(p){return !p.resolved&&p.status==='progress';});
-  var el=document.getElementById('peds-list');
   el.innerHTML=all.length?all.map(pedAdminHTML).join(''):'<div class="empty-admin"><div class="ea-ico">📭</div><p>No hay pedidos en esta categoría</p></div>';
 }
 function pedAdminHTML(p){
   var sm={pending:'pb-pend',progress:'pb-prog',done:'pb-done',resolved:'pb-res'};
-  var sl={pending:'\u23F3 Pendiente',progress:'\uD83D\uDD27 En proceso',done:'\u2705 Listo',resolved:'\u2705 Resuelto'};
-  var dots=Array.from({length:10},function(_,i){return '<span class="cdot-admin'+(i>=p.credits?' used':'')+'"></span>';}).join('');
-
-  var imgs=(p.imgs||[]);
+  var cr=Math.max(0,Math.min(10,Number(p.credits)||0));
+  var dots=Array.from({length:10},function(_,i){return '<span class="cdot-admin'+(i>=cr?' used':'')+'"></span>';}).join('');
   var mediaHTML='';
+  var imgs=(p.imgs||[]).map(safeSrc).filter(Boolean);
   if(imgs.length){
-    mediaHTML+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">';
-    imgs.forEach(function(src){
-      if(!src)return;
-      var isVideo=src.indexOf('data:video')===0||/\.(mp4|webm|mov)$/i.test(src);
-      var isImg=src.indexOf('data:image')===0||/\.(png|jpg|jpeg|gif|webp)$/i.test(src);
-      if(isVideo){
-        mediaHTML+='<video src="'+src+'" controls style="width:160px;height:110px;border-radius:10px;object-fit:cover;border:1.5px solid #2E2E2E;"></video>';
-      } else if(isImg){
-        mediaHTML+='<img src="'+src+'" onclick="openLB(this.src)" style="width:110px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid #2E2E2E;cursor:pointer;">';
-      } else {
-        mediaHTML+='<div onclick="window.open(\''+src+'\',\'_blank\')" style="display:flex;align-items:center;gap:8px;background:#242424;border:1.5px solid #2E2E2E;border-radius:10px;padding:10px 14px;cursor:pointer;">'
-          +'<span style="font-size:1.6rem;">\uD83D\uDCCE</span>'
-          +'<div style="font-size:.78rem;color:#fff;">Archivo adjunto</div></div>';
-      }
-    });
-    mediaHTML+='</div>';
+    mediaHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">'+imgs.map(function(src){
+      if(/^data:video/i.test(src)||/\.(mp4|webm|mov)$/i.test(src)) return '<video src="'+esc(src)+'" controls style="width:160px;height:110px;border-radius:10px;object-fit:cover;border:1.5px solid #2E2E2E;"></video>';
+      return '<img src="'+esc(src)+'" onclick="openLB(this.src)" style="width:110px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid #2E2E2E;cursor:pointer;">';
+    }).join('')+'</div>';
   }
-
-  var priceTxt=p.price?('$'+(p.price).toLocaleString('es-AR')+' ARS'+(p.firstPurchase?' \uD83C\uDF89 70% OFF':'')):'$10.000 ARS';
-
+  var priceTxt=p.price?('$'+Number(p.price).toLocaleString('es-AR')+' ARS'+(p.firstPurchase?' 🎉 70% OFF':'')):'$10.000 ARS';
+  var uid=esc(pedUid(p));
+  var owner=esc(p._owner), oname=esc(p._ownerName||nameOf(p._owner));
   return '<div class="ped-row">'
-    +'<div class="ped-row-top"><div class="ped-row-ico">'+p.icon+'</div>'
+    +'<div class="ped-row-top"><div class="ped-row-ico">'+esc(p.icon)+'</div>'
     +'<div class="ped-row-info">'
-    +'<div class="ped-row-name">'+p.name+'</div>'
-    +'<div class="ped-row-user">\uD83D\uDC64 '+p._ownerName+' &lt;'+p._owner+'&gt;</div>'
-    +'<div class="ped-row-desc">'+(p.desc||'Sin descripci\u00F3n')+'</div>'
-    +(p.style?'<div class="ped-row-desc">\uD83C\uDFA8 '+p.style+'</div>':'')
-    +'<div class="ped-row-date">\uD83D\uDCC5 '+p.date+' \u00B7 \uD83D\uDCDE '+(p.phone||'-')+' \u00B7 \uD83D\uDCB3 '+p.pay+' \u00B7 \uD83D\uDCB0 '+priceTxt+'</div>'
+    +'<div class="ped-row-name">'+esc(p.name)+'</div>'
+    +'<div class="ped-row-user">👤 '+oname+' &lt;'+owner+'&gt;'+(p.email&&p.email!==p._owner?' · ✉️ '+esc(p.email):'')+'</div>'
+    +'<div class="ped-row-desc">'+(p.desc?escBr(p.desc):'Sin descripción')+'</div>'
+    +(p.style?'<div class="ped-row-desc">🎨 '+esc(p.style)+'</div>':'')
+    +'<div class="ped-row-date">📅 '+esc(p.date||'-')+' · 📞 '+esc(p.phone||'-')+' · 💳 '+esc(p.pay)+' · 💰 '+esc(priceTxt)+'</div>'
     +'</div>'
-    +'<span class="ped-badge '+(sm[p.status]||'pb-pend')+'">'+(sl[p.status]||'\u23F3 Pendiente')+'</span>'
+    +'<span class="ped-badge '+(sm[p.status]||'pb-pend')+'">'+(ST_LABELS[p.status]||'⏳ Pendiente')+'</span>'
     +'</div>'
     +mediaHTML
-    +'<div class="credits-info"><div class="cdots-admin">'+dots+'</div>'+p.credits+'/10 cr\u00E9ditos restantes</div>'
+    +'<div class="credits-info"><div class="cdots-admin">'+dots+'</div>'+cr+'/10 créditos restantes</div>'
     +'<div class="ped-row-acts">'
-    +'<select class="status-sel" onchange="changeStatus(\''+p._owner+'\','+p.id+',this.value)">'
-    +'<option value="pending"'+(p.status==='pending'?' selected':'')+'>Pendiente</option>'
-    +'<option value="progress"'+(p.status==='progress'?' selected':'')+'>En proceso</option>'
-    +'<option value="done"'+(p.status==='done'?' selected':'')+'>Listo</option>'
-    +'</select>'
-    +'<button class="admin-btn btn-resolve" onclick="resolveFromAdmin(\''+p._owner+'\','+p.id+',\''+p._ownerName+'\',\''+p.name+'\')">Marcar resuelto</button>'
-    +'<button class="admin-btn btn-chat" onclick="openChatWithUser(\''+p._owner+'\',\''+p._ownerName+'\')">Chatear</button>'
+    +(p.resolved?'<button class="admin-btn" style="background:#242424;color:#9CA3AF" data-uid="'+uid+'" onclick="reopenPed(this.dataset.uid)">↩️ Reabrir</button>'
+      :'<select class="status-sel" data-uid="'+uid+'" onchange="changeStatus(this.dataset.uid,this.value)">'
+      +'<option value="pending"'+(p.status==='pending'?' selected':'')+'>Pendiente</option>'
+      +'<option value="progress"'+(p.status==='progress'?' selected':'')+'>En proceso</option>'
+      +'<option value="done"'+(p.status==='done'?' selected':'')+'>Listo</option>'
+      +'</select>'
+      +'<button class="admin-btn btn-resolve" data-uid="'+uid+'" onclick="resolveFromAdmin(this.dataset.uid)">Marcar resuelto</button>')
+    +'<button class="admin-btn btn-chat" data-email="'+owner+'" data-name="'+oname+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">Chatear</button>'
     +'</div></div>';
 }
-function changeStatus(owner,id,newStatus){
-  if(SB_READY){
-    SB.from('pedidos').update({estado:newStatus}).eq('numero',String(id))
-      .then(function(r){if(r.error)console.warn('changeStatus:',r.error.message);});
-  }
-  var p=_allPedsCache.find(function(x){return x.id===id;}); if(p)p.status=newStatus;
-  var lp=lsGet('peds_'+owner)||[];var lpi=lp.find(function(x){return x.id===id;});
-  if(lpi){lpi.status=newStatus;lsSet('peds_'+owner,lp);}
-  toast('🔧','Estado actualizado'); refreshAll();
+// Antes se buscaba el pedido por "numero" (que la app nunca guardaba) y no se actualizaba nada
+function changeStatus(uid,newStatus){
+  var p=findPed(uid); if(!p) return;
+  sbSafe(T_PEDS,'update',{estado:newStatus},{eq:p.key}).then(function(r){
+    if(r.error){toast('❌','No se pudo cambiar el estado: '+r.error.message);renderPeds();return;}
+    p.status=newStatus; renderAll(); toast('🔧','Estado actualizado');
+  });
 }
-function resolveFromAdmin(owner,id,ownerName,appName){
-  if(SB_READY){
-    SB.from('pedidos').update({resolved:true,estado:'resolved'}).eq('numero',String(id))
-      .then(function(r){if(r.error)console.warn('resolveFromAdmin:',r.error.message);});
-  }
-  var p=_allPedsCache.find(function(x){return x.id===id;}); if(p){p.resolved=true;p.status='resolved';}
-  var lp=lsGet('peds_'+owner)||[];var lpi=lp.find(function(x){return x.id===id;});
-  if(lpi){lpi.resolved=true;lpi.status='resolved';lsSet('peds_'+owner,lp);}
-  var msgs=getMsgs(ADMIN,owner);
-  msgs.push({type:'text',text:'✅ ¡Hola '+ownerName+'! Tu pedido "'+appName+'" fue marcado como resuelto. Ya podés verlo en "Pedidos Resueltos". ¡Gracias por confiar en APLI COP! 🚀',from:ADMIN,time:nowT()});
-  saveMsgs(ADMIN,owner,msgs);
-  localStorage.setItem('admin_lr_'+owner,msgs.length);
-  toast('✅','Pedido resuelto. Aviso enviado a '+ownerName);
-  refreshAll();
+function resolveFromAdmin(uid){
+  var p=findPed(uid); if(!p) return;
+  if(!confirm('¿Marcar "'+p.name+'" como resuelto y avisarle al usuario?')) return;
+  sbSafe(T_PEDS,'update',{resolved:true,estado:'resolved'},{eq:p.key}).then(function(r){
+    if(r.error){toast('❌','No se pudo actualizar: '+r.error.message);return;}
+    p.resolved=true; p.status='resolved'; renderAll();
+    var who=(p._ownerName||nameOf(p._owner)).split(' ')[0];
+    if(p._owner){
+      adminSaveMsg(p._owner,{type:'text',text:'✅ ¡Hola '+who+'! Tu pedido "'+p.name+'" fue marcado como resuelto. Ya podés verlo en Pedidos → Resueltos. ¡Gracias por confiar en APLI COP! 🚀'}).then(function(ok){
+        toast('✅',ok?'Pedido resuelto. Aviso enviado a '+who:'Pedido resuelto, pero no se pudo mandar el aviso');
+      });
+    }
+  });
 }
-
-// ── CHAT ────────────────────────────────────────────────────
-function refreshChatUsers(){
-  var users=getUsers(); var emails=Object.keys(users);
-  var el=document.getElementById('admin-users');
-  if(!emails.length){el.innerHTML='<div style="color:#9CA3AF;font-size:.82rem;">Sin usuarios registrados todavía</div>';return;}
-  var totalUnread=0;
-  el.innerHTML=emails.map(function(email){
-    var u=users[email]; var online=isOnline(email);
-    var msgs=getMsgs(ADMIN,email);
-    var lastRead=parseInt(localStorage.getItem('admin_lr_'+email)||'0');
-    var unread=msgs.filter(function(m,i){return i>=lastRead&&m.from===email;}).length;
-    if(unread>0) totalUnread+=unread;
-    var last=msgs.length?(msgs[msgs.length-1].type==='text'?msgs[msgs.length-1].text:'📎 Archivo'):'Sin mensajes';
-    return '<div class="user-item-admin'+(currentChatUser===email?' on':'')+'" onclick="openChatWithUser(\''+email+'\',\''+(u.name||email.split('@')[0])+'\')">'
-      +'<div class="user-av-admin" style="background:'+avColor(email)+'">'+(u.name||email)[0].toUpperCase()+'<span class="uod '+(online?'uod-on':'uod-off')+'"></span></div>'
-      +'<div style="flex:1"><div class="uia-name">'+(u.name||email.split('@')[0])+'</div><div class="uia-last">'+last+'</div></div>'
-      +'<span class="unread-admin'+(unread>0?' on':'')+'">'+unread+'</span></div>';
-  }).join('');
-  var badge=document.getElementById('b-chat');
-  badge.textContent=totalUnread; badge.classList.toggle('on',totalUnread>0);
-}
-function openChatWithUser(email,name){
-  currentChatUser=email;
-  document.getElementById('chat-list-view').style.display='none';
-  document.getElementById('chat-convo-view').style.display='';
-  document.getElementById('ac-av').textContent=name[0].toUpperCase();
-  document.getElementById('ac-av').style.background=avColor(email);
-  document.getElementById('ac-name').textContent=name;
-  var msgs=getMsgs(ADMIN,email);
-  localStorage.setItem('admin_lr_'+email,msgs.length);
-  showPanel('chat',document.querySelectorAll('.nav-link')[2]);
-  if(SB_READY){
-    listenMsgs(ADMIN,email,function(msgs){
-      localStorage.setItem('admin_lr_'+email,msgs.length);
-      if(currentChatUser===email)refreshAdminConvo();
-    });
-  }
-  refreshAdminConvo();
-}
-function closeAdminConvo(){
-  currentChatUser=null;
-  document.getElementById('chat-list-view').style.display='';
-  document.getElementById('chat-convo-view').style.display='none';
-  refreshChatUsers();
-}
-function refreshAdminConvo(){
-  if(!currentChatUser) return;
-  var online=isOnline(currentChatUser);
-  document.getElementById('ac-status').textContent=online?'● en línea':'○ no en línea';
-  document.getElementById('ac-status').style.color=online?'#22C55E':'#9CA3AF';
-  var msgs=getMsgs(ADMIN,currentChatUser);
-  localStorage.setItem('admin_lr_'+currentChatUser,msgs.length);
-  var c=document.getElementById('ac-msgs');
-  if(!msgs.length){c.innerHTML='<div style="text-align:center;color:#666;font-size:.75rem;padding:2rem">Iniciá la conversación</div>';return;}
-  c.innerHTML=msgs.map(function(m){
-    var out=m.from===ADMIN;
-    var content=m.type==='text'?m.text:m.type==='image'?'<img class="amsg-img" src="'+m.data+'" onclick="openLB(\''+m.data+'\')">':'<div style="display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.05);padding:8px;border-radius:8px;"><span>📎</span><span style="font-size:.75rem">'+m.filename+'</span></div>';
-    return '<div class="amsg '+(out?'amsg-out':'amsg-in')+'">'+content+'<div class="amsg-time">'+m.time+'</div></div>';
-  }).join('');
-  c.scrollTop=c.scrollHeight;
-}
-function adminSendMsg(){
-  var input=document.getElementById('ac-input');var text=input.value.trim();
-  if(!text||!currentChatUser)return;
-  var msgs=getMsgs(ADMIN,currentChatUser);
-  msgs.push({type:'text',text:text,from:ADMIN,time:nowT()});
-  saveMsgs(ADMIN,currentChatUser,msgs);
-  localStorage.setItem('admin_lr_'+currentChatUser,msgs.length);
-  input.value=''; refreshAdminConvo(); toast('💬','Mensaje enviado');
-}
-function adminSendImg(event){
-  var file=event.target.files[0];if(!file||!currentChatUser)return;
-  var r=new FileReader();
-  r.onload=function(ev){
-    var msgs=getMsgs(ADMIN,currentChatUser);
-    msgs.push({type:'image',data:ev.target.result,filename:file.name,from:ADMIN,time:nowT()});
-    saveMsgs(ADMIN,currentChatUser,msgs);
-    localStorage.setItem('admin_lr_'+currentChatUser,msgs.length);
-    refreshAdminConvo();
-  };
-  r.readAsDataURL(file);event.target.value='';
+function reopenPed(uid){
+  var p=findPed(uid); if(!p) return;
+  sbSafe(T_PEDS,'update',{resolved:false,estado:'progress'},{eq:p.key}).then(function(r){
+    if(r.error){toast('❌','No se pudo reabrir: '+r.error.message);return;}
+    p.resolved=false; p.status='progress'; renderAll(); toast('↩️','Pedido reabierto');
+  });
 }
 
-// ── USERS ───────────────────────────────────────────────────
-function refreshUsersTable(){
-  var users=getUsers(); var emails=Object.keys(users);
+// ══════════════════════════════════════════════════════════════
+// USUARIOS
+// ══════════════════════════════════════════════════════════════
+function renderUsersTable(){
+  var tbody=document.getElementById('users-tbody'); if(!tbody) return;
+  var emails=Object.keys(_users).sort(function(a,b){return (isOnline(b)?1:0)-(isOnline(a)?1:0)||nameOf(a).localeCompare(nameOf(b));});
   document.getElementById('users-count').textContent=emails.length+' usuarios';
-  var tbody=document.getElementById('users-tbody');
-  if(!emails.length){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Cargando usuarios...</td></tr>';
-    listenUsers();
-    return;
-  }
-  var rows='';
-  emails.forEach(function(email){
-    var u=users[email];
+  if(!emails.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Todavía no hay usuarios (o no se pudieron cargar)</td></tr>';return;}
+  tbody.innerHTML=emails.map(function(email){
     var online=isOnline(email);
-    var peds=_allPedsCache.filter(function(p){return p._owner===email||p.userEmail===email;}).length;
-    if(!peds) peds=(lsGet('peds_'+email)||[]).length;
-    var name=u.name||'-';
-    var initial=(u.name||email)[0].toUpperCase();
-    var av='<div class="user-av-admin" style="background:'+avColor(email)+';width:30px;height:30px;font-size:.75rem;">'+initial+'</div>';
-    rows+='<tr>'
-      +'<td><div style="display:flex;align-items:center;gap:8px;">'+av+'<span>'+name+'</span></div></td>'
-      +'<td style="color:#9CA3AF">'+email+'</td>'
+    var peds=_peds.filter(function(p){return p._owner===email;}).length;
+    var name=nameOf(email);
+    return '<tr>'
+      +'<td><div style="display:flex;align-items:center;gap:8px;"><div class="user-av-admin" style="background:'+avColor(email)+';width:30px;height:30px;font-size:.75rem;">'+esc(initialOf(name))+'</div><span>'+esc(name)+'</span></div></td>'
+      +'<td style="color:#9CA3AF">'+esc(email)+'</td>'
       +'<td><span class="online-pill '+(online?'op-on':'op-off')+'">'+(online?'● en línea':'○ offline')+'</span></td>'
       +'<td>'+peds+'</td>'
-      +'<td><button class="admin-btn btn-chat" onclick="openChatWithUser(this.dataset.email,this.dataset.name)" data-email="'+email+'" data-name="'+name+'">💬 Chatear</button></td>'
+      +'<td><button class="admin-btn btn-chat" data-email="'+esc(email)+'" data-name="'+esc(name)+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">💬 Chatear</button></td>'
       +'</tr>';
-  });
-  tbody.innerHTML=rows;
+  }).join('');
 }
 
-// ── UPDATES ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// ACTUALIZACIONES (antes se rompía al publicar porque faltaba nowD/nowT)
+// ══════════════════════════════════════════════════════════════
+var _publishing=false;
 function publishUpdate(){
+  if(_publishing) return;
   var text=document.getElementById('upd-text').value.trim();
   if(!text){toast('❌','Escribí un mensaje primero');return;}
   var type=document.getElementById('upd-type').value;
-  var update={id:Date.now(),text:text,type:type,date:nowD(),time:nowT()};
-  saveUpdate(update);
-  document.getElementById('upd-text').value='';
-  toast('📢','✅ Actualización publicada para todos los usuarios');
-  refreshUpdates();
+  _publishing=true;
+  sbSafe(T_UPD,'insert',{texto:text,tipo:type,date_str:nowD(),time_str:nowT()}).then(function(r){
+    _publishing=false;
+    if(r.error){toast('❌','No se pudo publicar: '+r.error.message);return;}
+    document.getElementById('upd-text').value='';
+    toast('📢','Actualización publicada para todos los usuarios');
+    loadUpdates();
+  });
 }
-function refreshUpdates(){
-  var updates=lsGet('updates')||[];
-  var el=document.getElementById('upd-list');
-  if(!updates.length){el.innerHTML='<div class="empty-admin"><div class="ea-ico">📢</div><p>Sin actualizaciones publicadas</p></div>';return;}
+function deleteUpdate(i){
+  var u=_updates[i]; if(!u) return;
+  if(!confirm('¿Borrar esta actualización?')) return;
+  var q=SB.from(T_UPD).delete();
+  if(u.rowId!==undefined&&u.rowId!==null) q=q.eq('id',u.rowId);
+  else if(u.created) q=q.eq('created_at',u.created);
+  else {toast('❌','No se puede identificar esta actualización');return;}
+  q.then(function(r){
+    if(r.error){toast('❌','No se pudo borrar: '+r.error.message);return;}
+    toast('🗑️','Actualización borrada'); loadUpdates();
+  });
+}
+function renderUpdates(){
+  var el=document.getElementById('upd-list'); if(!el) return;
+  if(!_updates.length){el.innerHTML='<div class="empty-admin"><div class="ea-ico">📢</div><p>Sin actualizaciones publicadas</p></div>';return;}
   var ti={notif:'🔔 Notificación',info:'ℹ️ Información',maint:'⚠️ Mantenimiento'};
   var tc={notif:'utb-notif',info:'utb-info',maint:'utb-maint'};
-  el.innerHTML=updates.map(function(u){
-    return '<div class="update-item"><div class="update-item-title"><span>'+(ti[u.type]||'🔔')+'</span><span class="utb '+(tc[u.type]||'utb-notif')+'">'+u.type+'</span></div>'
-      +'<div class="update-item-text">'+u.text+'</div><div class="update-item-date">'+u.date+' · '+u.time+'</div></div>';
+  el.innerHTML=_updates.map(function(u,i){
+    return '<div class="update-item"><div class="update-item-title"><span>'+(ti[u.type]||'🔔')+'</span><span class="utb '+(tc[u.type]||'utb-notif')+'">'+esc(u.type)+'</span>'
+      +'<button class="admin-btn" style="margin-left:auto;background:rgba(239,68,68,.15);color:#F87171;padding:3px 10px" onclick="deleteUpdate('+i+')">Borrar</button></div>'
+      +'<div class="update-item-text">'+escBr(u.text)+'</div><div class="update-item-date">'+esc(u.date)+' · '+esc(u.time)+'</div></div>';
   }).join('');
 }
 
-// ── BADGES ──────────────────────────────────────────────────
-function refreshBadges(){
-  var all=getAllPeds(); var pend=all.filter(function(p){return !p.resolved&&p.status==='pending';}).length;
-  var b=document.getElementById('b-pedidos'); b.textContent=pend; b.classList.toggle('on',pend>0);
+// ══════════════════════════════════════════════════════════════
+// AVISOS (badges)
+// ══════════════════════════════════════════════════════════════
+function renderBadges(){
+  var pend=_peds.filter(function(p){return !p.resolved&&p.status==='pending';}).length;
+  var b=document.getElementById('b-pedidos'); if(b){b.textContent=pend; b.classList.toggle('on',pend>0);}
+  var totalUnread=Object.keys(_chats).reduce(function(a,e){return a+unreadOf(e);},0);
+  var bc=document.getElementById('b-chat'); if(bc){bc.textContent=totalUnread; bc.classList.toggle('on',totalUnread>0);}
+  document.title=(totalUnread>0?'('+totalUnread+') ':'')+'APLI COP — Admin';
 }
 
-// ── TOAST & LIGHTBOX ────────────────────────────────────────
-var toastTimer;
-function toast(ico,msg){
-  var t=document.getElementById('toast-admin'); t.innerHTML=ico+' '+msg; t.classList.add('on');
-  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('on');},3000);
-}
-function openLB(src){document.getElementById('lb-admin-img').src=src;document.getElementById('lb-admin').classList.add('on');}
-function closeLB(){document.getElementById('lb-admin').classList.remove('on');}
-
-// ── BOT IA PANEL ─────────────────────────────────────────────
-var BOT_CLAVE = '201699';
-var botUnlocked = false;
-
+// ══════════════════════════════════════════════════════════════
+// BOT IA (configuración guardada en la tabla configuracion_del_bot)
+// ══════════════════════════════════════════════════════════════
+var botUnlocked=false;
 function openBotPanel(el){
-  // Show panel
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-link').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-bot').classList.add('on');
   el.classList.add('on');
-  document.getElementById('panel-title').textContent = '🤖 Bot IA';
-  document.getElementById('panel-sub').textContent = 'Control del asistente virtual de APLI COP';
-  if(botUnlocked) showBotContent();
-  else hideBotContent();
+  document.getElementById('panel-title').textContent=panelTitles.bot[0];
+  document.getElementById('panel-sub').textContent=panelTitles.bot[1];
+  if(botUnlocked) showBotContent(); else hideBotContent();
 }
-
 function checkBotKey(){
-  var val = document.getElementById('bot-key-input').value;
-  var err = document.getElementById('bot-key-err');
-  if(val === BOT_CLAVE){
-    botUnlocked = true;
-    showBotContent();
-    err.textContent = '';
-  } else {
-    err.textContent = '❌ Clave incorrecta';
-    document.getElementById('bot-key-input').value = '';
-  }
-}
-
-function showBotContent(){
-  document.getElementById('bot-lock').style.display = 'none';
-  document.getElementById('bot-content').style.display = 'block';
-  loadBotSettings();
-  loadBotStats();
-}
-
-function hideBotContent(){
-  document.getElementById('bot-lock').style.display = 'block';
-  document.getElementById('bot-content').style.display = 'none';
-  document.getElementById('bot-key-input').value = '';
-}
-
-function lockBot(){
-  botUnlocked = false;
-  hideBotContent();
-  toast('🔒','Panel bloqueado');
-}
-
-function setImgService(service, el){
-  lsSet('img_service', service);
-  saveBotConfig('img_service', service);
-  document.querySelectorAll('#img-service-btns button').forEach(function(b){
-    b.style.borderColor='#2E2E2E'; b.style.background='none'; b.style.color='#9CA3AF';
+  var val=document.getElementById('bot-key-input').value;
+  var err=document.getElementById('bot-key-err');
+  sha256Hex('aplicop-bot:'+val).then(function(h){
+    if(h&&h===BOT_KEY_HASH){botUnlocked=true;err.textContent='';showBotContent();}
+    else {err.textContent='❌ Clave incorrecta';document.getElementById('bot-key-input').value='';}
   });
-  el.style.borderColor='#FF6B00'; el.style.background='rgba(255,107,0,.15)'; el.style.color='#FF6B00';
-  var geminiBox = document.getElementById('gemini-key-box');
-  var status = document.getElementById('img-service-status');
+}
+function showBotContent(){
+  document.getElementById('bot-lock').style.display='none';
+  document.getElementById('bot-content').style.display='block';
+  loadBotSettings(); loadBotStats();
+}
+function hideBotContent(){
+  document.getElementById('bot-lock').style.display='block';
+  document.getElementById('bot-content').style.display='none';
+  document.getElementById('bot-key-input').value='';
+}
+function lockBot(){botUnlocked=false;hideBotContent();toast('🔒','Panel bloqueado');}
+
+function saveBotConfig(key,value,okMsg){
+  return sbSafe(T_BOT,'upsert',{llave:key,valor:value},{upsert:{onConflict:'llave'}}).then(function(r){
+    if(r.error){toast('❌','No se pudo guardar: '+r.error.message);return false;}
+    _botCfg[key]=value; if(okMsg) toast('✅',okMsg); loadBotStats(); return true;
+  });
+}
+
+function paintImgService(service){
+  var btns=document.querySelectorAll('#img-service-btns button');
+  btns.forEach(function(b,i){
+    var on=(i===0&&service!=='gemini')||(i===1&&service==='gemini');
+    b.style.borderColor=on?'#FF6B00':'#2E2E2E'; b.style.background=on?'rgba(255,107,0,.15)':'none'; b.style.color=on?'#FF6B00':'#9CA3AF';
+  });
+  var geminiBox=document.getElementById('gemini-key-box');
+  var status=document.getElementById('img-service-status');
   if(service==='gemini'){
     geminiBox.style.display='block';
-    status.textContent='🔑 Gemini seleccionado — ingresá tu API key';
-    status.style.color='#FBB724';
+    var has=!!_botCfg.gemini_api_key;
+    status.textContent=has?'✅ Gemini configurado':'🔑 Gemini seleccionado — ingresá tu API key';
+    status.style.color=has?'#22C55E':'#FBB724';
   } else {
     geminiBox.style.display='none';
     status.textContent='✅ Pollinations AI activo — listo para generar imágenes gratis';
     status.style.color='#22C55E';
   }
-  toast('✅','Servicio de imágenes: '+service);
 }
-
+function setImgService(service){
+  paintImgService(service);
+  saveBotConfig('img_service',service,'Servicio de imágenes: '+service);
+}
 function saveGeminiKey(){
-  var key = document.getElementById('gemini-api-key').value.trim();
-  if(!key){ toast('❌','Ingresá una API key de Gemini'); return; }
-  lsSet('gemini_api_key', key);
-  saveBotConfig('gemini_api_key', key);
-  document.getElementById('img-service-status').textContent='✅ Gemini configurado con tu API key';
-  document.getElementById('img-service-status').style.color='#22C55E';
-  toast('✅','API key de Gemini guardada');
+  var key=document.getElementById('gemini-api-key').value.trim();
+  if(!key){toast('❌','Ingresá una API key de Gemini');return;}
+  saveBotConfig('gemini_api_key',key,'API key de Gemini guardada').then(function(ok){if(ok)paintImgService('gemini');});
 }
-
-function loadImgServiceSettings(){
-  var service = lsGet('img_service') || 'pollinations';
-  var btns = document.querySelectorAll('#img-service-btns button');
-  if(service==='gemini' && btns[1]){
-    setImgService('gemini', btns[1]);
-    var gk = lsGet('gemini_api_key')||'';
-    if(gk) document.getElementById('gemini-api-key').value=gk;
-  } else if(btns[0]) {
-    setImgService('pollinations', btns[0]);
-  }
-}
+function maskKey(k){k=String(k||'');return k.length>10?k.slice(0,4)+'••••••••'+k.slice(-4):(k?'••••':'');}
 
 function loadBotSettings(){
-  loadImgServiceSettings();
-  // Load API key
-  var key = lsGet('bot_api_key') || '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';
-  document.getElementById('bot-api-key').value = key;
-  document.getElementById('bot-key-status').textContent = key ? '✅ Key cargada' : '';
-  // Load model
-  var model = lsGet('bot_model') || 'llama-3.3-70b-versatile';
-  document.getElementById('bot-model').value = model;
-  // Load extra info
-  var info = lsGet('bot_extra_info') || '';
-  document.getElementById('bot-extra-info').value = info;
-  // Load system extra
-  var sysExtra = lsGet('bot_system_extra') || '';
-  document.getElementById('bot-system-extra').value = sysExtra;
-  // Load tone
-  var tone = lsGet('bot_tone') || 'amigable';
-  document.querySelectorAll('#tone-btns button').forEach(function(b){
-    var isSel = b.textContent.toLowerCase().indexOf(tone) >= 0;
-    b.style.borderColor = isSel ? '#FF6B00' : '#2E2E2E';
-    b.style.background  = isSel ? 'rgba(255,107,0,.15)' : 'none';
-    b.style.color       = isSel ? '#FF6B00' : '#9CA3AF';
-  });
+  paintImgService(_botCfg.img_service||'pollinations');
+  // Ya no se muestra ninguna clave escrita en el código: solo la que esté guardada en la base
+  var key=_botCfg.bot_api_key||_botCfg.clave_api_bot||'';
+  var ki=document.getElementById('bot-api-key');
+  ki.value=''; ki.placeholder=key?('Guardada: '+maskKey(key)+' (escribí otra para cambiarla)'):'gsk_...';
+  document.getElementById('bot-key-status').textContent=key?'✅ Key guardada':'Sin key guardada';
+  var gk=_botCfg.gemini_api_key||'';
+  var gi=document.getElementById('gemini-api-key'); gi.value=''; gi.placeholder=gk?('Guardada: '+maskKey(gk)):'AIza...';
+  document.getElementById('bot-model').value=_botCfg.bot_model||_botCfg.modelo_bot||'openai/gpt-oss-120b';
+  document.getElementById('bot-extra-info').value=_botCfg.bot_extra_info||'';
+  document.getElementById('bot-system-extra').value=_botCfg.bot_system_extra||'';
+  paintTone(_botCfg.bot_tone||_botCfg['tono de bot']||'formal');
 }
-
 function saveBotKey(){
-  var key = document.getElementById('bot-api-key').value.trim();
-  if(!key){ toast('❌','Ingresá una API key válida'); return; }
-  saveBotConfig('bot_api_key', key);
-  document.getElementById('bot-key-status').textContent = '✅ Key guardada';
-  toast('✅','API Key guardada. El Bot la va a usar automáticamente.');
+  var key=document.getElementById('bot-api-key').value.trim();
+  if(!key){toast('❌','Ingresá una API key válida');return;}
+  saveBotConfig('bot_api_key',key,'API Key guardada').then(function(ok){
+    if(ok){document.getElementById('bot-key-status').textContent='✅ Key guardada';loadBotSettings();}
+  });
 }
-
 function testBotKey(){
-  var key = document.getElementById('bot-api-key').value.trim() || lsGet('bot_api_key');
-  var result = document.getElementById('bot-test-result');
-  result.textContent = '⏳ Probando...';
-  result.style.color = '#9CA3AF';
-  fetch('https://api.groq.com/openai/v1/chat/completions',{
+  var key=document.getElementById('bot-api-key').value.trim()||_botCfg.bot_api_key||'';
+  var result=document.getElementById('bot-test-result');
+  result.style.color='#9CA3AF';
+  // Prueba el asistente real (la misma función que usan los usuarios)
+  result.textContent='⏳ Probando el asistente...';
+  fetch(SUPABASE_URL+'/functions/v1/groq-chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:10,messages:[{role:'user',content:'hola'}]})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d.choices && d.choices[0]){
-      result.textContent = '✅ Conexión exitosa';
-      result.style.color = '#22C55E';
-    } else {
-      result.textContent = '❌ Key inválida';
-      result.style.color = '#EF4444';
-    }
-  })
-  .catch(function(){
-    result.textContent = '❌ Error de conexión';
-    result.style.color = '#EF4444';
-  });
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+    body:JSON.stringify({model:_botCfg.bot_model||'openai/gpt-oss-120b',max_tokens:10,messages:[{role:'user',content:'hola'}]})
+  }).then(function(r){return r.json().catch(function(){return {};});}).then(function(d){
+    if(d&&d.choices&&d.choices[0]){result.textContent='✅ El asistente responde bien';result.style.color='#22C55E';}
+    else if(key){testGroqDirect(key,result);}
+    else {result.textContent='❌ El asistente no respondió';result.style.color='#EF4444';}
+  }).catch(function(){ if(key) testGroqDirect(key,result); else {result.textContent='❌ Error de conexión';result.style.color='#EF4444';} });
 }
-
+function testGroqDirect(key,result){
+  result.textContent='⏳ Probando la key de Groq...';
+  fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'openai/gpt-oss-20b',max_tokens:10,messages:[{role:'user',content:'hola'}]})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.choices&&d.choices[0]){result.textContent='⚠️ La key anda, pero el asistente (función groq-chat) no respondió';result.style.color='#FBB724';}
+    else {result.textContent='❌ Key inválida';result.style.color='#EF4444';}
+  }).catch(function(){result.textContent='❌ Error de conexión';result.style.color='#EF4444';});
+}
 function saveBotModel(){
-  var model = document.getElementById('bot-model').value;
-  saveBotConfig('bot_model', model);
-  toast('✅','Modelo guardado: '+model);
+  var model=document.getElementById('bot-model').value;
+  saveBotConfig('bot_model',model,'Modelo guardado: '+model);
 }
-
 function saveBotInfo(){
-  var info = document.getElementById('bot-extra-info').value.trim();
-  saveBotConfig('bot_extra_info', info);
-  toast('✅','Información del bot guardada. Ya la usa al responder.');
+  saveBotConfig('bot_extra_info',document.getElementById('bot-extra-info').value.trim(),'Información del bot guardada. Ya la usa al responder.');
 }
-
-function setTone(tone, el){
-  saveBotConfig('bot_tone', tone);
+function paintTone(tone){
   document.querySelectorAll('#tone-btns button').forEach(function(b){
-    b.style.borderColor = '#2E2E2E';
-    b.style.background  = 'none';
-    b.style.color       = '#9CA3AF';
+    var on=b.textContent.toLowerCase().indexOf(tone)>=0;
+    b.style.borderColor=on?'#FF6B00':'#2E2E2E'; b.style.background=on?'rgba(255,107,0,.15)':'none'; b.style.color=on?'#FF6B00':'#9CA3AF';
   });
-  el.style.borderColor = '#FF6B00';
-  el.style.background  = 'rgba(255,107,0,.15)';
-  el.style.color       = '#FF6B00';
-  toast('✅','Tono: '+tone);
 }
-
+function setTone(tone){paintTone(tone);saveBotConfig('bot_tone',tone,'Tono: '+tone);}
 function saveBotPersonality(){
-  var extra = document.getElementById('bot-system-extra').value.trim();
-  saveBotConfig('bot_system_extra', extra);
-  toast('✅','Personalidad del bot guardada.');
+  saveBotConfig('bot_system_extra',document.getElementById('bot-system-extra').value.trim(),'Personalidad del bot guardada.');
+}
+// Antes mostraba números inventados (las charlas con la IA no se guardan en ningún lado).
+function loadBotStats(){
+  var el=document.getElementById('bot-stats'); if(!el) return;
+  var model=_botCfg.bot_model||'openai/gpt-oss-120b';
+  el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">'
+    +'<div class="stat-card"><div class="stat-val" style="color:#22C55E;font-size:1.1rem">'+esc(model)+'</div><div class="stat-lbl">Modelo activo</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:#FF6B00;font-size:1.1rem">'+esc(_botCfg.bot_tone||'formal')+'</div><div class="stat-lbl">Tono</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:#3A8FC7;font-size:1.1rem">'+esc(_botCfg.img_service||'pollinations')+'</div><div class="stat-lbl">Imágenes</div></div>'
+    +'</div><div style="font-size:.72rem;color:#9CA3AF;margin-top:.75rem">Las conversaciones con la IA no se guardan en la base, por eso no hay estadísticas de uso.</div>';
 }
 
-function loadBotStats(){
-  var el = document.getElementById('bot-stats');
-  var users = getUsers();
-  var totalConvs = 0;
-  var totalMsgs = 0;
-  Object.keys(users).forEach(function(email){
-    var msgs = lsGet('ia_'+email) || [];
-    if(msgs.length > 1){ totalConvs++; totalMsgs += msgs.filter(function(m){return m.from==='user';}).length; }
-  });
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">'
-    +'<div class="stat-card"><div class="stat-val" style="color:#FF6B00;">'+totalConvs+'</div><div class="stat-lbl">Usuarios que usaron el bot</div></div>'
-    +'<div class="stat-card"><div class="stat-val" style="color:#3A8FC7;">'+totalMsgs+'</div><div class="stat-lbl">Mensajes enviados</div></div>'
-    +'<div class="stat-card"><div class="stat-val" style="color:#22C55E;">'+(lsGet('bot_model')||'llama-3.3-70b').split('-')[0].toUpperCase()+'</div><div class="stat-lbl">Modelo activo</div></div>'
-    +'</div>';
-}
+// ══════════════════════════════════════════════════════════════
+// INICIO
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('pg-pin').classList.contains('on')){
+    if(e.key>='0'&&e.key<='9') pinPress(e.key);
+    if(e.key==='Backspace') pinDel();
+  }
+});
+document.addEventListener('visibilitychange',function(){if(adminOn&&!document.hidden){loadAdminChats(false);loadPeds();}});
+(function init(){
+  var s=null; try{s=sessionStorage.getItem('ac_admin_session');localStorage.removeItem('ac_admin_session');}catch(e){}
+  if(s===PIN_HASH) enterAdmin();
+})();
+
 </script>
 </body>
 </html>
