@@ -169,6 +169,8 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
 @keyframes imgdot{0%,80%,100%{transform:scale(0);opacity:.3}40%{transform:scale(1);opacity:1}}
 .img-gen-result{border-radius:10px;max-width:100%;display:block;margin:8px auto;cursor:pointer;}
 .img-gen-label{font-size:.68rem;color:#A8D4F5;margin-top:4px;opacity:.7;}
+.img-dl-btn{display:inline-block;margin-top:8px;background:#FF6B00;color:#fff;border:none;border-radius:20px;padding:.45rem 1.1rem;font-family:Poppins,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;}
+.img-dl-btn:hover{background:#FF8C35;}
 .cfg-profile{background:#fff;border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:1rem;}
 .cfg-av{width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto .75rem;background:#FFF0E6;display:flex;align-items:center;justify-content:center;}
 .cfg-av img{width:100%;height:100%;object-fit:contain;}
@@ -1486,6 +1488,7 @@ function renderIA(){
       return '<div class="img-gen-wrap"><div style="font-size:.75rem;color:#A8D4F5;margin-bottom:8px;">🎨 "'+esc(m.prompt)+'"</div>'
         +'<img class="img-gen-result" src="'+esc(safeSrc(m.imgUrl))+'" alt="imagen generada" onclick="openLB(this.src)" onerror="this.alt=\'No se pudo cargar la imagen\'">'
         +'<div class="img-gen-label">Tocá para ver en grande</div>'
+        +'<button class="img-dl-btn" data-src="'+esc(safeSrc(m.imgUrl))+'" data-name="'+esc(m.prompt)+'" onclick="downloadGenImg(this.dataset.src,this.dataset.name)">⬇️ Descargar</button>'
         +'<div class="msg-time" style="color:#A8D4F5">'+esc(m.time)+'</div></div>';
     }
     if(m.typing) return '<div class="msg msg-in" style="background:#fff;border-radius:0 12px 12px 12px"><span style="opacity:.5">✦ escribiendo...</span></div>';
@@ -1624,6 +1627,20 @@ function sendIA(){
     if(porVoz) toast('🤖','El asistente no pudo responder');
     renderIA();
   });
+}
+
+function downloadGenImg(src,prompt){
+  if(!src) return;
+  var slug=String(prompt||'imagen-ia').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'imagen-ia';
+  var name=slug+'.png';
+  fetch(src).then(function(r){ if(!r.ok) throw new Error('http'); return r.blob(); })
+    .then(function(blob){
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000);
+    })
+    .catch(function(){ window.open(src,'_blank','noopener'); toast('💾','Si no se descarga, mantené apretada la imagen y guardala'); });
 }
 
 function generateImage(prompt,lid){
