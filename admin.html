@@ -464,6 +464,21 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
             </div>
           </div>
 
+          <!-- IMAGENES DEL BOT -->
+          <div class="card">
+            <div class="card-head"><h3>🖼️ Imágenes que puede enviar el bot</h3></div>
+            <div class="card-body">
+              <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:.75rem;">
+                Subí imágenes con un nombre (por ejemplo "mapa" o "precios"). Cuando el cliente pida algo que tenga que ver, el bot la muestra en el chat. Máximo 5 imágenes por tanda.
+              </div>
+              <div id="bot-imgs-list"></div>
+              <label style="display:inline-block;background:#FF6B00;color:#fff;border-radius:10px;padding:.7rem 1.25rem;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.5rem;">
+                📤 Subir imágenes
+                <input type="file" accept="image/*" multiple style="display:none" onchange="botImgAdd(event)">
+              </label>
+            </div>
+          </div>
+
           <!-- STATS -->
           <div class="card">
             <div class="card-head"><h3>📊 Estadísticas del Bot</h3></div>
@@ -854,12 +869,60 @@ function loadUpdates(){
   });
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// IMÁGENES QUE PUEDE ENVIAR EL BOT
+// Se guardan en configuracion_del_bot con la llave "bot_imagenes"
+// ══════════════════════════════════════════════════════════════
+var _botImgs=[];
+function botImgsLoad(){
+  try{ _botImgs=JSON.parse(_botCfg.bot_imagenes||'[]')||[]; }catch(e){ _botImgs=[]; }
+  botImgsPaint();
+}
+function botImgsPaint(){
+  var c=document.getElementById('bot-imgs-list'); if(!c) return;
+  c.innerHTML=_botImgs.length?_botImgs.map(function(im,i){
+    return '<div style="display:flex;align-items:center;gap:10px;background:#242424;border-radius:10px;padding:8px;margin-bottom:6px;">'
+      +'<img src="'+esc(im.data)+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px">'
+      +'<div style="flex:1;font-size:.8rem;color:#fff;word-break:break-all;">'+esc(im.nombre)+'</div>'
+      +'<button onclick="botImgDel('+i+')" style="background:none;border:1px solid #EF4444;color:#EF4444;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:.75rem;">Borrar</button></div>';
+  }).join(''):'<div style="font-size:.78rem;color:#9CA3AF;">Todavía no hay imágenes.</div>';
+}
+function botImgAdd(e){
+  var files=Array.from(e.target.files||[]).slice(0,5); e.target.value='';
+  if(!files.length) return;
+  var p=Promise.resolve();
+  files.forEach(function(f){
+    p=p.then(function(){
+      var def=f.name.replace(/\.[^.]+$/,'').substring(0,40);
+      var nombre=prompt('Nombre para esta imagen (el bot la va a usar con ese nombre):',def);
+      if(!nombre||!nombre.trim()) return;
+      nombre=nombre.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_áéíóúñ]/g,'').substring(0,40);
+      return compressImage(f,800,0.7).then(function(d){
+        _botImgs=_botImgs.filter(function(x){return x.nombre!==nombre;});
+        _botImgs.push({nombre:nombre,data:d});
+      });
+    });
+  });
+  p.then(function(){ return saveBotImgs(); }).catch(function(){ toast('❌','No se pudo leer alguna imagen'); });
+}
+function botImgDel(i){
+  if(!confirm('¿Borrar esta imagen?')) return;
+  _botImgs.splice(i,1); saveBotImgs();
+}
+function saveBotImgs(){
+  return saveBotConfig('bot_imagenes',JSON.stringify(_botImgs),'Imágenes del bot guardadas').then(function(ok){
+    if(ok) botImgsPaint(); return ok;
+  });
+}
+
 function loadBotConfig(){
   SB.from(T_BOT).select('llave,valor').then(function(r){
     if(r.error){console.warn('configuracion_del_bot:',r.error.message);return;}
     _botCfg={};
     (r.data||[]).forEach(function(row){_botCfg[row.llave]=row.valor;});
     if(botUnlocked) loadBotSettings();
+    botImgsLoad();
   });
 }
 
