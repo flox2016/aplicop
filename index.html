@@ -1757,17 +1757,82 @@ function iaAttach(e){
   }).catch(function(){ toast('❌','No se pudo leer la imagen'); });
 }
 // Solo estas acciones puede pedir el bot. Cualquier otra se ignora.
+function irA(scr){ showPage('pg-app'); goScr(scr); }
 var IA_ACCIONES={
   abrir_docs:function(){ window.open('https://www.aplicop.com.ar/docs.html','_blank'); },
-  ir_inicio:function(){ goScr('home'); },
-  ir_chat:function(){ goScr('chat'); }
+  ir_inicio:function(){ irA('home'); },
+  ir_chat:function(){ irA('chat'); },
+  ir_pedidos:function(){ irA('pedidos'); },
+  ir_config:function(){ irA('cfg'); },
+  ir_notificaciones:function(){ irA('notifs'); },
+  abrir_microfono:function(){ irA('cfg-voz'); }
 };
+// Propuestas: el bot propone, la persona confirma con un botón
+var _iaProps={};
+function iaCardHtml(id,detalle,estado){
+  if(estado) return detalle+'<div style="margin-top:6px;font-size:.8rem;opacity:.8">'+estado+'</div>';
+  return detalle+'<div style="margin-top:8px;display:flex;gap:8px;">'
+    +'<button onclick="iaPropOk(\''+id+'\')" style="background:#FF6B00;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer">Confirmar</button>'
+    +'<button onclick="iaPropNo(\''+id+'\')" style="background:none;border:1px solid #9CA3AF;color:#374151;border-radius:8px;padding:6px 12px;cursor:pointer">Cancelar</button></div>';
+}
+function iaAddProp(p){
+  var id='p'+Date.now()+Math.floor(Math.random()*1000);
+  var det='';
+  if(p.tipo==='agregar_contacto') det='<b>¿Agregar contacto?</b><br>'+esc(p.email);
+  else if(p.tipo==='enviar_mensaje') det='<b>¿Enviar mensaje a '+esc(p.email)+'?</b><br>'+esc(p.texto);
+  else if(p.tipo==='pedido') det='<b>¿Cargar este pedido?</b><br>'+esc(p.descripcion)+(p.estilo?'<br><i>Estilo: '+esc(p.estilo)+'</i>':'')+'<br><small>Lo revisás y lo enviás vos desde el formulario.</small>';
+  else return;
+  _iaProps[id]=p;
+  _iaMsgs.push({from:'ia',html:true,text:iaCardHtml(id,det),id:id,time:nowT()});
+  renderIA();
+}
+function iaSetProp(id,estado){
+  var m=_iaMsgs.find(function(x){return x.id===id;});
+  if(m){ m.text=iaCardHtml(id,m.text.split('<div style="margin-top:8px')[0].split('<div style="margin-top:6px')[0],estado); }
+  renderIA();
+}
+function iaPropOk(id){
+  var p=_iaProps[id]; if(!p) return; delete _iaProps[id];
+  if(p.tipo==='agregar_contacto'){
+    if(!CU){ return; }
+    irA('chat');
+    document.getElementById('new-email').value=p.email;
+    addContact();
+    iaSetProp(id,'✅ Listo: se intentó agregar el contacto.');
+  } else if(p.tipo==='enviar_mensaje'){
+    var idx=_contacts.findIndex(function(c){return c.email===p.email;});
+    if(idx<0){ iaSetProp(id,'❌ Ese contacto no está en tu lista.'); return; }
+    showPage('pg-app'); openConvo(idx);
+    document.getElementById('cv-input').value=p.texto;
+    sendMsg();
+    iaSetProp(id,'✅ Mensaje enviado.');
+  } else if(p.tipo==='pedido'){
+    irA('order');
+    var d=document.getElementById('o-desc'); if(d) d.value=p.descripcion||'';
+    var st=document.getElementById('o-style'); if(st&&p.estilo) st.value=p.estilo;
+    iaSetProp(id,'✅ Cargado en el formulario. Revisalo y enviá el pedido.');
+  }
+}
+function iaPropNo(id){ delete _iaProps[id]; iaSetProp(id,'Cancelado.'); }
 function botImgList(){
   try{ return JSON.parse(_botConfig['bot_imagenes']||'[]')||[]; }catch(e){ return []; }
 }
+var _lastAccion={n:'',t:0};
 function iaRunAccion(nombre){
-  var fn=IA_ACCIONES[String(nombre||'').toLowerCase()];
-  if(fn){ try{ fn(); }catch(e){} }
+  var k=String(nombre||'').toLowerCase();
+  var fn=IA_ACCIONES[k];
+  if(!fn) return;
+  var ahora=Date.now();
+  if(_lastAccion.n===k && ahora-_lastAccion.t<4000) return;
+  _lastAccion={n:k,t:ahora};
+  var mapaPantalla={ir_inicio:'home',ir_chat:'chat',ir_pedidos:'pedidos',ir_config:'cfg',ir_notificaciones:'notifs',abrir_microfono:'cfg-voz'};
+  var scr=mapaPantalla[k];
+  if(scr){
+    var el=document.getElementById('scr-'+scr);
+    var yaEsta=el&&el.classList.contains('on')&&document.getElementById('pg-app').classList.contains('on');
+    if(yaEsta) return;
+  }
+  try{ fn(); }catch(e){}
 }
 
 function sendIA(){
@@ -1801,12 +1866,34 @@ function sendIA(){
       +' Si preguntan por el estado de su cuenta: está en perfecto estado. Publicidad cada 5 mensajes: Meaker https://flox2016.github.io/Meaker/ . Para imágenes: solo emojis, no caracteres especiales.'
       +' Esta app tiene asistente por voz: el usuario te puede hablar con el micrófono diciendo "Ok Asistente" y tus respuestas se leen en voz alta. Nunca digas que no podés escuchar, hablar, usar la voz o hacer llamadas o conferencias de voz.'
       +(botImgList().length?' IMÁGENES DISPONIBLES: '+botImgList().map(function(x){return x.nombre;}).join(', ')+'. Si una imagen ayuda a responder, agregá al final exactamente [[IMG:nombre]] con el nombre de la lista. No inventes nombres.':'')
-      +' ACCIONES: si el usuario pide abrir la documentación, agregá al final de tu respuesta exactamente [[ACCION:abrir_docs]]. Si pide volver al inicio, [[ACCION:ir_inicio]]. Si pide ir al chat, [[ACCION:ir_chat]]. No inventes otras acciones. Para cambiar la contraseña, no agregues ninguna acción: explicá que lo tiene que pedir a APLI COP Soporte.'
+      +(CU&&_contacts.length?' CONTACTOS DEL USUARIO: '+_contacts.map(function(c){return c.name+' <'+c.email+'>';}).join('; ')+'.':' El usuario no tiene contactos todavía.')
+      +' PROPUESTAS: para mandar un mensaje, agregar un contacto o cargar un pedido, NO digas que ya se hizo. Respondé una línea con [[PROPUESTA:{"tipo":"enviar_mensaje","email":"...","texto":"..."}]] (email de la lista de contactos), o [[PROPUESTA:{"tipo":"agregar_contacto","email":"..."}]], o [[PROPUESTA:{"tipo":"pedido","descripcion":"...","estilo":"..."}]]. La persona confirma con un botón. Para cambiar contraseñas o tocar datos de otras personas, no propongas nada: dile que lo pida a Soporte.'
+      +' ACCIONES: si el usuario pide abrir la documentación, agregá al final de tu respuesta exactamente [[ACCION:abrir_docs]]. Si pide volver al inicio, [[ACCION:ir_inicio]]. Si pide ir al chat, [[ACCION:ir_chat]]. Pedidos: [[ACCION:ir_pedidos]]. Configuración: [[ACCION:ir_config]]. Notificaciones: [[ACCION:ir_notificaciones]]. Micrófono: [[ACCION:abrir_microfono]] solo si piden ver o abrir esa pantalla; si piden activarlo, no pongas acción y decí que tiene que tocar el switch vos. No inventes otras acciones. Para cambiar la contraseña, no agregues ninguna acción: explicá que lo tiene que pedir a APLI COP Soporte.'
       +(porVoz?' ESTA pregunta llegó por voz y tu respuesta se va a leer en voz alta: respondé en 1 a 3 oraciones cortas, sin emojis, sin links, sin listas y sin símbolos.':'')
       +(EXTRA_INFO?' Info extra: '+EXTRA_INFO:'')+(SYS_EXTRA?' '+SYS_EXTRA:'');
     return askAI([{role:'system',content:systemMsg}].concat(history),!!img).then(function(reply){
       var acc=String(reply).match(/\[\[ACCION:\s*([a-z_]+)\s*\]\]/i);
-      if(acc){ reply=String(reply).replace(acc[0],'').trim(); iaRunAccion(acc[1]); }
+      var pideActivarMic=/(activ|prend|encend|habilit|enciend)/i.test(text)&&/(micro|voz|asistente)/i.test(text);
+      if(acc){
+        reply=String(reply).replace(acc[0],'').trim();
+        if(acc[1].toLowerCase()==='abrir_microfono'&&pideActivarMic){
+          reply='Te abro la configuración del micrófono. Para activarlo, tocá el switch "Asistente Micrófono" y aceptá el permiso del navegador.';
+          iaRunAccion('abrir_microfono');
+        } else {
+          iaRunAccion(acc[1]);
+        }
+      }
+      if(!String(reply).trim()) reply='Listo.';
+      var propTag=String(reply).match(/\[\[PROPUESTA:\s*(\{[\s\S]*?\})\s*\]\]/), propObj=null;
+      if(propTag){
+        reply=String(reply).replace(propTag[0],'').trim();
+        try{ propObj=JSON.parse(propTag[1]); }catch(e){ propObj=null; }
+        if(propObj){
+          if(propObj.tipo==='agregar_contacto'||propObj.tipo==='enviar_mensaje'){ propObj.email=String(propObj.email||'').trim().toLowerCase(); if(!validEmail(propObj.email)) propObj=null; }
+          if(propObj&&propObj.texto) propObj.texto=String(propObj.texto).substring(0,2000);
+          if(propObj&&propObj.descripcion) propObj.descripcion=String(propObj.descripcion).substring(0,1000);
+        }
+      }
       var imgTag=String(reply).match(/\[\[IMG:\s*([^\]]+?)\s*\]\]/i), replyImg=null;
       if(imgTag){
         reply=String(reply).replace(imgTag[0],'').trim();
@@ -1815,6 +1902,7 @@ function sendIA(){
       }
       _iaMsgs=_iaMsgs.filter(function(m){return m.id!==tid;});
       _iaMsgs.push({from:'ia',text:reply,img:replyImg,time:nowT()});
+      if(propObj) iaAddProp(propObj);
       if(porVoz) speakText(reply);
       var uc=_iaMsgs.filter(function(m){return m.from==='user';}).length;
       if(uc>0&&uc%5===0){_iaMsgs.push({from:'ad',text:ADS[adCounter%ADS.length],time:nowT()});adCounter++;}
