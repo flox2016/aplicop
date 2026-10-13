@@ -1740,7 +1740,7 @@ function askAI(messages,visionOnly){
 // CAPTURAS EN EL ASISTENTE + ACCIONES PERMITIDAS
 // ══════════════════════════════════════════════════════════════
 var _iaPending=null;
-var VISION_MODEL='meta-llama/llama-4-scout-17b-16e-instruct';
+var VISION_MODEL='qwen/qwen3.6-27b';
 function iaClearImg(){
   _iaPending=null;
   var p=document.getElementById('ia-prev'); p.style.display='none'; p.innerHTML='';
@@ -1779,7 +1779,7 @@ function iaAddProp(p){
   var id='p'+Date.now()+Math.floor(Math.random()*1000);
   var det='';
   if(p.tipo==='agregar_contacto') det='<b>¿Agregar contacto?</b><br>'+esc(p.email);
-  else if(p.tipo==='enviar_mensaje') det='<b>¿Enviar mensaje a '+esc(p.email)+'?</b><br>'+esc(p.texto);
+  else if(p.tipo==='enviar_mensaje') det='<b>¿Enviar a '+esc(p.email)+'?</b>'+(p.imagen?'<br><img src="'+esc(p.imagen)+'" style="max-width:160px;border-radius:8px;margin:6px 0;display:block">':'')+(p.texto?'<br>'+esc(p.texto):'');
   else if(p.tipo==='pedido') det='<b>¿Cargar este pedido?</b><br>'+esc(p.descripcion)+(p.estilo?'<br><i>Estilo: '+esc(p.estilo)+'</i>':'')+'<br><small>Lo revisás y lo enviás vos desde el formulario.</small>';
   else return;
   _iaProps[id]=p;
@@ -1803,9 +1803,12 @@ function iaPropOk(id){
     var idx=_contacts.findIndex(function(c){return c.email===p.email;});
     if(idx<0){ iaSetProp(id,'❌ Ese contacto no está en tu lista.'); return; }
     showPage('pg-app'); openConvo(idx);
-    document.getElementById('cv-input').value=p.texto;
-    sendMsg();
-    iaSetProp(id,'✅ Mensaje enviado.');
+    if(p.imagen) pushMsg({type:'image',data:p.imagen,filename:'imagen.png',from:CU.email,time:nowT()});
+    if(p.texto&&String(p.texto).trim()){
+      document.getElementById('cv-input').value=p.texto;
+      sendMsg();
+    }
+    iaSetProp(id,'✅ Enviado.');
   } else if(p.tipo==='pedido'){
     irA('order');
     var d=document.getElementById('o-desc'); if(d) d.value=p.descripcion||'';
@@ -1867,7 +1870,7 @@ function sendIA(){
       +' Esta app tiene asistente por voz: el usuario te puede hablar con el micrófono diciendo "Ok Asistente" y tus respuestas se leen en voz alta. Nunca digas que no podés escuchar, hablar, usar la voz o hacer llamadas o conferencias de voz.'
       +(botImgList().length?' IMÁGENES DISPONIBLES: '+botImgList().map(function(x){return x.nombre;}).join(', ')+'. Si una imagen ayuda a responder, agregá al final exactamente [[IMG:nombre]] con el nombre de la lista. No inventes nombres.':'')
       +(CU&&_contacts.length?' CONTACTOS DEL USUARIO: '+_contacts.map(function(c){return c.name+' <'+c.email+'>';}).join('; ')+'.':' El usuario no tiene contactos todavía.')
-      +' PROPUESTAS: para mandar un mensaje, agregar un contacto o cargar un pedido, NO digas que ya se hizo. Respondé una línea con [[PROPUESTA:{"tipo":"enviar_mensaje","email":"...","texto":"..."}]] (email de la lista de contactos), o [[PROPUESTA:{"tipo":"agregar_contacto","email":"..."}]], o [[PROPUESTA:{"tipo":"pedido","descripcion":"...","estilo":"..."}]]. La persona confirma con un botón. Para cambiar contraseñas o tocar datos de otras personas, no propongas nada: dile que lo pida a Soporte.'
+      +' PROPUESTAS: para mandar un mensaje, agregar un contacto o cargar un pedido, NO digas que ya se hizo. Respondé una línea con [[PROPUESTA:{"tipo":"enviar_mensaje","email":"...","texto":"..."}]] (si la persona quiere mandar una imagen, dejá texto vacío: la app adjunta la imagen sola) (email EXACTO de la lista de contactos; si la persona nombra a alguien que no está en la lista, no inventes un email: pedile que lo agregue primero), o [[PROPUESTA:{"tipo":"agregar_contacto","email":"..."}]], o [[PROPUESTA:{"tipo":"pedido","descripcion":"...","estilo":"..."}]]. La persona confirma con un botón. Para cambiar contraseñas o tocar datos de otras personas, no propongas nada: dile que lo pida a Soporte.'
       +' ACCIONES: si el usuario pide abrir la documentación, agregá al final de tu respuesta exactamente [[ACCION:abrir_docs]]. Si pide volver al inicio, [[ACCION:ir_inicio]]. Si pide ir al chat, [[ACCION:ir_chat]]. Pedidos: [[ACCION:ir_pedidos]]. Configuración: [[ACCION:ir_config]]. Notificaciones: [[ACCION:ir_notificaciones]]. Micrófono: [[ACCION:abrir_microfono]] solo si piden ver o abrir esa pantalla; si piden activarlo, no pongas acción y decí que tiene que tocar el switch vos. No inventes otras acciones. Para cambiar la contraseña, no agregues ninguna acción: explicá que lo tiene que pedir a APLI COP Soporte.'
       +(porVoz?' ESTA pregunta llegó por voz y tu respuesta se va a leer en voz alta: respondé en 1 a 3 oraciones cortas, sin emojis, sin links, sin listas y sin símbolos.':'')
       +(EXTRA_INFO?' Info extra: '+EXTRA_INFO:'')+(SYS_EXTRA?' '+SYS_EXTRA:'');
@@ -1890,8 +1893,14 @@ function sendIA(){
         try{ propObj=JSON.parse(propTag[1]); }catch(e){ propObj=null; }
         if(propObj){
           if(propObj.tipo==='agregar_contacto'||propObj.tipo==='enviar_mensaje'){ propObj.email=String(propObj.email||'').trim().toLowerCase(); if(!validEmail(propObj.email)) propObj=null; }
+          if(propObj&&propObj.tipo==='enviar_mensaje'&&!_contacts.some(function(c){return c.email===propObj.email;})){ reply=String(reply).trim()+'\n\nNo encuentro ese contacto en tu lista. Primero agregalo con su Gmail en la pestaña Chat y después volvé a pedírmelo.'; propObj=null; }
           if(propObj&&propObj.texto) propObj.texto=String(propObj.texto).substring(0,2000);
           if(propObj&&propObj.descripcion) propObj.descripcion=String(propObj.descripcion).substring(0,1000);
+        if(propObj&&propObj.tipo==='enviar_mensaje'){
+          var ultima=_iaMsgs.slice().reverse().find(function(m){return (m.type==='image_result'&&m.imgUrl)||m.img;});
+          var fuente=img||(ultima?(ultima.imgUrl||ultima.img):null);
+          if(fuente) propObj.imagen=fuente;
+        }
         }
       }
       var imgTag=String(reply).match(/\[\[IMG:\s*([^\]]+?)\s*\]\]/i), replyImg=null;
@@ -1911,7 +1920,7 @@ function sendIA(){
   }).catch(function(e){
     _iaMsgs=_iaMsgs.filter(function(m){return m.id!==tid;});
     var msg=(e&&e.status===429)?'El asistente recibió muchas preguntas seguidas. Esperá un minuto y probá de nuevo 🙏'
-      :'El asistente no está disponible en este momento 😕 Probá de nuevo en un rato o escribile a APLI COP Soporte.';
+      :'El asistente no está disponible en este momento 😕 Probá de nuevo en un rato o escribile a APLI COP Soporte.'+(img?' (Detalle: '+((e&&e.message)||'desconocido')+')':'');
     // Los errores se muestran en el chat pero NO se leen en voz alta
     _iaMsgs.push({from:'ia',text:msg,time:nowT(),error:true});
     if(porVoz) toast('🤖','El asistente no pudo responder');
