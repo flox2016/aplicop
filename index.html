@@ -363,9 +363,9 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
       <div class="cinfo"><div class="cname" style="color:#FF6B00">APLI COP Soporte</div><div class="clast">Soporte oficial</div></div>
       <div style="font-size:.65rem;color:#22C55E;font-weight:600">oficial ✓</div>
     </div>
-    <div style="background:#fff;border-radius:14px;padding:.85rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid rgba(59,130,246,.3);" onclick="openIA()">
-      <div class="cav" style="background:linear-gradient(135deg,#3A8FC7,#6B48FF);font-size:1rem">🤖<span class="odot on"></span></div>
-      <div class="cinfo"><div class="cname" style="color:#3A8FC7">IA — Asistente APLI COP</div><div class="clast">Responde preguntas y genera imágenes 🎨</div></div>
+    <div style="background:#fff;border-radius:14px;padding:.85rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid rgba(255,107,0,.3);" onclick="openIA()">
+      <div class="cav" style="background:#FF6B00;font-size:1rem">🛠️</div>
+      <div class="cinfo"><div class="cname" style="color:#FF6B00">Asistente de la plataforma</div><div class="clast">Tus conversaciones guardadas en tu cuenta</div></div>
     </div>
     <div id="contacts-list"></div>
   </div>
@@ -491,7 +491,12 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
     <button class="convo-back" onclick="showPage(&#39;pg-app&#39;);goScr(&#39;chat&#39;)">←</button>
     <div class="convo-av" style="background:linear-gradient(135deg,#3A8FC7,#6B48FF);font-size:1rem">🤖</div>
     <div><div class="convo-name">IA — Asistente APLI COP</div><div style="font-size:.7rem;color:#A8D4F5">Preguntas + imágenes 🎨</div></div>
+    <div style="margin-left:auto;display:flex;gap:6px;">
+      <button onclick="iaNuevaConv()" title="Nueva conversación" style="background:none;border:1px solid #FF6B00;color:#FF6B00;border-radius:10px;padding:.35rem .6rem;font-size:.8rem;font-weight:700;cursor:pointer;">＋</button>
+      <button onclick="iaAbrirHistorial()" title="Mis conversaciones" style="background:none;border:1px solid #9CA3AF;color:#fff;border-radius:10px;padding:.35rem .6rem;font-size:.8rem;cursor:pointer;">🗂️</button>
+    </div>
   </div>
+  <div id="ia-hist" style="display:none;background:#fff;border-bottom:1px solid #E5E7EB;max-height:45vh;overflow:auto;padding:8px 12px;"></div>
   <div class="msgs" id="ia-msgs" style="background:#F0F4FF"></div>
   <div class="input-bar" style="background:#E8EDFF">
     <label class="att-btn" title="Adjuntar captura" style="cursor:pointer">📷<input type="file" accept="image/*" style="display:none" onchange="iaAttach(event)"></label>
@@ -721,28 +726,34 @@ function showTab(tab){
 function setErr(id,msg){var el=document.getElementById(id);if(el)el.textContent=msg?'❌ '+msg:'';}
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
+// ══════════════════════════════════════════════════════════════
+// SESIÓN CON LA FUNCIÓN app-auth (la tabla usuarios ya no se lee desde el navegador)
+// ══════════════════════════════════════════════════════════════
+var AUTH_URL = SUPABASE_URL+'/functions/v1/app-auth';
+var _sess = {token:'',email:'',nombre:''};
+function authCall(body){
+  return fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify(body)})
+    .then(function(r){ return r.json().catch(function(){return {};}).then(function(d){ return {status:r.status,data:d}; }); })
+    .catch(function(){ return {status:0,data:{error:'Sin conexión'}}; });
+}
+function saveSession(s){
+  _sess=s;
+  try{ sessionStorage.setItem('apli_token',s.token); sessionStorage.setItem('apli_email',s.email); sessionStorage.setItem('apli_name',s.nombre); }catch(e){}
+}
+
+
+// ASISTENTE DE LA PLATAFORMA (chef dentro de APLI COP): le pasa el token de la sesión
 function doLogin(){
   setErr('in-err','');
   var email=document.getElementById('in-email').value.trim().toLowerCase();
   var pass=document.getElementById('in-pass').value;
   if(!validEmail(email)){setErr('in-err','Gmail inválido');return;}
   if(!pass){setErr('in-err','Ingresá tu contraseña');return;}
-  SB.from(T_USERS).select('*').eq('correo electronico',email).maybeSingle()
-    .then(function(r){
-      if(r.error){setErr('in-err','No se pudo entrar: '+errDB(r.error));return;}
-      if(!r.data){setErr('in-err','No hay cuenta con ese Gmail. Tocá "Registrarse".');return;}
-      var stored=r.data.aprobar||'';
-      passHash(email,pass).then(function(h){
-        var ok=false, migrate=false;
-        if(stored.indexOf('sha256:')===0) ok=(h===stored);
-        else if(stored!==''){ ok=(stored===pass); migrate=ok&&!!h; }
-        if(!ok){setErr('in-err','Contraseña incorrecta');return;}
-        // Cuenta vieja con contraseña a la vista → se guarda cifrada
-        if(migrate) sbSafe(T_USERS,'update',{aprobar:h},{eq:['correo electronico',email]});
-        var name=(r.data.nombre||email.split('@')[0]).trim();
-        enterApp(email,name);
-      });
-    });
+  authCall({action:'login',email:email,pass:pass}).then(function(r){
+    if(!r.data||!r.data.ok){ setErr('in-err',(r.data&&r.data.error)||'No se pudo entrar'); return; }
+    saveSession({token:r.data.token,email:r.data.email,nombre:r.data.nombre});
+    enterApp(r.data.email,r.data.nombre);
+  });
 }
 
 function doRegister(){
@@ -756,24 +767,18 @@ function doRegister(){
   if(!validEmail(email)){setErr('rg-err','Gmail inválido');return;}
   if(pass.length<6){setErr('rg-err','Mínimo 6 caracteres');return;}
   var full=nom+' '+ape;
-  SB.from(T_USERS).select('correo electronico').eq('correo electronico',email).maybeSingle()
-    .then(function(r){
-      if(r.data){setErr('rg-err','Este Gmail ya tiene cuenta. Iniciá sesión.');return;}
-      passHash(email,pass).then(function(h){
-        sbSafe(T_USERS,'insert',{'correo electronico':email,'nombre':full,'aprobar':h||pass,'en linea':true,'ultima vez visto':new Date().toISOString()})
-          .then(function(r2){
-            if(r2.error){setErr('rg-err','No se pudo crear la cuenta: '+errDB(r2.error));return;}
-            enterApp(email,full);
-          });
-      });
-    });
+  authCall({action:'register',email:email,pass:pass,nombre:full}).then(function(r){
+    if(!r.data||!r.data.ok){ setErr('rg-err',(r.data&&r.data.error)||'No se pudo crear la cuenta'); return; }
+    saveSession({token:r.data.token,email:r.data.email,nombre:r.data.nombre});
+    enterApp(r.data.email,r.data.nombre);
+  });
 }
 
 function heartbeat(on){
   if(!CU) return;
   var t=new Date().toISOString();
   sbSafe(T_PRES,'upsert',{'correo_electronico':CU.email,'en_linea':on,'ultima_vez_visto':t},{upsert:{onConflict:'correo_electronico'}});
-  sbSafe(T_USERS,'update',{'en linea':on,'ultima vez visto':t},{eq:['correo electronico',CU.email]});
+  if(_sess.token) authCall({action:'presencia',token:_sess.token,on:!!on});
 }
 
 function enterApp(email,name){
@@ -794,7 +799,8 @@ function doLogout(){
   stopVoice();
   if(CU) heartbeat(false);
   stopAllListeners();
-  try{sessionStorage.removeItem('apli_email');sessionStorage.removeItem('apli_name');}catch(e){}
+  try{sessionStorage.removeItem('apli_email');sessionStorage.removeItem('apli_name');sessionStorage.removeItem('apli_token');}catch(e){}
+  _sess={token:'',email:'',nombre:''};
   SB.auth.signOut().catch(function(){});
   CU=null;_pedidos=[];_contacts=[];_unread={};_presence={};_updates=[];_chatCache={};currentContact=null;
   _iaMsgs=[IA_WELCOME()];
@@ -854,9 +860,9 @@ function loadContacts(){
       if(other&&emails.indexOf(other)<0&&!_contacts.find(function(c){return c.email===other;})) emails.push(other);
     });
     if(!emails.length){pollChats();return;}
-    SB.from(T_USERS).select('*').in('correo electronico',emails).then(function(r2){
+    authCall({action:'nombres',token:_sess.token,emails:emails}).then(function(r2){
       var names={};
-      (r2.data||[]).forEach(function(u){names[u['correo electronico']]=(u.nombre||'').trim();});
+      ((r2.data&&r2.data.usuarios)||[]).forEach(function(u){names[u.email]=(u.nombre||'').trim();});
       emails.forEach(function(e){
         if(!_contacts.find(function(c){return c.email===e;})){
           _contacts.push({email:e,name:names[e]||e.split('@')[0]});
@@ -1372,10 +1378,9 @@ function addContact(){
   if(!validEmail(email)){err.textContent='❌ Gmail inválido';err.style.display='block';return;}
   if(email===CU.email){err.textContent='❌ No podés agregarte';err.style.display='block';return;}
   if(_contacts.find(function(c){return c.email===email;})){err.textContent='⚠️ Ya está en tu lista';err.style.display='block';return;}
-  SB.from(T_USERS).select('nombre').eq('correo electronico',email).maybeSingle()
-    .then(function(r){
-      if(r.error){err.textContent='❌ Error de conexión';err.style.display='block';return;}
-      if(!r.data){err.textContent='❌ Gmail no registrado en APLI COP';err.style.display='block';return;}
+  authCall({action:'nombre_de',token:_sess.token,email:email}).then(function(r){
+      if(r.status===0){err.textContent='❌ Error de conexión';err.style.display='block';return;}
+      if(!r.data||!r.data.ok){err.textContent='❌ Gmail no registrado en APLI COP';err.style.display='block';return;}
       var name=(r.data.nombre||email.split('@')[0]).trim();
       _contacts.push({email:email,name:name});
       _unread[email]=0;
@@ -1622,6 +1627,58 @@ function extractImgPrompt(text){
   return text.replace(/aseme|haceme?|generame?|creame?|dibujame?|ilustra|diseña|mostrame|muestrame|quiero ver/gi,'').replace(/una? (imagen|foto|ilustraci.n|dise.o|dibujo|logo) (de|con)/gi,'').trim()||text;
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// CONVERSACIONES GUARDADAS DEL ASISTENTE (por cuenta, vía chef-conversaciones)
+// ══════════════════════════════════════════════════════════════
+var _iaConvId=null, _iaSaveChain=Promise.resolve();
+function iaCall(action,payload){
+  if(!_sess.token) return Promise.reject(new Error('sin sesión'));
+  return fetch(SUPABASE_URL+'/functions/v1/chef-conversaciones',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY,'apikey':SUPABASE_ANON_KEY},
+    body:JSON.stringify(Object.assign({token:_sess.token,action:action},payload||{}))
+  }).then(function(r){ return r.json().catch(function(){return {};}).then(function(d){ if(!r.ok) throw new Error(d.error||('Error '+r.status)); return d; }); });
+}
+function iaGuardar(role,content,titulo){
+  _iaSaveChain=_iaSaveChain.then(function(){
+    if(!_iaConvId){
+      return iaCall('create').then(function(r){ _iaConvId=r.data.id; });
+    }
+  }).then(function(){
+    return iaCall('add_message',{convId:_iaConvId,role:role,content:String(content||'')});
+  }).then(function(){
+    if(titulo) return iaCall('set_title',{convId:_iaConvId,title:String(titulo).substring(0,40)});
+  }).catch(function(e){ console.warn('No se guardó la conversación:',e&&e.message); });
+}
+function iaNuevaConv(){
+  _iaConvId=null; _iaMsgs=[IA_WELCOME()]; renderIA();
+  document.getElementById('ia-hist').style.display='none';
+}
+function iaAbrirHistorial(){
+  var box=document.getElementById('ia-hist');
+  if(box.style.display==='block'){ box.style.display='none'; return; }
+  box.innerHTML='<div style="font-size:.8rem;color:#6B7280;padding:6px;">Cargando...</div>';
+  box.style.display='block';
+  iaCall('list').then(function(r){
+    var list=r.data||[];
+    if(!list.length){ box.innerHTML='<div style="font-size:.8rem;color:#6B7280;padding:6px;">Todavía no tenés conversaciones guardadas.</div>'; return; }
+    box.innerHTML=list.map(function(c){
+      return '<div onclick="iaCargarConv(\''+esc(c.id)+'\')" style="padding:9px 10px;border-radius:10px;cursor:pointer;font-size:.85rem;color:#1A1A2E;border-bottom:1px solid #F3F4F6;">'+esc(c.title||'Conversación')+'</div>';
+    }).join('');
+  }).catch(function(){ box.innerHTML='<div style="font-size:.8rem;color:#DC2626;padding:6px;">No se pudieron cargar las conversaciones.</div>'; });
+}
+function iaCargarConv(id){
+  iaCall('messages',{convId:id}).then(function(r){
+    _iaConvId=id;
+    var msgs=(r.data||[]).map(function(m){
+      return {from:m.role==='assistant'?'ia':'user', text:m.content, time:''};
+    });
+    _iaMsgs=msgs.length?msgs:[IA_WELCOME()];
+    renderIA();
+    document.getElementById('ia-hist').style.display='none';
+  }).catch(function(){ toast('❌','No se pudo abrir la conversación'); });
+}
+
 function openIA(){renderIA();showPage('pg-ia');}
 
 function iaText(m){
@@ -1842,6 +1899,7 @@ function sendIA(){
   if(text.length>1000) text=text.substring(0,1000);
   var porVoz=_voiceAsk; _voiceAsk=false;
   _iaMsgs.push({from:'user',text:text,img:img||null,time:nowT()});input.value='';
+  iaGuardar('user',text||'[imagen]',(_iaConvId?null:text));
   if(img) iaClearImg();
   if(!img&&isImgRequest(text)){
     var prompt=extractImgPrompt(text);
@@ -1910,6 +1968,7 @@ function sendIA(){
       }
       _iaMsgs=_iaMsgs.filter(function(m){return m.id!==tid;});
       _iaMsgs.push({from:'ia',text:reply,img:replyImg,time:nowT()});
+      iaGuardar('assistant',reply,null);
       if(propObj) iaAddProp(propObj);
       if(porVoz) speakText(reply);
       var uc=_iaMsgs.filter(function(m){return m.from==='user';}).length;
@@ -2257,10 +2316,12 @@ _iaMsgs=[IA_WELCOME()];
     var savedEmail=null,savedName=null;
     try{savedEmail=sessionStorage.getItem('apli_email');savedName=sessionStorage.getItem('apli_name');}catch(e){}
     if(!savedEmail){showLogin();return;}
-    SB.from(T_USERS).select('nombre').eq('correo electronico',savedEmail).maybeSingle().then(function(r){
-      if(r.data) enterApp(savedEmail,(r.data.nombre||savedName||savedEmail.split('@')[0]).trim());
+    var savedToken=null; try{savedToken=sessionStorage.getItem('apli_token');}catch(e){}
+    if(!savedToken){showLogin();return;}
+    authCall({action:'me',token:savedToken}).then(function(r){
+      if(r.data&&r.data.ok){ _sess={token:savedToken,email:r.data.email,nombre:r.data.nombre}; enterApp(r.data.email,r.data.nombre); }
       else showLogin();
-    },showLogin);
+    });
   });
 })();
 
