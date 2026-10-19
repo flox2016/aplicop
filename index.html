@@ -157,7 +157,7 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
 .att-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 .send-btn{width:40px;height:40px;background:#075E54;border:none;border-radius:50%;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #pg-ia{background:#F0F4FF;}
-.ia-header{background:linear-gradient(120deg,#1A1A2E,#0F3460);padding:.85rem 1.25rem;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.ia-header{background:linear-gradient(120deg,#1A1A2E,#0F3460);padding:.85rem 1.25rem;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;}
 .img-gen-wrap{background:linear-gradient(135deg,#1A1A2E,#0F3460);border-radius:12px;padding:1rem;margin:4px 0;text-align:center;}
 .img-gen-anim{display:flex;align-items:center;justify-content:center;gap:10px;color:#A8D4F5;font-size:.82rem;padding:.5rem 0;}
 .img-gen-dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B00;margin:0 3px;animation:imgdot 1.2s infinite;}
@@ -542,9 +542,9 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
     <button class="convo-back" onclick="showPage(&#39;pg-app&#39;);goScr(&#39;chat&#39;)">←</button>
     <div class="convo-av" style="background:linear-gradient(135deg,#3A8FC7,#6B48FF);font-size:1rem">🤖</div>
     <div><div class="convo-name">IA — Asistente APLI COP</div><div style="font-size:.7rem;color:#A8D4F5">Preguntas + imágenes 🎨</div></div>
-    <div style="margin-left:auto;display:flex;gap:6px;">
-      <button onclick="iaNuevaConv()" title="Nueva conversación" style="background:none;border:1px solid #FF6B00;color:#FF6B00;border-radius:10px;padding:.35rem .6rem;font-size:.8rem;font-weight:700;cursor:pointer;">＋</button>
-      <button onclick="iaAbrirHistorial()" title="Mis conversaciones" style="background:none;border:1px solid #9CA3AF;color:#fff;border-radius:10px;padding:.35rem .6rem;font-size:.8rem;cursor:pointer;">🗂️</button>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+      <button onclick="iaNuevaConv()" title="Nueva conversación" style="background:#FF6B00;border:none;color:#fff;border-radius:12px;padding:.6rem .9rem;font-size:1rem;font-weight:800;cursor:pointer;white-space:nowrap;">+ Nuevo Chat</button>
+      <button onclick="iaAbrirHistorial()" title="Mis conversaciones" style="background:none;border:2px solid #9CA3AF;color:#fff;border-radius:12px;padding:.6rem .9rem;font-size:1rem;font-weight:700;cursor:pointer;white-space:nowrap;">🗂️ Mis Chats</button>
     </div>
   </div>
   <div id="ia-hist" style="display:none;background:#fff;border-bottom:1px solid #E5E7EB;max-height:45vh;overflow:auto;padding:8px 12px;"></div>
