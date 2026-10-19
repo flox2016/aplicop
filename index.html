@@ -210,6 +210,30 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
 .main-btn:disabled{opacity:.6;cursor:wait;}
 .input-bar input{min-width:0;}
 .add-row input{min-width:0;}
+/* ══ TIEMPO REAL + LLAMADAS ══ */
+.cv-call-btn{border:none;background:#ffffff22;color:#fff;border-radius:50%;width:38px;height:38px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#cv-calls{margin-left:auto;gap:6px}
+.live-bubble{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:0 12px 12px 12px;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.live-dots i{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:#9CA3AF;animation:livedot 1.2s infinite}
+.live-dots i:nth-child(2){animation-delay:.2s}
+.live-dots i:nth-child(3){animation-delay:.4s}
+@keyframes livedot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.live-mic{display:inline-block;animation:livepulse 1s infinite}
+@keyframes livepulse{50%{transform:scale(1.15)}}
+#live-emo{font-size:1.1rem;min-width:24px;display:inline-block}
+.live-txt{font-size:.8rem;color:#6B7280}
+.call-ov{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1A1A2E,#2D1B4E);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font-family:Nunito,'Segoe UI',sans-serif;overflow:hidden}
+.call-remote{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;display:none}
+.call-local{position:absolute;right:12px;top:12px;width:110px;height:150px;object-fit:cover;border-radius:12px;background:#000;border:2px solid #ffffff55;display:none;z-index:2}
+.call-av{width:96px;height:96px;border-radius:50%;background:#FF6B00;align-items:center;justify-content:center;font-size:2.4rem;font-weight:900;display:flex}
+.call-name{font-size:1.4rem;font-weight:800;position:relative;z-index:1;text-shadow:0 1px 4px #000}
+.call-sub{font-size:.95rem;opacity:.9;position:relative;z-index:1;text-shadow:0 1px 4px #000}
+.call-row{display:flex;gap:22px;margin-top:20px;position:relative;z-index:3}
+.call-round{width:64px;height:64px;border-radius:50%;border:none;background:#ffffff33;color:#fff;font-size:1.5rem;cursor:pointer}
+.call-round.off{background:#fff;color:#1A1A2E}
+.call-no{background:#DC2626}
+.call-yes{background:#22C55E;animation:callpulse 1s infinite}
+@keyframes callpulse{50%{transform:scale(1.08)}}
 </style>
 </head>
 <body>
@@ -465,14 +489,16 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
     <button class="convo-back" onclick="backToChat()">←</button>
     <div class="convo-av" id="cv-av">?</div>
     <div><div class="convo-name" id="cv-name">Contacto</div><div id="cv-status" style="font-size:.7rem;color:#B2DFDB">cargando...</div></div>
+    <div id="cv-calls" style="display:none"><button class="cv-call-btn" onclick="callStart(false)" title="Llamar">📞</button><button class="cv-call-btn" onclick="callStart(true)" title="Videollamada">📹</button></div>
   </div>
   <div class="msgs" id="cv-msgs"></div>
+  <div id="cv-live" style="padding:0 12px 6px"></div>
   <div class="input-bar">
     <label class="att-btn">🖼️<input type="file" accept="image/*" onchange="sendFile(event,&#39;image&#39;)"></label>
     <label class="att-btn">🎥<input type="file" accept="video/*" onchange="sendFile(event,&#39;video&#39;)"></label>
     <label class="att-btn">📎<input type="file" onchange="sendFile(event,&#39;file&#39;)"></label>
     <button id="rec-start" class="att-btn" title="Grabar audio" onclick="recStart()" style="border:none;background:none;cursor:pointer;font-size:1.1rem">🎤</button>
-    <input type="text" id="cv-input" maxlength="2000" placeholder="Escribí un mensaje..." onkeydown="if(event.key===&#39;Enter&#39;)sendMsg()">
+    <input type="text" id="cv-input" maxlength="2000" oninput="rtOnInput()" placeholder="Escribí un mensaje..." onkeydown="if(event.key===&#39;Enter&#39;)sendMsg()">
     <button class="send-btn" onclick="sendMsg()">➤</button>
     <div id="rec-bar" style="display:none;align-items:center;gap:8px;flex:1;">
       <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#DC2626;"></span>
@@ -482,6 +508,31 @@ body{font-family:Poppins,sans-serif;background:#F7F8FA;min-height:100vh;}
       <span style="flex:1"></span>
       <button class="send-btn" onclick="recSend()" title="Enviar audio">➤</button>
     </div>
+  </div>
+</div>
+
+<!-- LLAMADA ENTRANTE -->
+<div id="call-in" class="call-ov" style="display:none">
+  <div class="call-av" id="call-in-av">?</div>
+  <div class="call-name" id="call-in-name"></div>
+  <div class="call-sub" id="call-in-sub">Te está llamando</div>
+  <div class="call-row">
+    <button class="call-round call-no" onclick="callReject()" title="Rechazar">📵</button>
+    <button class="call-round call-yes" onclick="callAccept()" title="Aceptar">📞</button>
+  </div>
+</div>
+<!-- LLAMADA EN CURSO -->
+<div id="call-ov" class="call-ov" style="display:none">
+  <video id="call-remote" class="call-remote" autoplay playsinline muted></video>
+  <video id="call-local" class="call-local" autoplay playsinline muted></video>
+  <audio id="call-audio" autoplay></audio>
+  <div class="call-av" id="call-av">?</div>
+  <div class="call-name" id="call-name"></div>
+  <div class="call-sub" id="call-stat">Llamando…</div>
+  <div class="call-row">
+    <button class="call-round" id="call-mic" onclick="callToggleMic()" title="Micrófono">🎙️</button>
+    <button class="call-round" id="call-cam" onclick="callToggleCam()" title="Cámara">📷</button>
+    <button class="call-round call-no" onclick="callHangup()" title="Colgar">📵</button>
   </div>
 </div>
 
@@ -2325,6 +2376,391 @@ _iaMsgs=[IA_WELCOME()];
   });
 })();
 
+
+/* ══════════════════════════════════════════════════════════════
+   TIEMPO REAL: "escribiendo", "grabando audio" y LLAMADAS (audio / video)
+   ══════════════════════════════════════════════════════════════ */
+// Servidores TURN (opcional). Cuando tengas credenciales, pegalas acá:
+// var RT_TURN_SERVERS = [{urls:'turn:tu-servidor:3478', username:'usuario', credential:'clave'}];
+var RT_TURN_SERVERS = [];
+var RT_ICE = [{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}].concat(RT_TURN_SERVERS);
+
+var _rtCh = {}, _liveKey = null, _peerTyping = false, _peerRec = false;
+var _typingTimer = null, _typingSentAt = 0, _emoIv = null, _emoIdx = 0;
+var _callInboxCh = null, _callOut = {}, _call = null, _incoming = null, _incomingTimer = null;
+var _callTimerIv = null, _callStartTs = 0, _ringCtx = null, _ringIv = null;
+
+function rtName(prefix, id){ return prefix + '-' + String(id).replace(/[^a-zA-Z0-9]/g, '-'); }
+
+// ── Canal por conversación (escribiendo / grabando) ──
+function rtSubscribe(key){
+  if(_rtCh[key]) return _rtCh[key];
+  var ch = SB.channel(rtName('rt', key))
+    .on('broadcast', {event:'live'}, function(e){ rtOnLive(key, e.payload || {}); })
+    .subscribe();
+  _rtCh[key] = ch; _sbChannels.push(ch);
+  return ch;
+}
+function rtSend(key, payload){
+  var ch = _rtCh[key]; if(!ch || !CU) return;
+  payload.from = CU.email;
+  ch.send({type:'broadcast', event:'live', payload:payload});
+}
+function rtEnterConvo(peer){
+  if(!CU || !peer) return;
+  _liveKey = getChatKey(CU.email, peer);
+  rtSubscribe(_liveKey);
+  _peerTyping = false; _peerRec = false; rtRender();
+}
+function rtLeave(){
+  _liveKey = null; _peerTyping = false; _peerRec = false;
+  clearTimeout(_typingTimer); rtStopEmo();
+  var b = document.getElementById('cv-live'); if(b) b.innerHTML = '';
+}
+function rtBaseStatus(){
+  if(!currentContact) return '';
+  if(currentContact.email === ADMIN) return 'Soporte oficial';
+  return isOnline(currentContact.email) ? 'en línea' : 'no en línea';
+}
+function rtRender(){
+  var box = document.getElementById('cv-live'); if(!box) return;
+  var h = '';
+  if(_peerRec) h = '<div class="live-bubble"><span class="live-mic">🎤</span><span id="live-emo">🔈</span><span class="live-txt">grabando audio…</span></div>';
+  else if(_peerTyping) h = '<div class="live-bubble"><span class="live-dots"><i></i><i></i><i></i></span></div>';
+  box.innerHTML = h;
+  var st = document.getElementById('cv-status');
+  if(st && currentContact){
+    if(_peerRec) st.textContent = 'grabando audio…';
+    else if(_peerTyping) st.textContent = 'escribiendo…';
+    else st.textContent = rtBaseStatus();
+  }
+  if(_peerRec) rtStartEmo(); else rtStopEmo();
+}
+function rtStartEmo(){
+  if(_emoIv) return; _emoIdx = 0;
+  _emoIv = setInterval(function(){
+    var e = document.getElementById('live-emo'); if(!e) return;
+    e.textContent = ['🔈','🔉','🔊'][(_emoIdx++) % 3];
+  }, 400);
+}
+function rtStopEmo(){ clearInterval(_emoIv); _emoIv = null; }
+
+function rtOnLive(key, p){
+  if(!CU || p.from === CU.email || key !== _liveKey) return;
+  if(p.t === 'typing'){
+    if(p.on === false){ _peerTyping = false; clearTimeout(_typingTimer); }
+    else {
+      _peerTyping = true; clearTimeout(_typingTimer);
+      _typingTimer = setTimeout(function(){ _peerTyping = false; rtRender(); }, 3000);
+    }
+  } else if(p.t === 'rec'){
+    _peerRec = !!p.on;
+    if(p.on){ _peerTyping = false; clearTimeout(_typingTimer); }
+  }
+  rtRender();
+}
+// Lo que yo escribo
+function rtOnInput(){
+  var parts = convoKeyParts(); if(!parts) return;
+  var input = document.getElementById('cv-input');
+  if(!input || !input.value.trim()){ rtStopTyping(); return; }
+  if(Date.now() - _typingSentAt > 2000){
+    _typingSentAt = Date.now();
+    rtSend(getChatKey(parts[0], parts[1]), {t:'typing', on:true});
+  }
+}
+function rtStopTyping(){
+  var parts = convoKeyParts(); if(!parts) return;
+  _typingSentAt = 0;
+  rtSend(getChatKey(parts[0], parts[1]), {t:'typing', on:false});
+}
+
+// ── Canal personal de llamadas (cada usuario escucha su propio "buzón") ──
+function callInboxStart(){
+  if(!CU || _callInboxCh) return;
+  _callInboxCh = SB.channel(rtName('call', CU.email))
+    .on('broadcast', {event:'sig'}, function(e){ onCallSig(e.payload || {}); })
+    .subscribe();
+  _sbChannels.push(_callInboxCh);
+}
+function callSendTo(email, payload){
+  var ch = _callOut[email];
+  if(!ch){
+    ch = SB.channel(rtName('call', email)).subscribe();
+    _callOut[email] = ch; _sbChannels.push(ch);
+  }
+  payload.from = CU.email;
+  payload.fromName = CU.name || CU.email;
+  ch.send({type:'broadcast', event:'sig', payload:payload});
+}
+
+function onCallSig(p){
+  if(!CU || !p.from || p.from === CU.email) return;
+  if(p.t === 'invite') return callOnInvite(p);
+  if(p.t === 'accept') return callOnAccept(p);
+  if(p.t === 'reject'){
+    if(_call && _call.role === 'caller' && _call.peer === p.from){
+      toast('ℹ️', p.reason === 'busy' ? (_call.peerName + ' está en otra llamada') : (_call.peerName + ' no atendió'));
+      callCleanup();
+    }
+    return;
+  }
+  if(p.t === 'end'){
+    if(_incoming && _incoming.from === p.from) callHideIncoming();
+    if(_call && _call.peer === p.from){ toast('ℹ️','La llamada terminó'); callCleanup(); }
+  }
+}
+
+function callOnInvite(p){
+  if(_call || _incoming){ callSendTo(p.from, {t:'reject', reason:'busy'}); return; }
+  _incoming = p;
+  var nm = p.fromName || p.from;
+  document.getElementById('call-in-av').textContent = nm.charAt(0).toUpperCase();
+  document.getElementById('call-in-av').style.background = avColor(p.from);
+  document.getElementById('call-in-name').textContent = nm;
+  document.getElementById('call-in-sub').textContent = p.video ? 'Videollamada entrante' : 'Llamada entrante';
+  document.getElementById('call-in').style.display = 'flex';
+  ringStart();
+  _incomingTimer = setTimeout(callHideIncoming, 35000);
+}
+function callHideIncoming(){
+  clearTimeout(_incomingTimer); _incomingTimer = null;
+  _incoming = null; ringStop();
+  document.getElementById('call-in').style.display = 'none';
+}
+function callReject(){
+  var p = _incoming; callHideIncoming();
+  if(p) callSendTo(p.from, {t:'reject'});
+}
+
+async function callAccept(){
+  var p = _incoming; if(!p) return;
+  callHideIncoming();
+  var stream;
+  try{ stream = await callGetMedia(!!p.video); }
+  catch(e){ toast('❌','Necesitás permitir el micrófono para atender'); callSendTo(p.from, {t:'reject', reason:'nomedia'}); return; }
+  _call = {role:'callee', peer:p.from, peerName:p.fromName || p.from, stream:stream, state:'connecting'};
+  callShowUI();
+  try{
+    var pc = callNewPc(); _call.pc = pc;
+    stream.getTracks().forEach(function(t){ pc.addTrack(t, stream); });
+    await pc.setRemoteDescription({type:'offer', sdp:p.sdp});
+    var ans = await pc.createAnswer();
+    await pc.setLocalDescription(ans);
+    await callWaitIce(pc);
+    callSendTo(p.from, {t:'accept', sdp:pc.localDescription.sdp});
+  }catch(e){
+    console.warn(e); toast('❌','No se pudo establecer la llamada'); callHangup(true);
+  }
+}
+async function callOnAccept(p){
+  if(!_call || _call.role !== 'caller' || _call.peer !== p.from || _call.state !== 'calling') return;
+  clearTimeout(_call.timeout); _call.state = 'connecting';
+  try{
+    await _call.pc.setRemoteDescription({type:'answer', sdp:p.sdp});
+    callSetStat('Conectando…');
+  }catch(e){
+    console.warn(e); toast('❌','No se pudo establecer la llamada'); callHangup(true);
+  }
+}
+
+async function callStart(video){
+  if(!CU || !currentContact || currentContact.email === ADMIN){
+    toast('ℹ️','Las llamadas son entre usuarios de la app'); return;
+  }
+  if(_call){ toast('ℹ️','Ya estás en una llamada'); return; }
+  var peer = currentContact.email, pname = currentContact.name || peer;
+  if(!isOnline(peer)){ toast('ℹ️', pname + ' no está en línea ahora'); return; }
+  if(!navigator.mediaDevices || !window.RTCPeerConnection){
+    toast('❌','Tu navegador no permite llamadas'); return;
+  }
+  var stream;
+  try{ stream = await callGetMedia(video); }
+  catch(e){ toast('❌','Necesitás permitir el micrófono' + (video ? ' y la cámara' : '')); return; }
+  _call = {role:'caller', peer:peer, peerName:pname, stream:stream, state:'calling'};
+  callShowUI();
+  try{
+    var pc = callNewPc(); _call.pc = pc;
+    stream.getTracks().forEach(function(t){ pc.addTrack(t, stream); });
+    var offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await callWaitIce(pc);
+    callSendTo(peer, {t:'invite', video:video, sdp:pc.localDescription.sdp});
+    _call.timeout = setTimeout(function(){
+      if(_call && _call.state === 'calling'){ toast('ℹ️','Sin respuesta'); callHangup(true); }
+    }, 35000);
+  }catch(e){
+    console.warn(e); toast('❌','No se pudo iniciar la llamada'); callHangup(true);
+  }
+}
+
+async function callGetMedia(video){
+  if(video){
+    try{
+      return await navigator.mediaDevices.getUserMedia({
+        audio:true, video:{facingMode:'user', width:{ideal:640}, height:{ideal:480}}
+      });
+    }catch(e){ toast('⚠️','No hay cámara disponible: la llamada va solo con audio'); }
+  }
+  return await navigator.mediaDevices.getUserMedia({audio:true});
+}
+
+function callNewPc(){
+  var pc = new RTCPeerConnection({iceServers: RT_ICE});
+  pc.ontrack = function(e){
+    var s = e.streams[0] || new MediaStream([e.track]);
+    document.getElementById('call-audio').srcObject = s;
+    document.getElementById('call-remote').srcObject = s;
+    callUpdateMode();
+    e.track.onunmute = callUpdateMode;
+  };
+  pc.onconnectionstatechange = function(){
+    var st = pc.connectionState;
+    if(st === 'connected'){ callSetStat('En llamada'); callStartTimer(); }
+    else if(st === 'disconnected'){ callSetStat('Reconectando…'); }
+    else if(st === 'failed'){
+      toast('❌','No se pudo conectar. Puede hacer falta un servidor TURN');
+      callHangup(true);
+    }
+  };
+  return pc;
+}
+function callWaitIce(pc){
+  return new Promise(function(res){
+    if(pc.iceGatheringState === 'complete') return res();
+    var chk = function(){ if(pc.iceGatheringState === 'complete') done(); };
+    var done = function(){ pc.removeEventListener('icegatheringstatechange', chk); res(); };
+    pc.addEventListener('icegatheringstatechange', chk);
+    setTimeout(done, 5000);
+  });
+}
+
+function callShowUI(){
+  var nm = _call.peerName;
+  document.getElementById('call-name').textContent = nm;
+  var av = document.getElementById('call-av');
+  av.textContent = nm.charAt(0).toUpperCase(); av.style.background = avColor(_call.peer);
+  document.getElementById('call-local').srcObject = _call.stream;
+  var mic = document.getElementById('call-mic'); mic.classList.remove('off'); mic.textContent = '🎙️';
+  var cam = document.getElementById('call-cam'); cam.classList.remove('off'); cam.textContent = '📷';
+  callSetStat(_call.role === 'caller' ? 'Llamando…' : 'Conectando…');
+  document.getElementById('call-ov').style.display = 'flex';
+  callUpdateMode();
+}
+function callUpdateMode(){
+  var ov = document.getElementById('call-ov'); if(!ov || !_call) return;
+  var rv = document.getElementById('call-remote').srcObject;
+  var lv = _call.stream;
+  var remoteVid = !!(rv && rv.getVideoTracks().length);
+  var localVid = !!(lv && lv.getVideoTracks().length);
+  document.getElementById('call-remote').style.display = remoteVid ? 'block' : 'none';
+  document.getElementById('call-av').style.display = remoteVid ? 'none' : 'flex';
+  document.getElementById('call-local').style.display = localVid ? 'block' : 'none';
+  document.getElementById('call-cam').style.display = localVid ? '' : 'none';
+  ov.classList.toggle('vid', remoteVid || localVid);
+}
+function callSetStat(t){ if(_callTimerIv) return; document.getElementById('call-stat').textContent = t; }
+function callStartTimer(){
+  if(_callTimerIv) return;
+  _callStartTs = Date.now();
+  _callTimerIv = setInterval(function(){
+    var s = Math.floor((Date.now() - _callStartTs) / 1000);
+    document.getElementById('call-stat').textContent = Math.floor(s/60) + ':' + String(s % 60).padStart(2,'0');
+  }, 500);
+}
+function callToggleMic(){
+  if(!_call) return;
+  var t = _call.stream.getAudioTracks()[0]; if(!t) return;
+  t.enabled = !t.enabled;
+  var b = document.getElementById('call-mic');
+  b.classList.toggle('off', !t.enabled); b.textContent = t.enabled ? '🎙️' : '🔇';
+}
+function callToggleCam(){
+  if(!_call) return;
+  var t = _call.stream.getVideoTracks()[0]; if(!t) return;
+  t.enabled = !t.enabled;
+  var b = document.getElementById('call-cam');
+  b.classList.toggle('off', !t.enabled); b.textContent = t.enabled ? '📷' : '🚫';
+}
+
+function callHangup(notify){
+  if(notify !== false && _call && _call.peer) callSendTo(_call.peer, {t:'end'});
+  callCleanup();
+}
+function callCleanup(){
+  if(_call){
+    clearTimeout(_call.timeout);
+    try{ if(_call.pc) _call.pc.close(); }catch(e){}
+    try{ if(_call.stream) _call.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+  }
+  _call = null;
+  clearInterval(_callTimerIv); _callTimerIv = null;
+  document.getElementById('call-ov').style.display = 'none';
+  document.getElementById('call-remote').srcObject = null;
+  document.getElementById('call-audio').srcObject = null;
+  document.getElementById('call-local').srcObject = null;
+}
+
+// ── Tono de llamada entrante ──
+function ringStart(){
+  try{
+    _ringCtx = _ringCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(_ringCtx.state === 'suspended') _ringCtx.resume();
+    var beep = function(){
+      var t = _ringCtx.currentTime;
+      [0, 0.22].forEach(function(d){
+        var o = _ringCtx.createOscillator(), g = _ringCtx.createGain();
+        o.type = 'sine'; o.frequency.value = d ? 660 : 880;
+        g.gain.setValueAtTime(0.0001, t+d);
+        g.gain.exponentialRampToValueAtTime(0.3, t+d+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+d+0.18);
+        o.connect(g); g.connect(_ringCtx.destination);
+        o.start(t+d); o.stop(t+d+0.2);
+      });
+      if(navigator.vibrate) navigator.vibrate(300);
+    };
+    beep(); clearInterval(_ringIv); _ringIv = setInterval(beep, 1800);
+  }catch(e){}
+}
+function ringStop(){ clearInterval(_ringIv); _ringIv = null; }
+
+// ── Botones de llamada (no aparecen en soporte) ──
+function updCallBtns(){
+  var b = document.getElementById('cv-calls'); if(!b) return;
+  b.style.display = (currentContact && currentContact.email && currentContact.email !== ADMIN) ? 'flex' : 'none';
+}
+
+// ══ ENGANCHE CON EL RESTO DE LA APP (sin tocar sus funciones) ══
+var _startOrig = startListeners;
+startListeners = function(){ _startOrig(); callInboxStart(); };
+
+var _stopOrig2 = stopAllListeners;
+stopAllListeners = function(){ _stopOrig2(); _rtCh = {}; _callInboxCh = null; _callOut = {}; };
+
+var _openConvoOrig = openConvo;
+openConvo = function(i){
+  _openConvoOrig(i);
+  if(CU && _contacts[i]) rtEnterConvo(_contacts[i].email);
+  updCallBtns();
+};
+var _openAdminOrig = openAdminChat;
+openAdminChat = function(){
+  _openAdminOrig();
+  if(currentContact) rtEnterConvo(currentContact.email);
+  updCallBtns();
+};
+var _backOrig = backToChat;
+backToChat = function(){ rtLeave(); _backOrig(); updCallBtns(); };
+
+var _sendMsgOrig = sendMsg;
+sendMsg = function(){ _sendMsgOrig(); rtStopTyping(); };
+
+var _recUIOrig = recUI;
+recUI = function(on){
+  _recUIOrig(on);
+  var parts = convoKeyParts(); if(!parts) return;
+  rtSend(getChatKey(parts[0], parts[1]), {t:'rec', on:!!on});
+};
 </script>
 
 
