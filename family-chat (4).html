@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Family-Chat · Empresa APLI COP®</title>
+<link rel="icon" href="https://aplicop.com.ar/COP.png">
+<link rel="apple-touch-icon" href="https://aplicop.com.ar/COP.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--az:#1F6FD1;--az2:#0B4A9C;--azc:#EAF3FD;--azm:#B9D5F5;--tx:#0F2A4A;--gr:#6B7C93;--ln:#D4E3F5}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Poppins,system-ui,sans-serif;background:var(--azc);color:var(--tx);-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;border:none}
+input,select,textarea{font-family:inherit}
+.page{display:none;min-height:100%;flex-direction:column}
+.page.on{display:flex}
+
+/* HOME */
+#pg-home{background:linear-gradient(170deg,#fff 0%,var(--azc) 60%,var(--azm) 100%);justify-content:space-between;padding:1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom,0px))}
+.hero{text-align:center;padding-top:3.5rem}
+.hero img{width:96px;height:96px;object-fit:contain;background:#fff;border-radius:24px;padding:8px;box-shadow:0 10px 30px rgba(31,111,209,.25)}
+.hero h1{font-size:1.9rem;font-weight:700;color:var(--az2);margin-top:1rem}
+.hero p{font-size:.9rem;color:var(--gr);margin-top:.25rem}
+.hero .brand{font-size:.8rem;font-weight:600;color:var(--az);margin-top:.4rem;letter-spacing:.5px}
+.menu{display:flex;flex-direction:column;gap:12px}
+.mbtn{width:100%;padding:1rem;border-radius:16px;font-size:1rem;font-weight:600;color:#fff;background:var(--az);box-shadow:0 6px 18px rgba(31,111,209,.3)}
+.mbtn.alt{background:#fff;color:var(--az2);border:2px solid var(--az);box-shadow:none}
+.mbtn:active{transform:scale(.98)}
+
+/* BARRAS Y FORMULARIOS */
+.bar{background:#fff;padding:.9rem 1.1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:5}
+.bar h2{font-size:1rem;color:var(--az2)}
+.back{width:38px;height:38px;border-radius:12px;background:var(--azc);font-size:1.1rem;color:var(--az2)}
+.card{background:#fff;margin:1rem;border-radius:20px;padding:1.25rem;box-shadow:0 8px 24px rgba(31,111,209,.1)}
+.card h3{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--az);margin-bottom:.8rem}
+.card p{font-size:.85rem;color:var(--gr);margin-bottom:.7rem;line-height:1.5}
+.sub{font-size:.85rem;color:var(--gr);margin:1rem 1rem 0;line-height:1.5}
+.fld{margin-bottom:.9rem}
+.fld label{display:block;font-size:.72rem;font-weight:600;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;border:1.5px solid var(--ln);border-radius:12px;padding:.7rem .9rem;font-size:.92rem;color:var(--tx);outline:none;background:#fff}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--az)}
+.fld textarea{resize:vertical;min-height:90px}
+.err{color:#D62828;font-size:.8rem;min-height:1.1em;text-align:center;margin:.2rem 0 .4rem}
+.primary{width:100%;background:var(--az);color:#fff;padding:.85rem;border-radius:14px;font-size:1rem;font-weight:600;margin-top:.3rem}
+.primary:disabled{opacity:.6}
+.ghost{background:var(--azc);color:var(--az2);padding:.6rem 1rem;border-radius:12px;font-weight:600;font-size:.85rem}
+.danger{background:#FDECEC;color:#B42318;width:100%;padding:.85rem;border-radius:14px;font-weight:600;font-size:.95rem}
+.muted-btn{width:100%;margin-top:.5rem}
+.empty{text-align:center;color:var(--gr);padding:2rem 1rem;font-size:.9rem}
+
+/* ESPERA */
+#pg-wait{justify-content:center;align-items:center;padding:1.5rem;text-align:center}
+.wait-box{background:#fff;border-radius:22px;padding:2rem 1.5rem;width:100%;max-width:360px;box-shadow:0 8px 24px rgba(31,111,209,.12)}
+.spin{width:54px;height:54px;border-radius:50%;border:5px solid var(--azm);border-top-color:var(--az);margin:0 auto 1rem;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.wait-box h2{color:var(--az2);font-size:1.2rem;margin-bottom:.4rem}
+.wait-box p{color:var(--gr);font-size:.88rem;line-height:1.5;margin-bottom:1.2rem}
+
+/* SALA */
+#pg-room{height:100vh;height:100dvh}
+.rtop{background:#fff;padding:.75rem 1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ln);flex-shrink:0}
+.rtop img{width:34px;height:34px;object-fit:contain}
+.rtop .tt{flex:1;min-width:0}
+.rtop h2{font-size:.98rem;color:var(--az2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtop small{font-size:.68rem;color:var(--gr)}
+.rbody{flex:1;min-height:0;overflow-y:auto;padding:1rem;display:none}
+.rbody.on{display:block}
+#tab-cfg .card:first-child{margin-top:0}
+.cin{display:none;gap:8px;padding:.6rem;background:#fff;border-top:1px solid var(--ln);flex-shrink:0}
+.cin input{flex:1;border:1.5px solid var(--ln);border-radius:22px;padding:.65rem 1rem;outline:none;font-size:.9rem}
+.cin input:focus{border-color:var(--az)}
+.cin button{background:var(--az);color:#fff;border-radius:22px;padding:0 1.1rem;font-weight:600}
+.rnav{display:flex;background:#fff;border-top:1px solid var(--ln);padding:.35rem 0 calc(.35rem + env(safe-area-inset-bottom,0px));flex-shrink:0}
+.rnav button{flex:1;background:none;color:var(--gr);font-size:.7rem;font-weight:600;padding:.35rem;display:flex;flex-direction:column;align-items:center;gap:2px}
+.rnav button .ic{font-size:1.2rem}
+.rnav button.on{color:var(--az)}
+
+/* AVATARES Y MENSAJES */
+.av{width:30px;height:30px;border-radius:50%;background:var(--az);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;object-fit:cover}
+img.av{display:block}
+.av.big{width:84px;height:84px;font-size:2rem;margin:0 auto .6rem}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row.mine{justify-content:flex-end}
+.bub{max-width:76%;background:#fff;border-radius:16px 16px 16px 4px;padding:.5rem .75rem;box-shadow:0 2px 6px rgba(15,42,74,.06)}
+.bub b{display:block;font-size:.7rem;color:var(--az);margin-bottom:2px}
+.bub span{font-size:.9rem;white-space:pre-wrap;word-break:break-word}
+.bub small{display:block;font-size:.6rem;color:var(--gr);text-align:right;margin-top:2px}
+.bub.me{background:var(--az);color:#fff;border-radius:16px 16px 4px 16px}
+.bub.me small{color:#D6E7FB}
+.pend{background:#fff;border:2px solid var(--az);border-radius:16px;padding:1rem;margin-bottom:12px}
+.pend p{font-size:.9rem;margin-bottom:.6rem}
+.pend .acts{display:flex;gap:8px}
+.pend button{flex:1;padding:.6rem;border-radius:12px;font-weight:600;color:#fff}
+.pend .yes{background:var(--az)}
+.pend .no{background:#D62828}
+
+/* ÁRBOL */
+.tree ul{list-style:none;padding-left:18px;border-left:2px solid var(--azm);margin-left:10px}
+.tree>ul{border-left:none;padding-left:0;margin-left:0}
+.tree li{margin:2px 0}
+.pn{display:inline-flex;align-items:center;gap:6px;background:var(--azc);border:1.5px solid var(--azm);border-radius:12px;padding:.4rem .6rem;margin:5px 0;font-size:.85rem;flex-wrap:wrap}
+.pn small{color:var(--gr);font-size:.7rem}
+.pn button{background:none;color:#D62828;font-size:.85rem;margin-left:4px}
+
+/* TOAST */
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--az2);color:#fff;padding:.7rem 1.1rem;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;font-size:.85rem;z-index:99;max-width:90%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.ic-btn{background:var(--azc);color:var(--az2);border-radius:50%;width:40px;height:40px;font-size:1.2rem;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center}
+.amenu{position:fixed;left:12px;bottom:130px;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,42,74,.2);padding:8px;display:none;flex-direction:column;gap:4px;z-index:30;min-width:190px}
+.amenu.on{display:flex}
+.amenu button{background:none;text-align:left;padding:.6rem .8rem;border-radius:10px;font-size:.9rem;color:var(--tx)}
+.amenu button:hover{background:var(--azc)}
+.typing{display:none;padding:.4rem 1rem;font-size:.78rem;color:var(--az2);background:var(--azc);align-items:center;gap:6px}
+.typing.on{display:flex}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--az);display:inline-block;animation:bl 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}
+.dots i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.rdot{width:9px;height:9px;border-radius:50%;background:#D62828;display:inline-block;animation:bl 1s infinite}
+.recbar{display:none;align-items:center;gap:8px;padding:.5rem .8rem;background:#FDECEC;color:#B42318;font-size:.82rem;font-weight:600;flex-wrap:wrap}
+.recbar.on{display:flex}
+.recbar button{background:#fff;border-radius:10px;padding:.35rem .6rem;font-size:.78rem;font-weight:600;color:#B42318}
+.recbar button.ok{background:var(--az);color:#fff}
+.mimg{max-width:220px;max-height:220px;border-radius:12px;display:block;cursor:pointer}
+.mfile{color:inherit;text-decoration:underline;font-size:.88rem}
+.bub audio{max-width:220px;display:block}
+.inc{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:420px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 12px 30px rgba(15,42,74,.25);z-index:60;font-size:.88rem;align-items:center;gap:8px;flex-wrap:wrap}
+.inc.on{display:flex}
+.inc button{padding:.5rem .9rem;border-radius:10px;font-weight:600;background:var(--az);color:#fff}
+.inc button+button{background:var(--azc);color:var(--az2)}
+.cov{position:fixed;inset:0;background:#0B2545;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1rem}
+.cov.on{display:flex}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;width:100%;max-height:70vh;overflow:auto}
+.ctile{position:relative;background:#1F3A5F;border-radius:14px;overflow:hidden;aspect-ratio:4/3}
+.ctile video{width:100%;height:100%;object-fit:cover}
+.cname{position:absolute;left:8px;bottom:6px;color:#fff;font-size:.75rem;background:rgba(0,0,0,.4);padding:2px 8px;border-radius:8px}
+.cctl{display:flex;gap:12px;margin-top:16px}
+.cctl button{width:54px;height:54px;border-radius:50%;background:#fff;font-size:1.3rem}
+.cctl .endc{background:#D62828;width:auto;padding:0 18px;border-radius:27px;color:#fff;font-weight:700;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<!-- INICIO -->
+<section id="pg-home" class="page on">
+  <div class="hero">
+    <img src="https://aplicop.com.ar/COP.png" alt="APLI COP">
+    <h1>Family-Chat</h1>
+    <p>Chats para tu familia y tus grupos</p>
+    <div class="brand">Empresa APLI COP®</div>
+  </div>
+  <div class="menu">
+    <button class="mbtn" onclick="openForm('createFam')">Crear Family-Chat</button>
+    <button class="mbtn alt" onclick="openForm('joinFam')">Unirse a Un Family-Chat</button>
+    <button class="mbtn" onclick="openForm('createPriv')">Crear Chat Privado</button>
+    <button class="mbtn alt" onclick="openForm('joinPriv')">Unirse a Un Chat Privado</button>
+  </div>
+</section>
+
+<!-- FORMULARIO GENÉRICO -->
+<section id="pg-form" class="page">
+  <div class="bar">
+    <button class="back" onclick="show('pg-home')">←</button>
+    <h2 id="f-title"></h2>
+  </div>
+  <p class="sub" id="f-sub"></p>
+  <div class="card">
+    <div id="f-fields"></div>
+    <div class="err" id="f-err"></div>
+    <button class="primary" id="f-btn" onclick="submitForm()"></button>
+  </div>
+</section>
+
+<!-- ESPERANDO APROBACIÓN -->
+<section id="pg-wait" class="page">
+  <div class="wait-box">
+    <div class="spin"></div>
+    <h2>Esperando aprobación</h2>
+    <p>Le pediste entrar a <b id="wait-name"></b>. Cuando el creador te apruebe, vas a entrar solo.</p>
+    <button class="ghost" style="width:100%" onclick="cancelWait()">Cancelar</button>
+  </div>
+</section>
+
+<!-- CHAT / ÁRBOL / CONFIG -->
+<section id="pg-room" class="page">
+  <header class="rtop">
+    <img src="https://aplicop.com.ar/COP.png" alt="">
+    <div class="tt">
+      <h2 id="rt-name"></h2>
+      <small id="rt-sub"></small>
+    </div>
+    <div id="call-btns" style="display:flex;gap:6px">
+      <button class="ghost" onclick="startCall(false)" title="Llamada de voz">📞</button>
+      <button class="ghost" onclick="startCall(true)" title="Videollamada">🎥</button>
+    </div>
+  </header>
+
+  <div class="rbody on" id="tab-chat">
+    <div id="pend-box"></div>
+    <div class="msgs" id="msg-list"></div>
+  </div>
+
+  <div class="rbody" id="tab-tree">
+    <div class="card">
+      <h3>Árbol genealógico</h3>
+      <div id="tree-view"></div>
+      <button class="primary" style="margin-top:12px" onclick="descargarArbol()">Descargar imagen del árbol (PNG)</button>
+      <p style="margin-top:14px;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--gr)">Personas cargadas</p>
+      <div id="tree-list" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <h3>Agregar persona</h3>
+      <div class="fld"><label>Nombre</label><input id="t-nom" placeholder="Ej: Ana"></div>
+      <div class="fld"><label>Apellido</label><input id="t-ape" placeholder="Ej: Pérez"></div>
+      <div class="fld"><label>Vínculo</label>
+        <select id="t-rel">
+          <option>Hijo de</option><option>Hija de</option><option>Padre de</option><option>Madre de</option>
+          <option>Pareja de</option><option>Hermano de</option><option>Hermana de</option>
+          <option>Abuelo de</option><option>Abuela de</option><option>Nieto de</option><option>Nieta de</option>
+          <option>Tío de</option><option>Tía de</option><option>Primo de</option><option>Prima de</option>
+          <option>Otro vínculo con</option>
+        </select>
+      </div>
+      <div class="fld"><label>De quién (persona de referencia)</label><select id="t-ref"></select></div>
+      <button class="primary" onclick="addPerson()">Agregar al árbol</button>
+    </div>
+    <div class="card">
+      <h3>Armarlo con IA</h3>
+      <p>Copiá este prompt, pegalo en la IA que uses y completá los nombres:</p>
+      <div class="fld"><textarea id="ai-prompt" readonly rows="6"></textarea></div>
+      <button class="ghost" onclick="copyPrompt()">Copiar prompt</button>
+      <p style="margin-top:1rem">Escribí los nombres y tocá el botón:</p>
+      <div class="fld"><textarea id="t-nombres" rows="4" placeholder="Juan Pérez, Ana Pérez, Lucas Pérez"></textarea></div>
+      <button class="primary" id="btn-ia" onclick="generarIA()">Generar árbol con IA</button>
+      <p style="margin-top:1rem">Revisá la respuesta (o pegala acá, una persona por línea):</p>
+      <div class="fld"><textarea id="t-imp" rows="6" placeholder="Ana Pérez | Hija de | Juan Pérez"></textarea></div>
+      <button class="primary" onclick="importAI()">Importar al árbol</button>
+    </div>
+  </div>
+
+  <div class="rbody" id="tab-cfg">
+    <div class="card" style="text-align:center">
+      <div id="cfg-av"></div>
+      <h3 id="cfg-name" style="text-transform:none;font-size:1.05rem;color:var(--tx)"></h3>
+      <p id="cfg-role"></p>
+    </div>
+    <div class="card">
+      <h3>Mi perfil</h3>
+      <div class="fld"><label>Tu nombre y apellido</label><input id="cf-name"></div>
+      <div class="fld"><label>Logo de perfil (foto)</label><input id="cf-file" type="file" accept="image/*"></div>
+      <button class="primary" onclick="saveProfile()">Guardar perfil</button>
+    </div>
+    <div class="card">
+      <h3 id="cfg-gtitle">Chat</h3>
+      <p>Código secreto: <b id="cfg-code"></b></p>
+      <button class="ghost" onclick="copyCode()">Copiar código</button>
+      <div class="fld" style="margin-top:14px"><label>Editar código</label><input id="cf-code" placeholder="Nuevo código secreto"></div>
+      <button class="primary" onclick="saveCode()">Guardar nuevo código</button>
+    </div>
+    <div class="card">
+      <button class="danger" onclick="leaveChat()">Salir de la familia / chat</button>
+    </div>
+  </div>
+
+  <div class="typing" id="typing"></div>
+  <div class="recbar" id="recbar"></div>
+  <div class="cin" id="cin">
+    <button class="ic-btn" onclick="toggleAttach()" title="Adjuntar">＋</button>
+    <input id="msg-in" placeholder="Escribí un mensaje..." autocomplete="off">
+    <button class="ic-btn" id="mic-btn" onclick="micStart()" title="Grabar audio">🎙️</button>
+    <button onclick="sendMsg()">Enviar</button>
+  </div>
+
+  <nav class="rnav">
+    <button data-t="chat" class="on" onclick="setTab('chat')"><span class="ic">💬</span>Chat</button>
+    <button data-t="tree" onclick="setTab('tree')"><span class="ic">🌳</span>Árbol</button>
+    <button data-t="cfg" onclick="setTab('cfg')"><span class="ic">⚙️</span>Configuración</button>
+  </nav>
+</section>
+
+<div class="amenu" id="attach-menu">
+  <button onclick="pick('f-any')">📄 Archivos</button>
+  <button onclick="pick('f-img')">🖼️ Imágenes</button>
+  <button onclick="pick('f-vid')">🎬 Videos</button>
+  <button onclick="pick('f-html')">🌐 HTML</button>
+</div>
+<input type="file" id="f-any" hidden onchange="sendFile(this)">
+<input type="file" id="f-img" accept="image/*" hidden onchange="sendFile(this)">
+<input type="file" id="f-vid" accept="video/*" hidden onchange="sendFile(this)">
+<input type="file" id="f-html" accept=".html,.htm,text/html" hidden onchange="sendFile(this)">
+
+<div class="inc" id="inc"></div>
+<div class="cov" id="call-ov">
+  <div class="cgrid" id="cgrid"></div>
+  <div class="cctl">
+    <button onclick="callMic()" id="c-mic" title="Micrófono">🎙️</button>
+    <button onclick="callCam()" id="c-cam" title="Cámara">📷</button>
+    <button class="endc" onclick="endCall()">Colgar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════ SUPABASE ══════════ */
+const SB_URL='https://flkjwpcypihdkiyblucs.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsa2p3cGN5cGloZGtpeWJsdWNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMDM2MjMsImV4cCI6MjA5ODY3OTYyM30.Zevico24gkdO9-d8xOWKFSRsKt_npHef4F2OFCR5DsU';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+/* ══════════ ESTADO ══════════ */
+let S=null, members=[], msgs=[], tab='chat', timers=[], chans=[], waitTimer=null, busy=false, lastCount=-1, lastSig='', formCfg=null;
+
+/* ══════════ UTILIDADES ══════════ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ini=n=>esc((n||'?').trim().charAt(0).toUpperCase());
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const normCode=c=>String(c).trim().toUpperCase().replace(/\s+/g,'');
+const fmtT=d=>new Date(d).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+const av=(name,avatar)=>avatar?`<img class="av" src="${avatar}" alt="">`:`<div class="av">${ini(name)}</div>`;
+
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2600);}
+function show(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id===id));}
+function sess(){try{return JSON.parse(localStorage.getItem('fc_sess'))}catch(e){return null}}
+function setSess(v){v?localStorage.setItem('fc_sess',JSON.stringify(v)):localStorage.removeItem('fc_sess');}
+function copyText(t,msg){
+  const ok=()=>toast(msg||'Copiado ✅');
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){toast('No se pudo copiar')}ta.remove();};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok).catch(fallback);}else fallback();
+}
+async function findGroup(code){
+  const {data,error}=await sb.from('fc_groups').select('*').eq('code',code).maybeSingle();
+  if(error) throw error; return data;
+}
+
+/* ══════════ FORMULARIOS ══════════ */
+const FORMS={
+  createFam:{title:'Crear Family-Chat',sub:'Poné el nombre de la familia y un código secreto para que otros entren.',btn:'Crear',
+    fields:[{id:'name',label:'Nombre de la familia',ph:'Ej: Familia Pérez'},{id:'me',label:'Tu nombre y apellido',ph:'Ej: Juan Pérez'},{id:'code',label:'Código secreto',ph:'Ej: PEREZ2026'}],
+    run:v=>createGroup('family',v)},
+  joinFam:{title:'Unirse a un Family-Chat',sub:'Ingresá el código secreto que te pasaron.',btn:'Entrar',
+    fields:[{id:'code',label:'Código secreto',ph:'Código'},{id:'me',label:'Tu nombre y apellido',ph:'Ej: Juan Pérez'}],
+    run:v=>joinGroup('family',v)},
+  createPriv:{title:'Crear Chat Privado',sub:'Poné el nombre del chat y un código. Vas a decidir quién puede entrar.',btn:'Crear',
+    fields:[{id:'name',label:'Nombre del chat',ph:'Ej: Asado del sábado'},{id:'me',label:'Tu nombre y apellido',ph:'Ej: Juan Pérez'},{id:'code',label:'Código secreto',ph:'Código'}],
+    run:v=>createGroup('private',v)},
+  joinPriv:{title:'Unirse a un Chat Privado',sub:'Ingresá el código. El creador del chat tiene que aprobar tu ingreso.',btn:'Pedir ingreso',
+    fields:[{id:'code',label:'Código secreto',ph:'Código'},{id:'me',label:'Tu nombre y apellido',ph:'Ej: Juan Pérez'}],
+    run:v=>joinGroup('private',v)}
+};
+function openForm(k){
+  formCfg=FORMS[k];
+  $('f-title').textContent=formCfg.title;
+  $('f-sub').textContent=formCfg.sub;
+  $('f-fields').innerHTML=formCfg.fields.map(f=>`<div class="fld"><label>${esc(f.label)}</label><input id="ff-${f.id}" placeholder="${esc(f.ph||'')}" autocomplete="off"></div>`).join('');
+  $('f-btn').textContent=formCfg.btn;
+  $('f-err').textContent='';
+  show('pg-form');
+}
+async function submitForm(){
+  const v={};
+  for(const f of formCfg.fields){
+    const el=$('ff-'+f.id), x=el.value.trim();
+    if(!x){$('f-err').textContent='Completá: '+f.label.toLowerCase();el.focus();return;}
+    v[f.id]=x;
+  }
+  const btn=$('f-btn'); btn.disabled=true; $('f-err').textContent='';
+  try{ await formCfg.run(v); }
+  catch(e){ $('f-err').textContent=e.message||'Algo salió mal, probá de nuevo'; }
+  btn.disabled=false;
+}
+
+/* ══════════ CREAR / UNIRSE ══════════ */
+async function createGroup(kind,v){
+  const code=normCode(v.code);
+  if(code.length<4) throw new Error('El código tiene que tener al menos 4 caracteres');
+  if(await findGroup(code)) throw new Error('Ese código ya está en uso, probá con otro');
+  const {data:g,error}=await sb.from('fc_groups').insert({name:v.name,code,kind,tree:[]}).select().single();
+  if(error) throw error;
+  const {data:m,error:e2}=await sb.from('fc_members').insert({group_id:g.id,name:v.me,role:'owner',status:'approved'}).select().single();
+  if(e2) throw e2;
+  enter(g,m);
+}
+async function joinGroup(kind,v){
+  const code=normCode(v.code);
+  const g=await findGroup(code);
+  if(!g) throw new Error('No existe ningún chat con ese código');
+  if(g.kind!==kind) throw new Error(g.kind==='family'
+    ?'Ese código es de un Family-Chat. Usá "Unirse a un Family-Chat".'
+    :'Ese código es de un Chat Privado. Usá "Unirse a un Chat Privado".');
+  const status=kind==='family'?'approved':'pending';
+  const {data:m,error}=await sb.from('fc_members').insert({group_id:g.id,name:v.me,role:'member',status}).select().single();
+  if(error) throw error;
+  if(status==='approved') enter(g,m); else startWait(g,m);
+}
+function enter(g,m){
+  S={group:g,member:m}; setSess({gid:g.id,mid:m.id});
+  openRoom();
+}
+function startWait(g,m){
+  S={group:g,member:m}; setSess({gid:g.id,mid:m.id});
+  $('wait-name').textContent=g.name;
+  show('pg-wait');
+  clearInterval(waitTimer);
+  waitTimer=setInterval(checkWait,3000);
+}
+async function checkWait(){
+  if(!S) return;
+  const {data:m}=await sb.from('fc_members').select('*').eq('id',S.member.id).maybeSingle();
+  if(!m){ toast('Tu solicitud fue rechazada'); leaveLocal(); return; }
+  if(m.status==='approved'){ clearInterval(waitTimer); toast('¡Te aprobaron! Bienvenido 🎉'); S.member=m; openRoom(); }
+}
+async function cancelWait(){
+  if(S) await sb.from('fc_members').delete().eq('id',S.member.id);
+  leaveLocal();
+}
+async function decide(id,ok){
+  if(ok){ await sb.from('fc_members').update({status:'approved'}).eq('id',id); toast('Aprobado ✅'); }
+  else { await sb.from('fc_members').delete().eq('id',id); toast('Solicitud rechazada'); }
+  refresh(true);
+}
+
+/* ══════════ SALA ══════════ */
+function openRoom(){
+  stopRoom();
+  show('pg-room');
+  lastCount=-1; lastSig='';
+  setTab('chat');
+  refresh(true);
+  const gid=S.group.id;
+  rtCh=sb.channel('fc-'+gid)
+    .on('postgres_changes',{event:'*',schema:'public',table:'fc_messages',filter:'group_id=eq.'+gid},()=>refresh())
+    .on('postgres_changes',{event:'*',schema:'public',table:'fc_members',filter:'group_id=eq.'+gid},()=>refresh())
+    .on('postgres_changes',{event:'*',schema:'public',table:'fc_groups',filter:'id=eq.'+gid},()=>refresh())
+    .on('broadcast',{event:'evt'},e=>onEvt(e.payload))
+    .subscribe(); chans.push(rtCh);
+  timers.push(setInterval(()=>refresh(),4000));
+  timers.push(setInterval(drawAct,500));
+}
+function stopRoom(){
+  timers.forEach(clearInterval); timers=[];
+  chans.forEach(c=>sb.removeChannel(c)); chans=[];
+}
+function leaveLocal(){
+  stopRoom(); clearInterval(waitTimer);
+  setSess(null); S=null; members=[]; msgs=[];
+  show('pg-home');
+}
+async function refresh(force){
+  if(!S||busy) return;
+  busy=true;
+  try{
+    const gid=S.group.id;
+    const [g,mm,ms]=await Promise.all([
+      sb.from('fc_groups').select('*').eq('id',gid).maybeSingle(),
+      sb.from('fc_members').select('*').eq('group_id',gid).order('created_at'),
+      sb.from('fc_messages').select('*').eq('group_id',gid).order('created_at').limit(500)
+    ]);
+    if(!g.data){ toast('Este chat ya no existe'); leaveLocal(); return; }
+    members=mm.data||[]; msgs=ms.data||[];
+    const me=members.find(x=>x.id===S.member.id);
+    if(!me){ toast('Ya no sos parte de este chat'); leaveLocal(); return; }
+    S.group=g.data; S.member=me;
+    const sig=JSON.stringify([msgs.length,msgs.at(-1)?.id,members.map(x=>x.id+x.status+x.name+(x.avatar?x.avatar.length:0)),S.group.tree,S.group.name,S.group.code]);
+    if(force||sig!==lastSig){ lastSig=sig; renderRoom(); }
+  }catch(e){ console.warn(e); }
+  finally{ busy=false; }
+}
+function setTab(t){
+  tab=t;
+  document.querySelectorAll('.rnav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.rbody').forEach(b=>b.classList.toggle('on',b.id==='tab-'+t));
+  $('cin').style.display=t==='chat'?'flex':'none';
+  if(t==='tree') populateRefs();
+  if(t==='cfg' && S){ $('cf-name').value=S.member.name; $('cf-code').value=''; }
+  renderRoom();
+}
+function renderRoom(){
+  if(!S) return;
+  $('rt-name').textContent=S.group.name;
+  $('rt-sub').textContent=(S.group.kind==='family'?'Family-Chat':'Chat privado')+' · '+members.filter(m=>m.status==='approved').length+' integrantes · Empresa APLI COP®';
+  if(tab==='chat') renderChat();
+  if(tab==='tree'){ try{ renderTree(); }catch(e){ $('tree-view').innerHTML='<div class="empty">Error al dibujar: '+esc(e.message)+'</div>'; console.error(e); } }
+  if(tab==='cfg') renderCfg();
+}
+function renderChat(){
+  const me=S.member, isOwner=me.role==='owner';
+  const pend=members.filter(m=>m.status==='pending');
+  $('pend-box').innerHTML = (isOwner && S.group.kind==='private' && pend.length)
+    ? pend.map(p=>`<div class="pend"><p>¿Puede entrar <b>${esc(p.name)}</b>?</p><div class="acts"><button class="yes" onclick="decide('${p.id}',true)">Sí</button><button class="no" onclick="decide('${p.id}',false)">No</button></div></div>`).join('')
+    : '';
+  $('msg-list').innerHTML = msgs.length ? msgs.map(m=>{
+    const mine=m.member_id===me.id;
+    const who=members.find(x=>x.id===m.member_id);
+    const nm=who?who.name:m.sender;
+    return `<div class="row${mine?' mine':''}">${mine?'':av(nm,who&&who.avatar)}<div class="bub${mine?' me':''}">${mine?'':`<b>${esc(nm)}</b>`}${bodyHTML(m)}<small>${fmtT(m.created_at)}</small></div></div>`;
+  }).join('') : '<div class="empty">Todavía no hay mensajes. ¡Saludá! 👋</div>';
+  if(msgs.length!==lastCount){ lastCount=msgs.length; const rb=$('tab-chat'); rb.scrollTop=rb.scrollHeight; }
+}
+async function sendMsg(){
+  const input=$('msg-in'), t=input.value.trim();
+  if(!t||!S) return;
+  input.value='';
+  const {error}=await sb.from('fc_messages').insert({group_id:S.group.id,member_id:S.member.id,sender:S.member.name,text:t});
+  if(error) toast('Error: '+error.message); else refresh(true);
+}
+$('msg-in').addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg();});
+
+/* ══════════ ÁRBOL ══════════ */
+function populateRefs(){
+  const T=S?(S.group.tree||[]):[];
+  $('t-ref').innerHTML='<option value="">Persona raíz (sin vínculo)</option>'+T.map(p=>`<option value="${p.id}">${esc(p.nombre)} ${esc(p.apellido)}</option>`).join('');
+}
+function renderTree(){
+  const T=S.group.tree||[];
+  const bw=170,bh=60,gx=30,gy=90;
+  const kids=p=>T.filter(x=>x.ref===p.id&&x.id!==p.id);
+  const roots=T.filter(p=>!p.ref||!T.some(q=>q.id===p.ref));
+  const pos={}; let nextX=0;
+  function layout(p,d,seen){
+    if(seen.has(p.id)||d>12) return;
+    seen.add(p.id);
+    const ch=kids(p);
+    if(!ch.length){ pos[p.id]={x:nextX,y:d}; nextX+=bw+gx; return; }
+    ch.forEach(k=>layout(k,d+1,seen));
+    const xs=ch.filter(k=>pos[k.id]).map(k=>pos[k.id].x);
+    pos[p.id]={x:xs.length?(Math.min(...xs)+Math.max(...xs))/2:nextX,y:d};
+  }
+  roots.forEach(r=>layout(r,0,new Set()));
+  const placed=T.filter(p=>pos[p.id]);
+
+  if(!placed.length){
+    $('tree-view').innerHTML='<div class="empty">Todavía no cargaste personas. Agregá la primera abajo o usá la IA.</div>';
+  }else{
+    const W=Math.max(...placed.map(p=>pos[p.id].x))+bw+20;
+    const H=Math.max(...placed.map(p=>pos[p.id].y))*(bh+gy)+bh+20;
+    let svg='';
+    placed.forEach(p=>{
+      kids(p).filter(k=>pos[k.id]).forEach(k=>{
+        const a=pos[p.id], b=pos[k.id];
+        const x1=a.x+bw/2, y1=a.y*(bh+gy)+bh, x2=b.x+bw/2, y2=b.y*(bh+gy), my=(y1+y2)/2;
+        svg+=`<path d="M${x1} ${y1}V${my}H${x2}V${y2}" fill="none" stroke="#7FB0E8" stroke-width="2.5"/>`;
+      });
+    });
+    placed.forEach(p=>{
+      const a=pos[p.id], y=a.y*(bh+gy);
+      const nom=esc(p.nombre.slice(0,20)), ape=esc((p.apellido||'').slice(0,22));
+      svg+=`<rect x="${a.x}" y="${y}" width="${bw}" height="${bh}" rx="14" fill="#fff" stroke="#1F6FD1" stroke-width="2"/>`+
+           `<text x="${a.x+bw/2}" y="${y+26}" text-anchor="middle" font-size="14" font-weight="700" fill="#0B4A9C" font-family="Poppins,Arial,sans-serif">${nom}</text>`+
+           `<text x="${a.x+bw/2}" y="${y+46}" text-anchor="middle" font-size="12" fill="#6B7C93" font-family="Poppins,Arial,sans-serif">${ape}</text>`;
+    });
+    $('tree-view').innerHTML=`<div style="overflow-x:auto"><svg id="tree-svg" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#fff"/>${svg}</svg></div>`;
+  }
+  $('ai-prompt').value='Genérame Un Árbol Genealógico con estas personas (y las personas ponen sus nombres): [escribí acá los nombres y apellidos]\n\nRespondé SOLO con una lista, una persona por línea, con este formato exacto:\nNombre Apellido | Vínculo | De quién\n\nEjemplo:\nJuan Pérez | | \nAna Pérez | Hija de | Juan Pérez\nLucas Pérez | Hijo de | Juan Pérez\n\nLa persona raíz va con el Vínculo y De quién vacíos.';
+  $('tree-list').innerHTML=T.length
+    ? T.map(p=>`<div class="pn" style="margin:4px 4px 4px 0"><b>${esc(p.nombre)} ${esc(p.apellido)}</b><button onclick="delPerson('${p.id}')" title="Quitar">✕</button></div>`).join('')
+    : '';
+}
+function descargarArbol(){
+  const svg=document.getElementById('tree-svg');
+  if(!svg) return toast('Primero agregá personas al árbol');
+  const W=+svg.getAttribute('width'), H=+svg.getAttribute('height');
+  const xml=new XMLSerializer().serializeToString(svg);
+  const url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml;charset=utf-8'}));
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2;
+    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+    ctx.scale(2,2); ctx.drawImage(img,0,0,W,H);
+    const a=document.createElement('a');
+    a.download=(S.group.name||'arbol').replace(/[^\w\- ]/g,'')+'.png';
+    a.href=c.toDataURL('image/png'); a.click();
+    URL.revokeObjectURL(url);
+  };
+  img.onerror=()=>{ URL.revokeObjectURL(url); toast('No se pudo generar la imagen'); };
+  img.src=url;
+}
+function renderTreeOld(){
+  const T=S.group.tree||[];
+  const kids=p=>T.filter(x=>x.ref===p.id&&x.id!==p.id);
+  const node=(p,d)=>{
+    const rp=p.ref?T.find(q=>q.id===p.ref):null;
+    const txt=(p.rel&&rp)?`${p.rel} ${rp.nombre} ${rp.apellido}`:'';
+    const ch=kids(p);
+    return `<li><span class="pn"><b>${esc(p.nombre)} ${esc(p.apellido)}</b>${txt?`<small>${esc(txt)}</small>`:''}<button onclick="delPerson('${p.id}')" title="Quitar">✕</button></span>${(d<12&&ch.length)?`<ul>${ch.map(k=>node(k,d+1)).join('')}</ul>`:''}</li>`;
+  };
+  const roots=T.filter(p=>!p.ref||!T.some(q=>q.id===p.ref));
+  $('tree-view').innerHTML = T.length
+    ? `<ul class="tree">${roots.map(r=>node(r,0)).join('')}</ul>`
+    : '<div class="empty">Todavía no cargaste personas. Agregá la primera abajo o usá la IA.</div>';
+  $('ai-prompt').value='Genérame Un Árbol Genealógico con estas personas (y las personas ponen sus nombres): [escribí acá los nombres y apellidos]\n\nRespondé SOLO con una lista, una persona por línea, con este formato exacto:\nNombre Apellido | Vínculo | De quién\n\nEjemplo:\nJuan Pérez | | \nAna Pérez | Hija de | Juan Pérez\nLucas Pérez | Hijo de | Juan Pérez\n\nLa persona raíz va con el Vínculo y De quién vacíos.';
+}
+async function saveTree(T){
+  const {error}=await sb.from('fc_groups').update({tree:T}).eq('id',S.group.id);
+  if(error){ toast('Error: '+error.message); return false; }
+  S.group.tree=T; lastSig=''; renderRoom(); populateRefs();
+  toast('Árbol guardado ✅');
+  return true;
+}
+async function addPerson(){
+  const nombre=$('t-nom').value.trim(), apellido=$('t-ape').value.trim();
+  const rel=$('t-rel').value, ref=$('t-ref').value||null;
+  if(!nombre){ toast('Poné al menos el nombre'); return; }
+  const T=[...(S.group.tree||[]),{id:uid(),nombre,apellido,rel:ref?rel:'',ref}];
+  if(await saveTree(T)){ $('t-nom').value=''; $('t-ape').value=''; }
+}
+async function delPerson(id){
+  if(!confirm('¿Quitar a esta persona del árbol?')) return;
+  const T=(S.group.tree||[]).filter(p=>p.id!==id).map(p=>p.ref===id?{...p,ref:null,rel:''}:p);
+  saveTree(T);
+}
+async function generarIA(){
+  const nombres=$('t-nombres').value.trim();
+  if(!nombres){ toast('Escribí los nombres de las personas'); return; }
+  const btn=$('btn-ia'); btn.disabled=true; btn.textContent='Generando…';
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/ia-arbol',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},
+      body:JSON.stringify({texto:'Genérame un árbol genealógico con estas personas: '+nombres+'. Si no se sabe el vínculo, dejalo como puedas en el formato indicado.'})
+    });
+    const data=await r.json();
+    if(!r.ok||data.error) throw new Error(data.error||'Error al generar');
+    $('t-imp').value=data.resultado;
+    toast('Listo, revisá el resultado y tocá Importar ✅');
+  }catch(e){
+    toast('No se pudo generar: '+e.message);
+  }finally{
+    btn.disabled=false; btn.textContent='Generar árbol con IA';
+  }
+}
+function copyPrompt(){ copyText($('ai-prompt').value,'Prompt copiado ✅'); }
+async function importAI(){
+  const lines=$('t-imp').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){ toast('Pegá la respuesta de la IA'); return; }
+  const T=[...(S.group.tree||[])];
+  const added=lines.map(l=>{
+    const p=l.split('|').map(x=>x.trim());
+    const full=(p[0]||'').split(/\s+/);
+    return {id:uid(),nombre:full[0]||'',apellido:full.slice(1).join(' '),rel:'',ref:null,_rel:p[1]||'',_par:p[2]||''};
+  }).filter(x=>x.nombre);
+  const all=[...T,...added];
+  const findP=n=>all.find(p=>`${p.nombre} ${p.apellido}`.trim().toLowerCase()===n.trim().toLowerCase());
+  added.forEach(a=>{
+    if(a._par){ const r=findP(a._par); if(r&&r.id!==a.id){ a.ref=r.id; a.rel=a._rel||'Pariente de'; } }
+    delete a._rel; delete a._par;
+  });
+  if(await saveTree([...T,...added])) $('t-imp').value='';
+}
+
+/* ══════════ CONFIGURACIÓN ══════════ */
+function renderCfg(){
+  const me=S.member, g=S.group;
+  $('cfg-av').innerHTML=me.avatar?`<img class="av big" src="${me.avatar}" alt="">`:`<div class="av big">${ini(me.name)}</div>`;
+  $('cfg-name').textContent=me.name;
+  $('cfg-role').textContent=(me.role==='owner'?'Creador · ':'')+(g.kind==='family'?'Family-Chat':'Chat privado')+' · '+g.name;
+  $('cfg-gtitle').textContent=g.kind==='family'?'Family-Chat':'Chat privado';
+  $('cfg-code').textContent=g.code;
+}
+function copyCode(){ copyText(S.group.code,'Código copiado ✅'); }
+async function saveProfile(){
+  const name=$('cf-name').value.trim();
+  if(!name){ toast('Poné tu nombre y apellido'); return; }
+  const f=$('cf-file').files[0];
+  let avatar=S.member.avatar||null;
+  try{ if(f) avatar=await readAvatar(f); }catch(e){ toast('No se pudo leer la imagen'); return; }
+  const {error}=await sb.from('fc_members').update({name,avatar}).eq('id',S.member.id);
+  if(error){ toast('Error: '+error.message); return; }
+  $('cf-file').value='';
+  toast('Perfil actualizado ✅');
+  refresh(true);
+}
+function readAvatar(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const sw=Math.min(img.width,img.height), sx=(img.width-sw)/2, sy=(img.height-sw)/2;
+        const c=document.createElement('canvas'); c.width=c.height=160;
+        c.getContext('2d').drawImage(img,sx,sy,sw,sw,0,0,160,160);
+        res(c.toDataURL('image/jpeg',.85));
+      };
+      img.onerror=rej; img.src=r.result;
+    };
+    r.onerror=rej; r.readAsDataURL(file);
+  });
+}
+async function saveCode(){
+  const code=normCode($('cf-code').value);
+  if(!code){ toast('Escribí el nuevo código'); return; }
+  if(code.length<4){ toast('El código tiene que tener al menos 4 caracteres'); return; }
+  const other=await findGroup(code);
+  if(other && other.id!==S.group.id){ toast('Ese código ya está en uso'); return; }
+  const {error}=await sb.from('fc_groups').update({code}).eq('id',S.group.id);
+  if(error){ toast('Error: '+error.message); return; }
+  $('cf-code').value='';
+  toast('Código cambiado ✅');
+  refresh(true);
+}
+async function leaveChat(){
+  if(!confirm('¿Seguro que querés salir?')) return;
+  await sb.from('fc_members').delete().eq('id',S.member.id);
+  toast('Saliste del chat');
+  leaveLocal();
+}
+
+/* ══════════ ARRANQUE ══════════ */
+(async function init(){
+  const s=sess();
+  if(!s){ show('pg-home'); return; }
+  try{
+    const {data:m}=await sb.from('fc_members').select('*').eq('id',s.mid).maybeSingle();
+    const {data:g}=await sb.from('fc_groups').select('*').eq('id',s.gid).maybeSingle();
+    if(!m||!g){ leaveLocal(); return; }
+    if(m.status==='pending'){ startWait(g,m); return; }
+    enter(g,m);
+  }catch(e){ show('pg-home'); }
+})();
+/* ══════════ TIEMPO REAL: ESCRIBIENDO / GRABANDO ══════════ */
+let rtCh=null, act={}, lastTyp=0;
+let mrec=null, mchunks=[], recT0=0, recElapsed=0, recIv=null, recPaused=false, recStream=null;
+let callOn=false, localStream=null, peers={}, callVideo=false;
+
+function rtSend(payload){
+  if(!rtCh||!S) return;
+  rtCh.send({type:'broadcast',event:'evt',payload:{...payload,from:S.member.id,name:S.member.name}});
+}
+$('msg-in').addEventListener('input',()=>{
+  const n=Date.now();
+  if(n-lastTyp>1500){ lastTyp=n; rtSend({t:'typ'}); }
+});
+function drawAct(){
+  const now=Date.now();
+  Object.keys(act).forEach(k=>{ if(!act[k]||act[k].until<now) delete act[k]; });
+  const list=Object.values(act), el=$('typing');
+  if(!list.length){ el.classList.remove('on'); el.innerHTML=''; return; }
+  const txt=list.map(a=>a.name+(a.kind==='rec'?' está grabando audio':' está escribiendo')).join(', ');
+  el.innerHTML=(list[0].kind==='rec'?'<span class="rdot"></span>':'<span class="dots"><i></i><i></i><i></i></span>')+' '+esc(txt);
+  el.classList.add('on');
+}
+
+/* ══════════ MENSAJES CON ADJUNTOS ══════════ */
+function bodyHTML(m){
+  if(m.kind==='image') return `<img class="mimg" src="${m.file_url}" alt="" onclick="window.open(this.src)">`;
+  if(m.kind==='video') return `<video class="mimg" src="${m.file_url}" controls playsinline></video>`;
+  if(m.kind==='audio') return `<audio src="${m.file_url}" controls></audio>`;
+  if(m.kind==='file'||m.kind==='html') return `<a class="mfile" href="${m.file_url}" target="_blank" download="${esc(m.file_name)}">📎 ${esc(m.file_name)}</a>`;
+  return `<span style="white-space:pre-wrap">${esc(m.text)}</span>`;
+}
+async function sendRow(extra){
+  const {error}=await sb.from('fc_messages').insert({group_id:S.group.id,member_id:S.member.id,sender:S.member.name,...extra});
+  if(error) toast('Error: '+error.message); else refresh(true);
+}
+async function uploadBlob(blob,name,kind){
+  const path=S.group.id+'/'+uid()+'-'+name;
+  const {error}=await sb.storage.from('fc-files').upload(path,blob,{contentType:blob.type||undefined});
+  if(error){ toast('Error al subir: '+error.message); return; }
+  const {data}=sb.storage.from('fc-files').getPublicUrl(path);
+  await sendRow({kind,file_url:data.publicUrl,file_name:name,text:kind==='audio'?'Audio':name});
+}
+function toggleAttach(){ $('attach-menu').classList.toggle('on'); }
+function pick(id){ $('attach-menu').classList.remove('on'); $(id).click(); }
+async function sendFile(input){
+  const f=input.files[0]; input.value='';
+  if(!f||!S) return;
+  if(f.size>50*1024*1024){ toast('El archivo es muy grande (máximo 50 MB)'); return; }
+  let kind='file';
+  if(f.type.startsWith('image/')) kind='image';
+  else if(f.type.startsWith('video/')) kind='video';
+  else if(/\.html?$/i.test(f.name)) kind='html';
+  toast('Subiendo…');
+  await uploadBlob(f,f.name.replace(/[^\w.\-]/g,'_'),kind);
+}
+
+/* ══════════ AUDIO: GRABAR / PAUSAR / BORRAR / ENVIAR ══════════ */
+async function micStart(){
+  if(mrec) return;
+  try{ recStream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ toast('No se pudo acceder al micrófono'); return; }
+  mchunks=[];
+  mrec=new MediaRecorder(recStream);
+  mrec.ondataavailable=e=>{ if(e.data&&e.data.size) mchunks.push(e.data); };
+  mrec.start();
+  recElapsed=0; recPaused=false; recT0=Date.now();
+  recIv=setInterval(recTick,500); recTick();
+  rtSend({t:'rec',on:true});
+}
+function recTick(){
+  const el=recPaused?recElapsed:recElapsed+(Date.now()-recT0);
+  const s=Math.floor(el/1000);
+  $('recbar').innerHTML=`<span class="rdot"></span> Grabando audio ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`+
+    `<button onclick="micPause()">${recPaused?'▶ Seguir grabando':'⏸ Pausar'}</button>`+
+    `<button onclick="micDelete()">🗑 Borrar</button>`+
+    `<button class="ok" onclick="micSend()">Enviar</button>`;
+  $('recbar').classList.add('on');
+}
+function micPause(){
+  if(!mrec) return;
+  if(mrec.state==='recording'){ mrec.pause(); recElapsed+=Date.now()-recT0; recPaused=true; }
+  else if(mrec.state==='paused'){ mrec.resume(); recT0=Date.now(); recPaused=false; }
+  recTick();
+  rtSend({t:'rec',on:!recPaused});
+}
+function micStop(){
+  clearInterval(recIv); recIv=null;
+  if(mrec&&mrec.state!=='inactive') mrec.stop();
+  if(recStream) recStream.getTracks().forEach(t=>t.stop());
+  $('recbar').classList.remove('on');
+  rtSend({t:'rec',on:false});
+}
+function micDelete(){
+  if(mrec) mrec.onstop=null;
+  mchunks=[];
+  micStop();
+  mrec=null;
+}
+function micSend(){
+  if(!mrec) return;
+  const rec=mrec;
+  rec.onstop=async()=>{
+    const blob=new Blob(mchunks,{type:rec.mimeType||'audio/webm'});
+    mrec=null; mchunks=[];
+    await uploadBlob(blob,'audio-'+Date.now()+'.webm','audio');
+  };
+  micStop();
+}
+
+/* ══════════ LLAMADAS (VOZ Y VIDEO, GRUPALES) ══════════ */
+function startCall(video){
+  if(callOn){ $('call-ov').classList.add('on'); return; }
+  rtSend({t:'call',video});
+  joinCall(video);
+}
+async function joinCall(video){
+  if(callOn) return;
+  try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video}); }
+  catch(e){
+    try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}); video=false; }
+    catch(e2){ toast('No se pudo acceder al micrófono o la cámara'); return; }
+  }
+  callOn=true; callVideo=video;
+  $('inc').classList.remove('on');
+  $('call-ov').classList.add('on');
+  $('c-cam').style.display=video?'':'none';
+  addTile('me',localStream,true,S.member.name);
+  rtSend({t:'join'});
+}
+function mkPeer(id,name){
+  if(peers[id]) return peers[id].pc;
+  const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  peers[id]={pc,name};
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.onicecandidate=e=>{ if(e.candidate) rtSend({t:'sig',to:id,k:'ice',d:e.candidate}); };
+  pc.ontrack=e=>addTile(id,e.streams[0]||new MediaStream([e.track]),false,name);
+  pc.onconnectionstatechange=()=>{ if(pc.connectionState==='failed'||pc.connectionState==='closed') dropPeer(id); };
+  return pc;
+}
+async function onSig(p){
+  if(!callOn||p.to!==S.member.id) return;
+  if(p.k==='offer'){
+    const pc=mkPeer(p.from,p.name);
+    await pc.setRemoteDescription(p.d);
+    const ans=await pc.createAnswer();
+    await pc.setLocalDescription(ans);
+    rtSend({t:'sig',to:p.from,k:'answer',d:pc.localDescription});
+  }else if(p.k==='answer'){
+    const pr=peers[p.from]; if(pr) await pr.pc.setRemoteDescription(p.d);
+  }else if(p.k==='ice'){
+    const pr=peers[p.from]; if(pr){ try{ await pr.pc.addIceCandidate(p.d); }catch(e){} }
+  }
+}
+function addTile(id,stream,isMe,name){
+  let t=document.getElementById('ct-'+id);
+  if(!t){
+    t=document.createElement('div'); t.className='ctile'; t.id='ct-'+id;
+    t.innerHTML=`<video autoplay playsinline${isMe?' muted':''}></video><span class="cname">${esc(isMe?'Vos':name)}</span>`;
+    $('cgrid').appendChild(t);
+  }
+  t.querySelector('video').srcObject=stream;
+}
+function dropPeer(id){
+  if(peers[id]){ try{ peers[id].pc.close(); }catch(e){} delete peers[id]; }
+  const t=document.getElementById('ct-'+id); if(t) t.remove();
+}
+function endCall(){
+  if(!callOn) return;
+  rtSend({t:'leave'});
+  Object.keys(peers).forEach(dropPeer);
+  if(localStream) localStream.getTracks().forEach(t=>t.stop());
+  localStream=null; callOn=false;
+  $('cgrid').innerHTML='';
+  $('call-ov').classList.remove('on');
+}
+function callMic(){
+  if(!localStream) return;
+  const t=localStream.getAudioTracks()[0]; if(!t) return;
+  t.enabled=!t.enabled; $('c-mic').textContent=t.enabled?'🎙️':'🔇';
+}
+function callCam(){
+  if(!localStream) return;
+  const t=localStream.getVideoTracks()[0]; if(!t) return;
+  t.enabled=!t.enabled; $('c-cam').textContent=t.enabled?'📷':'🚫';
+}
+
+/* ══════════ RECEPCIÓN DE EVENTOS ══════════ */
+async function onEvt(p){
+  if(!S||!p||p.from===S.member.id) return;
+  if(p.t==='typ'){
+    act[p.from]={name:p.name,kind:'typ',until:Date.now()+3000};
+  }else if(p.t==='rec'){
+    if(p.on) act[p.from]={name:p.name,kind:'rec',until:Date.now()+90000}; else delete act[p.from];
+  }else if(p.t==='call'){
+    if(!callOn){
+      $('inc').innerHTML=`<span><b>${esc(p.name)}</b> te llama (${p.video?'videollamada':'llamada de voz'})</span><button onclick="joinCall(${!!p.video})">Unirse</button><button onclick="$('inc').classList.remove('on')">Ignorar</button>`;
+      $('inc').classList.add('on');
+    }
+  }else if(p.t==='join'){
+    if(callOn){
+      const pc=mkPeer(p.from,p.name);
+      const off=await pc.createOffer();
+      await pc.setLocalDescription(off);
+      rtSend({t:'sig',to:p.from,k:'offer',d:pc.localDescription});
+    }
+  }else if(p.t==='leave'){
+    dropPeer(p.from);
+  }else if(p.t==='sig'){
+    await onSig(p);
+  }
+  drawAct();
+}
+</script>
+</body>
+</html>
