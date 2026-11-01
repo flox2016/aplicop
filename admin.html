@@ -136,10 +136,10 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 .utb-maint{background:rgba(239,68,68,.2);color:#F87171;}
 
 .users-table{width:100%;border-collapse:collapse;}
-.users-table th{text-align:left;padding:.75rem 1rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;border-bottom:1px solid #2E2E2E;}
-.users-table td{padding:.75rem 1rem;font-size:.82rem;border-bottom:1px solid #2E2E2E;}
+.users-table th{text-align:left;padding:.7rem .6rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;border-bottom:1px solid #2E2E2E;}
+.users-table td{padding:.7rem .6rem;font-size:.82rem;border-bottom:1px solid #2E2E2E;}
 .users-table tr:last-child td{border-bottom:none;}
-.online-pill{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:10px;}
+.online-pill{white-space:nowrap;display:inline-block;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:10px;}
 .op-on{background:rgba(34,197,94,.15);color:#4ADE80;}
 .op-off{background:rgba(156,163,175,.15);color:#9CA3AF;}
 
@@ -169,6 +169,25 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 .diag-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #2E2E2E;font-size:.82rem;align-items:flex-start;}
 .diag-row:last-child{border-bottom:none;}
 .diag-row .det{display:block;color:#9CA3AF;font-size:.72rem;word-break:break-word;}
+
+.btn-del{background:rgba(239,68,68,.28);color:#FCA5A5;border:1px solid rgba(239,68,68,.55);}
+.users-table td:nth-child(2){word-break:break-all;}
+.u-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.pg-btn{border:1px solid #2E2E2E;background:#1E1E1E;color:#fff;border-radius:10px;padding:.6rem 1.4rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif}
+.pg-btn:hover{border-color:#FF6B00;color:#FF6B00}
+.al-tab{border:1px solid #2E2E2E;background:none;color:#9CA3AF;border-radius:8px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif}
+.al-tab.on{background:#FF6B00;color:#fff;border-color:#FF6B00}
+.alert-item{border-left:3px solid #EF4444;background:rgba(239,68,68,.07);border-radius:8px;padding:.7rem .85rem;margin-bottom:.6rem}
+.alert-item.seen{opacity:.6;border-left-color:#4B5563;background:rgba(255,255,255,.03)}
+.al-top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:.35rem}
+.al-user{font-weight:700;font-size:.85rem}
+.al-mail{font-size:.72rem;color:#9CA3AF}
+.al-tag{font-size:.65rem;font-weight:700;background:rgba(239,68,68,.2);color:#F87171;border-radius:6px;padding:2px 8px}
+.al-tag.warn{background:rgba(251,191,36,.2);color:#FBBF24}
+.al-when{font-size:.68rem;color:#6B7280;margin-left:auto}
+.al-msg{font-size:.82rem;line-height:1.5;margin-bottom:.5rem;word-break:break-word}
+.al-btns{display:flex;gap:6px;flex-wrap:wrap}
+.al-empty{text-align:center;color:#9CA3AF;font-size:.82rem;padding:1.2rem}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -218,7 +237,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
     <div class="nav-link" onclick="showPanel('chat',this)"><span class="nl-ico">💬</span> Chat<span class="nl-badge" id="b-chat"></span></div>
     <div class="nav-link" onclick="showPanel('users',this)"><span class="nl-ico">👥</span> Usuarios</div>
     <div class="nav-link" onclick="showPanel('updates',this)"><span class="nl-ico">📢</span> Actualizaciones</div>
-    <div class="nav-link" onclick="openBotPanel(this)"><span class="nl-ico">🤖</span> Bot IA<span style="font-size:.6rem;background:#FF6B00;color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px;">🔒</span></div>
+    <div class="nav-link" onclick="openBotPanel(this)"><span class="nl-ico">🤖</span> Bot IA<span style="font-size:.6rem;background:#FF6B00;color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px;">🔒</span><span class="nl-badge" id="b-bot"></span></div>
     <div class="sb-bottom"><button class="logout-admin" onclick="adminLogout()">🚪 Cerrar sesión</button></div>
   </div>
 
@@ -287,10 +306,15 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
         <div class="card">
           <div class="card-head"><h3>👥 Usuarios registrados</h3><span style="font-size:.78rem;color:#9CA3AF" id="users-count"></span></div>
           <div class="card-body">
+            <input type="text" id="users-q" placeholder="Buscar por nombre o Gmail (en esta página)…" oninput="usersFilter(this.value)" style="width:100%;margin-bottom:.75rem;padding:.6rem .8rem;border-radius:8px;border:1px solid #2E2E2E;background:#1E1E1E;color:#fff;font-family:Poppins,sans-serif;font-size:.82rem;box-sizing:border-box">
+            <div id="users-prev" style="display:none;text-align:center;margin-bottom:.75rem"><button class="pg-btn" onclick="usersPage(-1)">⬆️ Ver anteriores</button></div>
+            <div style="overflow-x:auto">
             <table class="users-table" id="users-table">
               <thead><tr><th>Usuario</th><th>Gmail</th><th>Estado</th><th>Pedidos</th><th>Acción</th></tr></thead>
               <tbody id="users-tbody"></tbody>
             </table>
+            </div>
+            <div id="users-next" style="display:none;text-align:center;margin-top:.9rem"><button class="pg-btn" onclick="usersPage(1)">Ver otros ⬇️</button></div>
           </div>
         </div>
       </div>
@@ -318,6 +342,19 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 
       <!-- ========== BOT IA PANEL ========== -->
       <div class="panel" id="panel-bot">
+
+        <!-- ALERTAS DEL BOT -->
+        <div class="card" id="bot-alerts-card" style="margin-bottom:1rem;border:1px solid rgba(239,68,68,.35)">
+          <div class="card-head"><h3>🚨 Alertas del Bot (pedidos ilegales o peligrosos)</h3><span style="font-size:.78rem;color:#9CA3AF" id="al-count"></span></div>
+          <div class="card-body">
+            <div style="display:flex;gap:6px;margin-bottom:.75rem;flex-wrap:wrap">
+              <button class="al-tab on" id="al-tab-new" onclick="alertsTab('new')">Nuevas</button>
+              <button class="al-tab" id="al-tab-all" onclick="alertsTab('all')">Todas</button>
+              <button class="al-tab" onclick="alertsMarkAll()" style="margin-left:auto">✓ Marcar todas como vistas</button>
+            </div>
+            <div id="bot-alerts"></div>
+          </div>
+        </div>
 
         <!-- LOCK -->
         <div id="bot-lock" style="text-align:center;padding:3rem 1rem;">
@@ -461,21 +498,6 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
                 style="background:#FF6B00;color:#fff;border:none;border-radius:10px;padding:.7rem 1.25rem;font-family:Poppins,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.75rem;">
                 💾 Guardar personalidad
               </button>
-            </div>
-          </div>
-
-          <!-- IMAGENES DEL BOT -->
-          <div class="card">
-            <div class="card-head"><h3>🖼️ Imágenes que puede enviar el bot</h3></div>
-            <div class="card-body">
-              <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:.75rem;">
-                Subí imágenes con un nombre (por ejemplo "mapa" o "precios"). Cuando el cliente pida algo que tenga que ver, el bot la muestra en el chat. Máximo 5 imágenes por tanda.
-              </div>
-              <div id="bot-imgs-list"></div>
-              <label style="display:inline-block;background:#FF6B00;color:#fff;border-radius:10px;padding:.7rem 1.25rem;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.5rem;">
-                📤 Subir imágenes
-                <input type="file" accept="image/*" multiple style="display:none" onchange="botImgAdd(event)">
-              </label>
             </div>
           </div>
 
@@ -765,12 +787,13 @@ function stopAllListeners(){
 function startAdminListeners(){
   stopAllListeners();
   if(!SB){toast('❌','No se pudo conectar con la base de datos');return;}
-  loadUsers(); loadPresence(); loadPeds(); loadUpdates(); loadBotConfig(); loadAdminChats(true);
+  loadUsers(true); loadPresence(); loadPeds(); loadUpdates(); loadBotConfig(); loadAdminChats(true); loadAlerts();
 
   _sbChannels.push(SB.channel('adm-peds').on('postgres_changes',{event:'*',schema:'public',table:T_PEDS},function(){loadPeds();}).subscribe());
   _sbChannels.push(SB.channel('adm-users').on('postgres_changes',{event:'*',schema:'public',table:T_USERS},function(){loadUsers();}).subscribe());
   _sbChannels.push(SB.channel('adm-upd').on('postgres_changes',{event:'*',schema:'public',table:T_UPD},function(){loadUpdates();}).subscribe());
   _sbChannels.push(SB.channel('adm-bot').on('postgres_changes',{event:'*',schema:'public',table:T_BOT},function(){loadBotConfig();}).subscribe());
+  _sbChannels.push(SB.channel('adm-alertas').on('postgres_changes',{event:'*',schema:'public',table:'alertas_bot'},function(){loadAlerts();}).subscribe());
   _sbChannels.push(SB.channel('adm-pres').on('postgres_changes',{event:'*',schema:'public',table:T_PRES},function(payload){
     var p=payload.new||{}; var e=p.correo_electronico||p.email||''; if(!e) return;
     _presence[e]={online:!!p.en_linea,lastSeen:p.ultima_vez_visto?new Date(p.ultima_vez_visto).getTime():Date.now()};
@@ -787,24 +810,58 @@ function startAdminListeners(){
     if(!adminOn||document.hidden) return;
     loadAdminChats(false); tick++;
     if(tick%5===0){loadPeds();loadUsers();loadPresence();loadUpdates();}
+    if(tick%3===0) loadAlerts();
   },6000);
 }
 
-function loadUsers(){
-  SB.from(T_USERS).select('*').then(function(r){
-    if(r.error){console.warn('usuarios:',r.error.message);return;}
+// Usuarios: se muestran de a 10.000 (Supabase entrega como máximo 1.000 por consulta, por eso se junta en tandas)
+var USERS_PAGE=10000, _usersPage=0, _usersTotal=0, _userCol=null, _userOrderOff=false, _usersAt=0, _usersLoading=false, _usersQ='', _utTimer=null, _utRun=0;
+function userEmailOf(u){return String(u['correo electronico']||u['correo_electronico']||u.email||'').toLowerCase();}
+function fmtN(n){return Number(n||0).toLocaleString('es-AR');}
+function loadUsers(force){
+  if(_usersLoading||!SB) return;
+  var gap=_usersTotal>2000?120000:20000;
+  if(!force&&Date.now()-_usersAt<gap) return;
+  _usersAt=Date.now(); _usersLoading=true;
+  var page=_usersPage, start=page*USERS_PAGE, end=start+USERS_PAGE-1, got=[], total=null;
+  function detect(){
+    if(_userCol) return Promise.resolve();
+    return SB.from(T_USERS).select('*').limit(1).then(function(r){
+      var row=r.data&&r.data[0];
+      if(row) _userCol=['correo electronico','correo_electronico','email'].filter(function(k){return k in row;})[0]||null;
+    });
+  }
+  function block(from){
+    var to=Math.min(from+999,end);
+    var q=SB.from(T_USERS).select('*',{count:'exact'});
+    if(_userCol&&!_userOrderOff) q=q.order(_userCol,{ascending:true});   // mismo orden en todas las tandas
+    return q.range(from,to).then(function(r){
+      if(r.error){
+        if(_userCol&&!_userOrderOff){_userOrderOff=true;return block(from);}
+        throw r.error;
+      }
+      if(r.count!=null) total=r.count;
+      var rows=r.data||[]; got=got.concat(rows);
+      if(rows.length<(to-from+1)||to>=end) return;
+      return block(to+1);
+    });
+  }
+  detect().then(function(){return block(start);}).then(function(){
+    _usersLoading=false;
+    if(page!==_usersPage) return loadUsers(true);
+    if(!got.length&&page>0){_usersPage=0;return loadUsers(true);}
     var users={};
-    (r.data||[]).forEach(function(u){
-      var email=(u['correo electronico']||u['correo_electronico']||u.email||'').toLowerCase();
+    got.forEach(function(u){
+      var email=userEmailOf(u);
       if(!email||email==='__diagnostico__') return;
       var ls=u['ultima vez visto']||u['ultima_vez_visto']||null;
       users[email]={name:String(u.nombre||email.split('@')[0]).trim(),online:!!(u['en linea']||u['en_linea']),lastSeen:ls?new Date(ls).getTime():0};
     });
+    _usersTotal=total!=null?total:(start+got.length);
     _users=users;
     renderDash(); renderUsersTable(); renderChatUsers();
-  });
+  }).catch(function(e){_usersLoading=false;console.warn('usuarios:',e&&e.message);});
 }
-
 function loadPresence(){
   SB.from(T_PRES).select('*').then(function(r){
     if(r.error) return;
@@ -869,60 +926,12 @@ function loadUpdates(){
   });
 }
 
-
-// ══════════════════════════════════════════════════════════════
-// IMÁGENES QUE PUEDE ENVIAR EL BOT
-// Se guardan en configuracion_del_bot con la llave "bot_imagenes"
-// ══════════════════════════════════════════════════════════════
-var _botImgs=[];
-function botImgsLoad(){
-  try{ _botImgs=JSON.parse(_botCfg.bot_imagenes||'[]')||[]; }catch(e){ _botImgs=[]; }
-  botImgsPaint();
-}
-function botImgsPaint(){
-  var c=document.getElementById('bot-imgs-list'); if(!c) return;
-  c.innerHTML=_botImgs.length?_botImgs.map(function(im,i){
-    return '<div style="display:flex;align-items:center;gap:10px;background:#242424;border-radius:10px;padding:8px;margin-bottom:6px;">'
-      +'<img src="'+esc(im.data)+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px">'
-      +'<div style="flex:1;font-size:.8rem;color:#fff;word-break:break-all;">'+esc(im.nombre)+'</div>'
-      +'<button onclick="botImgDel('+i+')" style="background:none;border:1px solid #EF4444;color:#EF4444;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:.75rem;">Borrar</button></div>';
-  }).join(''):'<div style="font-size:.78rem;color:#9CA3AF;">Todavía no hay imágenes.</div>';
-}
-function botImgAdd(e){
-  var files=Array.from(e.target.files||[]).slice(0,5); e.target.value='';
-  if(!files.length) return;
-  var p=Promise.resolve();
-  files.forEach(function(f){
-    p=p.then(function(){
-      var def=f.name.replace(/\.[^.]+$/,'').substring(0,40);
-      var nombre=prompt('Nombre para esta imagen (el bot la va a usar con ese nombre):',def);
-      if(!nombre||!nombre.trim()) return;
-      nombre=nombre.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_áéíóúñ]/g,'').substring(0,40);
-      return compressImage(f,800,0.7).then(function(d){
-        _botImgs=_botImgs.filter(function(x){return x.nombre!==nombre;});
-        _botImgs.push({nombre:nombre,data:d});
-      });
-    });
-  });
-  p.then(function(){ return saveBotImgs(); }).catch(function(){ toast('❌','No se pudo leer alguna imagen'); });
-}
-function botImgDel(i){
-  if(!confirm('¿Borrar esta imagen?')) return;
-  _botImgs.splice(i,1); saveBotImgs();
-}
-function saveBotImgs(){
-  return saveBotConfig('bot_imagenes',JSON.stringify(_botImgs),'Imágenes del bot guardadas').then(function(ok){
-    if(ok) botImgsPaint(); return ok;
-  });
-}
-
 function loadBotConfig(){
   SB.from(T_BOT).select('llave,valor').then(function(r){
     if(r.error){console.warn('configuracion_del_bot:',r.error.message);return;}
     _botCfg={};
     (r.data||[]).forEach(function(row){_botCfg[row.llave]=row.valor;});
     if(botUnlocked) loadBotSettings();
-    botImgsLoad();
   });
 }
 
@@ -933,11 +942,25 @@ function getChatKey(a,b){return [a,b].sort().join('|');}
 function userOfKey(key){var p=String(key).split('|');return p[0]===ADMIN?p[1]:p[0];}
 function newMsgId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 function msgKey(m){return m.id||(m.from+'|'+m.time+'|'+String(m.text||m.filename||'').slice(0,60));}
-function mergeMsgs(server,local){
-  var seen={},out=[];
-  (server||[]).concat(local||[]).forEach(function(m){if(!m)return;var k=msgKey(m);if(!seen[k]){seen[k]=1;out.push(m);}});
+function mergeOne(a,b){
+  var newer=(b.mv||0)>(a.mv||0)?b:a;
+  var out=Object.assign({},newer);
+  if(a.del||b.del) out.del=true;
+  var h=[]; (a.hid||[]).concat(b.hid||[]).forEach(function(e){if(h.indexOf(e)<0)h.push(e);});
+  if(h.length) out.hid=h;
+  var mv=Math.max(a.mv||0,b.mv||0); if(mv) out.mv=mv;
+  if(out.del){out.text='';delete out.data;delete out.filename;delete out.duration;}
   return out;
 }
+function mergeMsgs(server,local){
+  var map={},order=[];
+  (server||[]).concat(local||[]).forEach(function(m){
+    if(!m)return; var k=msgKey(m);
+    if(!map[k]){map[k]=m;order.push(k);} else map[k]=mergeOne(map[k],m);
+  });
+  return order.map(function(k){return map[k];});
+}
+function msgSig(list){return (list||[]).map(function(m){return msgKey(m)+':'+(m.mv||0)+(m.del?'d':'')+((m.hid||[]).length);}).join(',');}
 function lastRead(email){return parseInt(localStorage.getItem('admin_lr_'+email)||'0');}
 function setLastRead(email,n){try{localStorage.setItem('admin_lr_'+email,String(n));}catch(e){}}
 function unreadOf(email){
@@ -952,7 +975,7 @@ function applyAdminChat(key,msgs){
   var pending=prev.filter(function(m){return m._pending||m._failed;});
   var merged=mergeMsgs(msgs||[],pending);
   var before=unreadOf(email);
-  var changed=merged.length!==prev.length;
+  var changed=msgSig(merged)!==msgSig(prev);
   _chats[email]=merged;
   if(currentChatUser===email&&isPanelOn('chat')) setLastRead(email,merged.length);
   var after=unreadOf(email);
@@ -1134,20 +1157,22 @@ function renderConvoStatus(){
 function renderAdminConvo(){
   if(!currentChatUser) return;
   renderConvoStatus();
-  var msgs=_chats[currentChatUser]||[];
-  if(isPanelOn('chat')) setLastRead(currentChatUser,msgs.length);
+  var all=_chats[currentChatUser]||[];
+  var msgs=all.filter(function(m){return !(m.hid&&m.hid.indexOf(ADMIN)>=0);});
+  if(isPanelOn('chat')) setLastRead(currentChatUser,all.length);
   renderBadges();
   var c=document.getElementById('ac-msgs');
   if(!msgs.length){c.innerHTML='<div style="text-align:center;color:#666;font-size:.75rem;padding:2rem">Iniciá la conversación</div>';return;}
   var nearBottom=c.scrollHeight-c.scrollTop-c.clientHeight<120;
   c.innerHTML=msgs.map(function(m){
     var out=m.from===ADMIN; var src=safeSrc(m.data); var content;
-    if(m.type==='text') content=escBr(m.text);
+    if(m.del) content='<i style="opacity:.6">🚫 Mensaje eliminado</i>';
+    else if(m.type==='text') content=escBr(m.text);
     else if(m.type==='image') content=src?'<img class="amsg-img" src="'+esc(src)+'" onclick="openLB(this.src)">':'🖼️ Imagen no disponible';
     else if(m.type==='video') content=src?'<video style="max-width:200px;border-radius:8px" controls src="'+esc(src)+'"></video>':'🎥 Video no disponible';
     else content='<a '+(src?'href="'+esc(src)+'" download="'+esc(m.filename||'archivo')+'"':'')+' style="display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.05);padding:8px;border-radius:8px;color:#fff;text-decoration:none"><span>📎</span><span style="font-size:.75rem">'+esc(m.filename||'archivo')+'</span></a>';
     var mark=out?(m._pending?' 🕓':(m._failed?' ⚠️ no enviado':' ✓')):'';
-    return '<div class="amsg '+(out?'amsg-out':'amsg-in')+'">'+content+'<div class="amsg-time">'+esc(m.time||'')+mark+'</div></div>';
+    return '<div class="amsg '+(out?'amsg-out':'amsg-in')+'">'+content+'<div class="amsg-time">'+esc(m.time||'')+(m.ed&&!m.del?' · editado':'')+mark+'</div></div>';
   }).join('');
   if(nearBottom||(msgs.length&&msgs[msgs.length-1].from===ADMIN)) c.scrollTop=c.scrollHeight;
 }
@@ -1202,7 +1227,7 @@ function renderAll(){renderDash();renderPeds();renderChatUsers();renderUsersTabl
 var ST_COLORS={pending:'#FBB724',progress:'#60A5FA',done:'#4ADE80',resolved:'#4ADE80'};
 var ST_LABELS={pending:'⏳ Pendiente',progress:'🔧 En proceso',done:'✅ Listo',resolved:'✅ Resuelto'};
 function renderDash(){
-  var su=document.getElementById('s-users'); if(su)su.textContent=Object.keys(_users).length;
+  var su=document.getElementById('s-users'); if(su)su.textContent=(_usersTotal||Object.keys(_users).length).toLocaleString('es-AR');
   var sp=document.getElementById('s-peds'); if(sp)sp.textContent=_peds.length;
   var spn=document.getElementById('s-pend'); if(spn)spn.textContent=_peds.filter(function(p){return !p.resolved;}).length;
   var sr=document.getElementById('s-res'); if(sr)sr.textContent=_peds.filter(function(p){return p.resolved;}).length;
@@ -1313,23 +1338,151 @@ function reopenPed(uid){
 // ══════════════════════════════════════════════════════════════
 // USUARIOS
 // ══════════════════════════════════════════════════════════════
-function renderUsersTable(){
+function usersFilter(v){_usersQ=String(v||'').toLowerCase().trim();renderUsersTable();}
+function usersPage(d){
+  var max=Math.max(0,Math.ceil(_usersTotal/USERS_PAGE)-1);
+  var np=Math.min(max,Math.max(0,_usersPage+d));
+  if(np===_usersPage) return;
+  _usersPage=np; _users={}; _usersQ='';
+  var q=document.getElementById('users-q'); if(q) q.value='';
+  renderUsersTable(); loadUsers(true);
+  window.scrollTo(0,0);
+  var p=document.getElementById('panel-users'); if(p) p.scrollTop=0;
+}
+function renderUsersTable(){clearTimeout(_utTimer);_utTimer=setTimeout(renderUsersTableNow,120);}
+function renderUsersTableNow(){
   var tbody=document.getElementById('users-tbody'); if(!tbody) return;
-  var emails=Object.keys(_users).sort(function(a,b){return (isOnline(b)?1:0)-(isOnline(a)?1:0)||nameOf(a).localeCompare(nameOf(b));});
-  document.getElementById('users-count').textContent=emails.length+' usuarios';
-  if(!emails.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Todavía no hay usuarios (o no se pudieron cargar)</td></tr>';return;}
-  tbody.innerHTML=emails.map(function(email){
-    var online=isOnline(email);
-    var peds=_peds.filter(function(p){return p._owner===email;}).length;
-    var name=nameOf(email);
+  var all=Object.keys(_users);
+  var emails=all.filter(function(e){return !_usersQ||e.indexOf(_usersQ)>=0||nameOf(e).toLowerCase().indexOf(_usersQ)>=0;})
+    .sort(function(a,b){return (isOnline(b)?1:0)-(isOnline(a)?1:0)||nameOf(a).localeCompare(nameOf(b));});
+  var start=_usersPage*USERS_PAGE, total=_usersTotal||all.length;
+  document.getElementById('users-count').textContent=_usersQ?(emails.length+' coinciden (de '+fmtN(all.length)+' en esta página)')
+    :(total>USERS_PAGE?'Mostrando '+fmtN(start+1)+'–'+fmtN(start+all.length)+' de '+fmtN(total)+' usuarios':fmtN(total)+' usuarios');
+  document.getElementById('users-prev').style.display=_usersPage>0?'block':'none';
+  document.getElementById('users-next').style.display=((_usersPage+1)*USERS_PAGE<total)?'block':'none';
+  if(!emails.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">'+(_usersQ?'Nadie coincide con la búsqueda':'Todavía no hay usuarios (o no se pudieron cargar)')+'</td></tr>';return;}
+  var pc={}; _peds.forEach(function(p){pc[p._owner]=(pc[p._owner]||0)+1;});
+  function rowHtml(email){
+    var online=isOnline(email), name=nameOf(email);
     return '<tr>'
       +'<td><div style="display:flex;align-items:center;gap:8px;"><div class="user-av-admin" style="background:'+avColor(email)+';width:30px;height:30px;font-size:.75rem;">'+esc(initialOf(name))+'</div><span>'+esc(name)+'</span></div></td>'
       +'<td style="color:#9CA3AF">'+esc(email)+'</td>'
       +'<td><span class="online-pill '+(online?'op-on':'op-off')+'">'+(online?'● en línea':'○ offline')+'</span></td>'
-      +'<td>'+peds+'</td>'
-      +'<td><button class="admin-btn btn-chat" data-email="'+esc(email)+'" data-name="'+esc(name)+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">💬 Chatear</button></td>'
+      +'<td>'+(pc[email]||0)+'</td>'
+      +'<td><div class="u-actions"><button class="admin-btn btn-chat" data-email="'+esc(email)+'" data-name="'+esc(name)+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">💬 Chatear</button>'
+      +'<button class="admin-btn btn-del" data-email="'+esc(email)+'" onclick="askDeleteUser(this.dataset.email)" title="Borrar usuario">🗑️ Borrar</button></div></td>'
       +'</tr>';
+  }
+  var run=++_utRun, i=0, CH=400;
+  tbody.innerHTML='';
+  (function chunk(){   // se dibuja en tandas para que 10.000 filas no congelen la pantalla
+    if(run!==_utRun) return;
+    tbody.insertAdjacentHTML('beforeend',emails.slice(i,i+CH).map(rowHtml).join(''));
+    i+=CH; if(i<emails.length) setTimeout(chunk,0);
+  })();
+}
+
+var _delEmail=null;
+function askDeleteUser(email){
+  _delEmail=email;
+  document.getElementById('du-title').textContent='¿Borrar a '+nameOf(email)+'?';
+  document.getElementById('du-mail').textContent=email;
+  document.getElementById('du-peds-n').textContent=_peds.filter(function(p){return p._owner===email;}).length;
+  document.getElementById('du-chat').checked=true; document.getElementById('du-peds').checked=false;
+  document.getElementById('du-err').textContent=''; document.getElementById('du-ok').disabled=false;
+  document.getElementById('del-user-ov').style.display='flex';
+}
+function closeDeleteUser(){document.getElementById('del-user-ov').style.display='none';_delEmail=null;}
+function doDeleteUser(){
+  var email=_delEmail; if(!email) return;
+  var ok=document.getElementById('du-ok'), er=document.getElementById('du-err');
+  var delChat=document.getElementById('du-chat').checked, delPeds=document.getElementById('du-peds').checked;
+  ok.disabled=true; er.textContent='';
+  var fail=function(t){er.textContent=t;ok.disabled=false;};
+  SB.from(T_USERS).delete().eq(_userCol||'correo electronico',email).select().then(function(r){
+    if(r.error){fail('No se pudo borrar: '+errDB(r.error));return;}
+    if(!(r.data&&r.data.length)){fail('La base no borró nada (puede ser un permiso). Revisá las políticas de la tabla usuarios.');return;}
+    var extra=[
+      SB.from(T_PRES).delete().eq('correo_electronico',email),
+      SB.from(T_PRES).delete().eq('email',email),
+      SB.from('perfiles').delete().eq('email',email)
+    ];
+    if(delChat) extra.push(SB.from(T_CHATS).delete().eq('llave',getChatKey(ADMIN,email)));
+    if(delPeds) extra.push(SB.from(T_PEDS).delete().eq('owner_email',email));
+    Promise.all(extra.map(function(p){return p.then(function(){return null;},function(){return null;});})).then(function(){
+      delete _users[email]; delete _chats[email]; delete _presence[email];
+      if(currentChatUser===email) currentChatUser=null;
+      if(delPeds) _peds=_peds.filter(function(p){return p._owner!==email;});
+      _usersTotal=Math.max(0,_usersTotal-1);
+      closeDeleteUser();
+      renderDash(); renderUsersTableNow(); renderChatUsers(); renderPeds(); renderBadges();
+      toast('🗑️','Usuario borrado: '+email);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ALERTAS DEL BOT (pedidos ilegales o peligrosos que detectó el asistente)
+// ══════════════════════════════════════════════════════════════
+var _alerts=[], _alertsTab='new', _alertsOff=false, _alertsFirst=true;
+function loadAlerts(){
+  if(_alertsOff||!SB) return;
+  SB.from('alertas_bot').select('*').order('creado_en',{ascending:false}).limit(300).then(function(r){
+    if(r.error){
+      if(/does not exist|schema cache|42P01|PGRST205|Could not find the table/i.test((r.error.message||'')+(r.error.code||''))){_alertsOff=true;renderAlerts();}
+      return;
+    }
+    var prev={}; _alerts.forEach(function(a){prev[a.id]=1;});
+    var fresh=(r.data||[]).filter(function(a){return !prev[a.id]&&!a.visto;});
+    _alerts=r.data||[];
+    if(!_alertsFirst&&fresh.length) toast('🚨','Alerta del bot: '+(fresh[0].nombre||fresh[0].usuario));
+    _alertsFirst=false;
+    renderAlerts(); renderBadges();
+  });
+}
+function alertsTab(t){_alertsTab=t;renderAlerts();}
+function renderAlerts(){
+  var box=document.getElementById('bot-alerts'); if(!box) return;
+  if(_alertsOff){box.innerHTML='<div class="al-empty">Falta crear la tabla <b>alertas_bot</b> en Supabase (corré el archivo apli-sql.sql).</div>';return;}
+  var nuevas=_alerts.filter(function(a){return !a.visto;}).length;
+  document.getElementById('al-count').textContent=nuevas+' sin ver · '+_alerts.length+' en total';
+  document.getElementById('al-tab-new').classList.toggle('on',_alertsTab==='new');
+  document.getElementById('al-tab-all').classList.toggle('on',_alertsTab==='all');
+  var list=_alertsTab==='new'?_alerts.filter(function(a){return !a.visto;}):_alerts;
+  if(!list.length){box.innerHTML='<div class="al-empty">'+(_alertsTab==='new'?'No hay alertas nuevas ✅':'Todavía no hubo alertas')+'</div>';return;}
+  box.innerHTML=list.map(function(a){
+    var when=a.creado_en?new Date(a.creado_en).toLocaleString('es-AR'):'';
+    return '<div class="alert-item'+(a.visto?' seen':'')+'">'
+      +'<div class="al-top"><span class="al-user">'+esc(a.nombre||a.usuario)+'</span><span class="al-mail">'+esc(a.usuario)+'</span>'
+      +'<span class="al-tag">'+esc(a.categoria||'sin tipo')+'</span>'
+      +(a.confirmada?'':'<span class="al-tag warn">sin confirmar</span>')
+      +'<span class="al-when">'+esc(when)+'</span></div>'
+      +'<div class="al-msg">“'+esc(a.mensaje)+'”</div>'
+      +'<div class="al-btns"><button class="admin-btn btn-chat" data-email="'+esc(a.usuario)+'" data-name="'+esc(a.nombre||a.usuario)+'" onclick="openChatWithUser(this.dataset.email,this.dataset.name)">💬 Chatear</button>'
+      +(a.visto?'':'<button class="admin-btn btn-resolve" data-id="'+esc(String(a.id))+'" onclick="alertSeen(this.dataset.id)">✓ Marcar visto</button>')
+      +'<button class="admin-btn btn-del" data-id="'+esc(String(a.id))+'" onclick="alertDel(this.dataset.id)">🗑️</button></div></div>';
   }).join('');
+}
+function alertSeen(id){
+  sbSafe('alertas_bot','update',{visto:true},{eq:['id',id]}).then(function(r){
+    if(r.error){toast('❌','No se pudo marcar: '+errDB(r.error));return;}
+    _alerts.forEach(function(a){if(String(a.id)===String(id))a.visto=true;});
+    renderAlerts(); renderBadges();
+  });
+}
+function alertsMarkAll(){
+  if(!_alerts.some(function(a){return !a.visto;})) return;
+  SB.from('alertas_bot').update({visto:true}).eq('visto',false).then(function(r){
+    if(r.error){toast('❌','No se pudo marcar: '+errDB(r.error));return;}
+    _alerts.forEach(function(a){a.visto=true;}); renderAlerts(); renderBadges();
+  });
+}
+function alertDel(id){
+  if(!confirm('¿Borrar esta alerta?')) return;
+  SB.from('alertas_bot').delete().eq('id',id).then(function(r){
+    if(r.error){toast('❌','No se pudo borrar: '+errDB(r.error));return;}
+    _alerts=_alerts.filter(function(a){return String(a.id)!==String(id);}); renderAlerts(); renderBadges();
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1382,7 +1535,9 @@ function renderBadges(){
   var b=document.getElementById('b-pedidos'); if(b){b.textContent=pend; b.classList.toggle('on',pend>0);}
   var totalUnread=Object.keys(_chats).reduce(function(a,e){return a+unreadOf(e);},0);
   var bc=document.getElementById('b-chat'); if(bc){bc.textContent=totalUnread; bc.classList.toggle('on',totalUnread>0);}
-  document.title=(totalUnread>0?'('+totalUnread+') ':'')+'APLI COP — Admin';
+  var nb=(_alerts||[]).filter(function(a){return !a.visto;}).length;
+  var bb=document.getElementById('b-bot'); if(bb){bb.textContent=nb;bb.classList.toggle('on',nb>0);}
+  document.title=(totalUnread>0?'('+totalUnread+') ':'')+(nb>0?'🚨'+nb+' ':'')+'APLI COP — Admin';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1571,5 +1726,18 @@ document.addEventListener('visibilitychange',function(){if(adminOn&&!document.hi
 })();
 
 </script>
+
+<!-- BORRAR USUARIO -->
+<div id="del-user-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1E1E1E;border:1px solid #2E2E2E;border-radius:14px;max-width:420px;width:100%;padding:1.25rem 1.4rem;font-family:Poppins,sans-serif;color:#fff">
+    <div style="font-size:1rem;font-weight:700;margin-bottom:.2rem" id="du-title"></div>
+    <div style="font-size:.78rem;color:#9CA3AF;margin-bottom:.9rem;word-break:break-all" id="du-mail"></div>
+    <div style="font-size:.8rem;line-height:1.5;margin-bottom:.8rem">Se borra su cuenta y su foto de perfil. Si se registra de nuevo con ese Gmail, arranca de cero.</div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:.8rem;margin-bottom:.4rem"><input type="checkbox" id="du-chat" checked> Borrar su chat de soporte</label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:.8rem;margin-bottom:.8rem"><input type="checkbox" id="du-peds"> Borrar también sus pedidos (<span id="du-peds-n">0</span>)</label>
+    <div id="du-err" style="color:#F87171;font-size:.78rem;min-height:1em;margin-bottom:.6rem"></div>
+    <div style="display:flex;gap:8px"><button class="admin-btn" onclick="closeDeleteUser()" style="flex:1;background:#2E2E2E;color:#fff;padding:.7rem">Cancelar</button><button class="admin-btn btn-del" id="du-ok" onclick="doDeleteUser()" style="flex:1;padding:.7rem">🗑️ Borrar definitivamente</button></div>
+  </div>
+</div>
 </body>
 </html>
