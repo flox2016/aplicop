@@ -278,6 +278,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
 .grp-row,.rad{display:flex!important;align-items:center;gap:8px;padding:6px 2px;font-size:.88rem;font-weight:500!important;color:#1A1A2E!important;margin:0!important}
 .sheet-link{display:block;width:100%;border:none;background:none;color:#DC2626;font-weight:700;padding:.8rem;margin-top:6px;cursor:pointer;font-family:inherit;font-size:.88rem}
 .cv-lock{display:none;flex-shrink:0;text-align:center;padding:.9rem 1rem calc(.9rem + env(safe-area-inset-bottom,0px));background:#F4F5F7;color:#6B7280;font-size:.82rem;border-top:1px solid #E5E7EB}
+.lock-btn{margin-left:8px;border:none;background:var(--ac);color:var(--ac-on);border-radius:14px;padding:.3rem .8rem;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit}
 .cfg-photo-btn{display:inline-block;border:1.5px solid var(--ac);color:var(--ac);background:none;border-radius:20px;padding:.35rem .9rem;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit}
 .cfg-av img.foto{object-fit:cover}
 
@@ -544,6 +545,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
     <div class="convo-av" id="cv-av">?</div>
     <div><div class="convo-name" id="cv-name">Contacto</div><div id="cv-status" style="font-size:.7rem;color:#B2DFDB">cargando...</div></div>
     <div id="cv-calls" style="display:none"><button class="cv-call-btn" onclick="callStart(false)" title="Llamar">📞</button><button class="cv-call-btn" onclick="callStart(true)" title="Videollamada">📹</button></div>
+    <button class="cv-call-btn" id="cv-menu" onclick="chatMenu()" title="Más opciones" style="display:none;margin-left:6px">⋮</button>
   </div>
   <div class="msgs" id="cv-msgs"></div>
   <div id="cv-live" style="padding:0 12px 6px"></div>
@@ -1067,7 +1069,16 @@ function mergeMsgs(server,local){
   });
   return order.map(function(k){return map[k];});
 }
-function msgVisible(m){return !(m&&m.hid&&CU&&m.hid.indexOf(CU.email)>=0);}
+function msgVisible(m,key){
+  if(!m||!CU) return true;
+  if(m.hid&&m.hid.indexOf(CU.email)>=0) return false;
+  if(key){
+    var o=String(key).indexOf('g:')===0?key:otherOf(key);
+    var cl=_blk.d[o]; if(cl&&(m.ts||0)<=cl) return false;                       // borrado: se limpia lo anterior
+    var bt=_blk.b[o]; if(bt&&m.from!==CU.email&&(m.ts||0)>=bt) return false;    // bloqueado: no se ve lo que manda
+  }
+  return true;
+}
 function msgSig(list){return (list||[]).map(function(m){return msgKey(m)+':'+(m.mv||0)+(m.del?'d':'')+((m.hid||[]).length);}).join(',');}
 function lastReadKey(key){return 'apli_lr_'+key;}
 function otherOf(key){var p=key.split('|');return p[0]===CU.email?p[1]:p[0];}
@@ -1157,7 +1168,7 @@ function applyChat(key,msgs){
   var open=currentKey()===key&&document.getElementById('pg-convo').classList.contains('on');
   var lr=parseInt(localStorage.getItem(lastReadKey(key))||'0');
   if(open){localStorage.setItem(lastReadKey(key),merged.length);lr=merged.length;}
-  var unread=merged.filter(function(m,i){return i>=lr&&m.from!==CU.email&&!m.del&&msgVisible(m);}).length;
+  var unread=merged.filter(function(m,i){return i>=lr&&m.from!==CU.email&&!m.del&&msgVisible(m,key);}).length;
   var before=_unread[other]||0;
   _unread[other]=unread;
   if(unread>before&&(!open||document.hidden)){
@@ -1505,6 +1516,7 @@ function addContact(){
   var err=document.getElementById('chat-err');err.style.display='none';
   if(!validEmail(email)){err.textContent='❌ Gmail inválido';err.style.display='block';return;}
   if(email===CU.email){err.textContent='❌ No podés agregarte';err.style.display='block';return;}
+  if(_blk.d[email]&&_contacts.find(function(c){return c.email===email;})){delete _blk.d[email];blkSave();input.value='';renderContacts();toast('✅','Contacto agregado');return;}
   if(_contacts.find(function(c){return c.email===email;})){err.textContent='⚠️ Ya está en tu lista';err.style.display='block';return;}
   authCall({action:'nombre_de',token:_sess.token,email:email}).then(function(r){
       if(r.status===0){err.textContent='❌ Error de conexión';err.style.display='block';return;}
@@ -1519,8 +1531,8 @@ function addContact(){
     });
 }
 
-function lastPreview(msgs){
-  msgs=(msgs||[]).filter(msgVisible);
+function lastPreview(msgs,key){
+  msgs=(msgs||[]).filter(function(m){return msgVisible(m,key);});
   if(!msgs.length) return 'Iniciá la conversación 👋';
   var m=msgs[msgs.length-1];
   if(m.del) return '🚫 Mensaje eliminado';
@@ -1528,32 +1540,40 @@ function lastPreview(msgs){
   return m.type==='text'?String(m.text||'').substring(0,40):(m.type==='image'?'🖼️ Imagen':m.type==='video'?'🎥 Video':'📎 Archivo');
 }
 
-function groupPreview(g,msgs){
-  var vis=(msgs||[]).filter(msgVisible);
+function groupPreview(g,msgs,key){
+  if(isBlocked(key)) return '🚫 Bloqueado';
+  var vis=(msgs||[]).filter(function(m){return msgVisible(m,key);});
   if(!vis.length) return 'Grupo creado';
   var m=vis[vis.length-1];
-  return (m.from===CU.email?'Vos: ':nameOf(m.from)+': ')+lastPreview([m]);
+  return (m.from===CU.email?'Vos: ':nameOf(m.from)+': ')+lastPreview([m],key);
+}
+function contactShown(c){
+  var cl=_blk.d[c.email]; if(!cl) return true;
+  var key=getChatKey(CU.email,c.email);
+  return (_chatCache[key]||[]).some(function(m){return msgVisible(m,key);});   // borrado: reaparece si te escribe de nuevo
 }
 function renderContacts(){
   var list=document.getElementById('contacts-list');if(!list||!CU)return;
   var gids=Object.keys(_groups);
-  if(!_contacts.length&&!gids.length){list.innerHTML='<div class="empty" style="padding:1rem"><div class="ei">💬</div><p>Agregá un Gmail registrado</p></div>';return;}
+  var shown=_contacts.map(function(c,i){return {c:c,i:i};}).filter(function(x){return contactShown(x.c);});
+  if(!shown.length&&!gids.length){list.innerHTML='<div class="empty" style="padding:1rem"><div class="ei">💬</div><p>Agregá un Gmail registrado</p></div>';return;}
   var html=gids.map(function(id){
     var g=_groups[id], key='g:'+id, u=_unread[key]||0;
     return '<div class="contact-item" onclick="openGroup(\''+esc(id)+'\')">'
       +'<div class="cav" style="background:'+avColor(id)+';font-size:1.1rem">👥</div>'
-      +'<div class="cinfo"><div class="cname">'+esc(g.nombre)+'</div><div class="clast">'+esc(groupPreview(g,_chatCache[key]))+'</div></div>'
+      +'<div class="cinfo"><div class="cname">'+esc(g.nombre)+'</div><div class="clast">'+esc(groupPreview(g,_chatCache[key],key))+'</div></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
       +'<span class="cunread '+(u>0?'on':'')+'">'+u+'</span>'
       +'<div style="font-size:.65rem;color:#9CA3AF">'+g.miembros.length+' personas</div></div></div>';
   }).join('');
-  html+=_contacts.map(function(c,i){
-    var on=isOnline(c.email);var u=_unread[c.email]||0;
+  html+=shown.map(function(x){
+    var c=x.c, i=x.i, on=isOnline(c.email), u=_unread[c.email]||0, key=getChatKey(CU.email,c.email);
     var msgs=getChatMsgs(CU.email,c.email);
     var initial=(c.name||c.email||'?').charAt(0).toUpperCase();
+    var prev=isBlocked(c.email)?'🚫 Bloqueado':lastPreview(msgs,key);
     return '<div class="contact-item" onclick="openConvo('+i+')">'
       +'<div class="cav" style="background:'+avBg(c.email)+'">'+esc(avTxt(c.email,initial))+'<span class="odot '+(on?'on':'off')+'"></span></div>'
-      +'<div class="cinfo"><div class="cname">'+esc(c.name)+'</div><div class="clast">'+esc(lastPreview(msgs))+'</div></div>'
+      +'<div class="cinfo"><div class="cname">'+esc(c.name)+'</div><div class="clast">'+esc(prev)+'</div></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
       +'<span class="cunread '+(u>0?'on':'')+'">'+u+'</span>'
       +'<div style="font-size:.65rem;color:'+(on?'#22C55E':'#9CA3AF')+'">'+(on?'en línea':'offline')+'</div></div></div>';
@@ -1597,6 +1617,7 @@ function openConvo(i){
   if(!CU||!_contacts[i]) return;
   currentContact=_contacts[i];
   groupUiReset();
+  applyDmLock();
   var initial=(currentContact.name||currentContact.email||'?').charAt(0).toUpperCase();
   setAv(document.getElementById('cv-av'),currentContact.email,initial);
   document.getElementById('cv-name').textContent=currentContact.name;
@@ -1615,7 +1636,7 @@ function renderMsgs(){
   var c=document.getElementById('cv-msgs');if(!c)return;
   var parts=convoKeyParts(); if(!parts) return;
   var key=getChatKey(parts[0],parts[1]);
-  var msgs=(_chatCache[key]||[]).filter(msgVisible);
+  var msgs=(_chatCache[key]||[]).filter(function(m){return msgVisible(m,key);});
   var isGrp=!!(currentContact&&currentContact.group);
   if(document.getElementById('pg-convo').classList.contains('on')){
     try{localStorage.setItem(lastReadKey(key),msgs.length);}catch(e){}
@@ -1647,6 +1668,7 @@ function renderMsgs(){
 function pushMsg(msg){
   var parts=convoKeyParts(); if(!parts) return;
   if(currentContact&&currentContact.group&&!canWrite(_groups[currentContact.id],CU.email)){toast('🔒','No tenés permiso para escribir en este grupo');return;}
+  if(currentContact&&currentContact.email!==ADMIN&&isBlocked(currentContact.group?currentContact.key:currentContact.email)){toast('🚫','Lo bloqueaste. Desbloquealo para escribir');return;}
   saveChatMsg(parts[0],parts[1],msg);
 }
 function retryMsg(id){
@@ -3053,14 +3075,22 @@ function groupUiReset(){
   if(nm&&nm.parentElement) nm.parentElement.onclick=null;
 }
 function applyGroupLock(g){
-  var can=canWrite(g,CU.email), lock=$g('cv-lock'), bar=document.querySelector('#pg-convo .input-bar');
+  var lock=$g('cv-lock'), bar=document.querySelector('#pg-convo .input-bar');
   if(!lock||!bar) return;
-  lock.style.display=can?'none':'block';
-  bar.style.display=can?'':'none';
-  if(!can){
-    lock.textContent=g.modo==='nadie'?'🔒 En este grupo nadie puede escribir (solo lectura)'
+  var key='g:'+g.id, bloq=isBlocked(key), can=canWrite(g,CU.email);
+  if(bloq) lock.innerHTML='🚫 Bloqueaste este grupo <button class="lock-btn" onclick="blkToggle(\''+esc(key)+'\')">Desbloquear</button>';
+  else if(!can) lock.textContent=g.modo==='nadie'?'🔒 En este grupo nadie puede escribir (solo lectura)'
       :(g.modo==='solo_creador'?'🔒 Solo '+nameOf(g.creador)+' puede escribir en este grupo':'🔒 Solo algunas personas pueden escribir en este grupo');
-  }
+  lock.style.display=(bloq||!can)?'block':'none';
+  bar.style.display=(bloq||!can)?'none':'';
+}
+function applyDmLock(){
+  var c=currentContact, lock=$g('cv-lock'), bar=document.querySelector('#pg-convo .input-bar');
+  if(!c||c.group||c.email===ADMIN||!lock||!bar) return;
+  var bloq=isBlocked(c.email);
+  lock.style.display=bloq?'block':'none';
+  bar.style.display=bloq?'none':'';
+  if(bloq) lock.innerHTML='🚫 Bloqueaste a '+esc(c.name)+' <button class="lock-btn" onclick="blkToggle(\''+esc(c.email)+'\')">Desbloquear</button>';
 }
 function refreshGroupHeader(){
   if(!currentContact||!currentContact.group) return;
@@ -3178,14 +3208,27 @@ function grpSave(){
     if(_grpMode==='new') openGroup(o.id); else refreshGroupHeader();
   });
 }
-function grpLeave(){
-  var g=_grpId?_groups[_grpId]:null; if(!g) return;
-  openSheet('¿Salir del grupo "'+g.nombre+'"?',[{t:'🚪 Salir del grupo',danger:true,fn:function(){
+function grpLeave(){grpLeaveId(_grpId);}
+function grpLeaveId(id){
+  var g=id?_groups[id]:null; if(!g) return;
+  openSheet('¿Salir y borrar el grupo "'+g.nombre+'"?',[{t:'🚪 Salir y borrar',sub:'Salís del grupo y desaparece de tu lista',danger:true,fn:function(){
     var upd={miembros:g.miembros.filter(function(e){return e!==CU.email;}),escritores:(g.escritores||[]).filter(function(e){return e!==CU.email;}),actualizado_en:new Date().toISOString()};
     sbSafe('grupos','update',upd,{eq:['id',g.id]}).then(function(r){
       if(r.error){toast('❌','No se pudo salir: '+errDB(r.error));return;}
       delete _groups[g.id]; grpClose();
       if(currentContact&&currentContact.group&&currentContact.id===g.id) backToChat(); else renderContacts();
+    });
+  }}]);
+}
+function grpDeleteAll(id){
+  var g=id?_groups[id]:null; if(!g||!canEditGroup(g)) return;
+  openSheet('¿Eliminar el grupo "'+g.nombre+'" para todos?',[{t:'💥 Eliminar para todos',sub:'Se borra el grupo y sus mensajes. No se puede deshacer',danger:true,fn:function(){
+    SB.from('grupos').delete().eq('id',id).select().then(function(r){
+      if(r.error||!(r.data&&r.data.length)){toast('❌','No se pudo eliminar el grupo');return;}
+      SB.from(T_CHATS).delete().eq('llave','g:'+id).then(function(){});
+      delete _groups[id]; delete _chatCache['g:'+id]; grpClose();
+      if(currentContact&&currentContact.group&&currentContact.id===id) backToChat(); else renderContacts();
+      toast('🗑️','Grupo eliminado');
     });
   }}]);
 }
@@ -3239,6 +3282,146 @@ function iaMsgDel(sid){
     iaGuardar('assistant',IA_MK_EV+JSON.stringify({a:'d',t:sid}),null,null);
   }}]);
 }
+
+// ══════════════════════════════════════════════════════════════
+// BLOQUEAR / BORRAR CONTACTOS Y GRUPOS
+// ══════════════════════════════════════════════════════════════
+var _blk={b:{},d:{},t:0}, _blkOff=false;
+function blkKey(){return 'apli_blk_'+(CU?CU.email:'');}
+function isBlocked(key){return !!(key&&_blk.b[key]);}
+function blkLoadLocal(){
+  _blk={b:{},d:{},t:0};
+  try{var o=JSON.parse(localStorage.getItem(blkKey())||'null');if(o&&o.b&&typeof o.b==='object')_blk={b:o.b||{},d:o.d||{},t:o.t||0};}catch(e){}
+}
+function blkSave(){
+  _blk.t=Date.now();
+  try{localStorage.setItem(blkKey(),JSON.stringify(_blk));}catch(e){}
+  if(_blkOff||!CU) return;
+  sbSafe('perfiles','upsert',{email:CU.email,bloqueos:_blk,actualizado_en:new Date().toISOString()},{upsert:{onConflict:'email'}}).then(function(r){
+    if(r.error&&avTablaFalta(r.error)) _blkOff=true;
+  });
+}
+function blkPull(){
+  if(!CU) return;
+  SB.from('perfiles').select('bloqueos').eq('email',CU.email).maybeSingle().then(function(r){
+    if(r.error){_blkOff=true;return;}
+    var s=r.data&&r.data.bloqueos;
+    if(s&&s.b&&typeof s.b==='object'&&(s.t||0)>_blk.t){
+      _blk={b:s.b||{},d:s.d||{},t:s.t};
+      try{localStorage.setItem(blkKey(),JSON.stringify(_blk));}catch(e){}
+      blkRefresh();
+    }
+  });
+}
+function blkRefresh(){
+  renderContacts(); updateBadges();
+  if(currentContact&&document.getElementById('pg-convo').classList.contains('on')){
+    if(currentContact.group) refreshGroupHeader(); else applyDmLock();
+    renderMsgs();
+  }
+}
+function blkToggle(key){
+  if(!key||!CU) return;
+  if(_blk.b[key]){delete _blk.b[key];toast('✅','Desbloqueado');}
+  else{_blk.b[key]=Date.now();_unread[key]=0;toast('🚫','Bloqueado');}
+  blkSave(); blkRefresh();
+}
+function contactDelete(email){
+  var c=_contacts.find(function(x){return x.email===email;}); if(!c) return;
+  openSheet('¿Borrar a '+c.name+'?',[{t:'🗑️ Borrar contacto',sub:'Sale de tu lista y se limpia la conversación para vos. Si te escribe de nuevo, reaparece',danger:true,fn:function(){
+    _blk.d[email]=Date.now(); _unread[email]=0; blkSave();
+    if(currentContact&&currentContact.email===email) backToChat(); else renderContacts();
+    updateBadges(); toast('🗑️','Contacto borrado');
+  }}]);
+}
+function chatMenu(){
+  var c=currentContact; if(!c||c.email===ADMIN) return;
+  if(c.group){
+    var g=_groups[c.id]; if(!g) return;
+    var key='g:'+c.id, bloq=isBlocked(key), items=[];
+    if(canEditGroup(g)) items.push({t:'✏️ Editar grupo',sub:'Quién escribe, sumar o sacar personas',fn:function(){grpOpen('edit',c.id);}});
+    else items.push({t:'ℹ️ Info del grupo',fn:function(){grpOpen('view',c.id);}});
+    items.push({t:bloq?'✅ Desbloquear grupo':'🚫 Bloquear grupo',sub:bloq?'':'No ves sus mensajes ni avisos y no podés escribir',fn:function(){blkToggle(key);}});
+    if(canEditGroup(g)) items.push({t:'💥 Eliminar grupo para todos',danger:true,fn:function(){grpDeleteAll(c.id);}});
+    else items.push({t:'🗑️ Salir y borrar grupo',sub:'Salís y desaparece de tu lista',danger:true,fn:function(){grpLeaveId(c.id);}});
+    openSheet(g.nombre,items);
+  } else {
+    var e=c.email, bl=isBlocked(e);
+    openSheet(c.name,[
+      {t:bl?'✅ Desbloquear':'🚫 Bloquear',sub:bl?'':'No te llegan sus mensajes ni llamadas y no podés escribirle',fn:function(){blkToggle(e);}},
+      {t:'🗑️ Borrar contacto',sub:'Sale de tu lista y se limpia la conversación para vos',danger:true,fn:function(){contactDelete(e);}}
+    ]);
+  }
+}
+var _startOrig4=startListeners;
+startListeners=function(){_startOrig4();blkLoadLocal();blkPull();};
+var _stopOrig4=stopAllListeners;
+stopAllListeners=function(){_stopOrig4();_blk={b:{},d:{},t:0};_blkOff=false;};
+
+// ══════════════════════════════════════════════════════════════
+// BOT: ALERTA POR PEDIDOS ILEGALES O PELIGROSOS (se avisa al admin)
+// ══════════════════════════════════════════════════════════════
+var IA_ILEGAL='🚨 Ilegal. Alerta enviada al admin para que llame al 911.';
+var IA_RIESGOS=[
+  ['robo',/\b(robar|robo|robarle|robarlo|robarla|asaltar|asalto|hurtar|hurto|saquear|atracar|desvalijar|carterear|arrebatar)\b/],
+  ['violencia',/\b(matar|matarlo|matarla|asesinar|asesinato|secuestrar|secuestro|apunalar|envenenar|torturar|violar|golpear a)\b/],
+  ['armas o explosivos',/\b(bomba|explosivo|explosivos|molotov|dinamita|granada|silenciador|arma casera|armas? de fuego|fabricar (un )?arma)\b/],
+  ['drogas',/\b(fabricar (droga|drogas|cocaina|metanfetamina|crack)|cocinar (meta|droga)|vender (droga|drogas|cocaina|marihuana)|traficar|narcotrafico)\b/],
+  ['fraude o hackeo',/\b(hackear|hackeo|phishing|clonar (una )?tarjeta|estafar|estafa|falsificar|lavar dinero|ransomware|keylogger|ddos|robar (contrasenas?|cuentas?|datos|tarjetas?))\b/],
+  ['menores',/\b(abuso sexual|pornografia infantil|abusar de (un )?(nino|menor))\b/]
+];
+function iaNorm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function iaRiesgo(text){
+  var n=iaNorm(text);
+  for(var i=0;i<IA_RIESGOS.length;i++) if(IA_RIESGOS[i][1].test(n)) return IA_RIESGOS[i][0];
+  return '';
+}
+var _iaChecking=false;
+function iaClasificar(text){
+  var p=askAI([
+    {role:'system',content:'Sos un clasificador de seguridad. Respondé SOLO una palabra: ILEGAL si el usuario pide ayuda, instrucciones o métodos para cometer un delito o hacerle daño a otra persona (robar, asaltar, matar, secuestrar, fabricar armas o explosivos, fabricar o vender drogas, estafar, hackear a otros, abuso de menores, etc.). SEGURO si solo pregunta cómo protegerse, habla de una película, juego o ficción, hace una consulta legal o informativa, o es una conversación normal. No expliques nada.'},
+    {role:'user',content:String(text).substring(0,600)}
+  ],false).then(function(t){
+    t=String(t||'').toUpperCase();
+    if(/\bILEGAL\b/.test(t)&&!/\bNO ILEGAL\b/.test(t)) return 'ILEGAL';
+    if(/\bSEGURO\b/.test(t)) return 'SEGURO';
+    return 'ERROR';
+  }).catch(function(){return 'ERROR';});
+  var to=new Promise(function(r){setTimeout(function(){r('ERROR');},12000);});
+  return Promise.race([p,to]);
+}
+function iaAlertar(text,cat,confirmada){
+  if(!CU) return;
+  sbSafe('alertas_bot','insert',{usuario:CU.email,nombre:(CU.name||CU.nombre||'').toString().substring(0,80),mensaje:String(text).substring(0,500),categoria:cat||'',confirmada:!!confirmada,visto:false,creado_en:new Date().toISOString()}).then(function(r){
+    if(r.error) console.warn('[APLI COP] No se pudo guardar la alerta:',r.error.message);
+  });
+}
+var _sendIA0=sendIA;
+sendIA=function(){
+  if(_iaChecking) return;
+  var input=$g('ia-input'), text=String(input.value||'').trim();
+  if(text.length>1000) text=text.substring(0,1000);
+  var cat=''; try{cat=text?iaRiesgo(text):'';}catch(e){cat='';}   // si la detección falla, el mensaje se manda igual
+  if(!cat) return _sendIA0();
+  _iaChecking=true;
+  iaClasificar(text).then(function(v){
+    _iaChecking=false;
+    if(v==='ILEGAL'){
+      iaAlertar(text,cat,true);
+      var porVoz=_voiceAsk; _voiceAsk=false;
+      var usid=newMsgId(); input.value=''; if(_iaPending) iaClearImg();
+      _iaMsgs.push({from:'user',text:text,time:nowT(),sid:usid});
+      iaGuardar('user',iaTag(usid,text),(_iaConvId?null:text),'⟦i:'+usid+'⟧'+text);
+      _iaMsgs.push({from:'ia',text:IA_ILEGAL,time:nowT()});
+      renderIA();
+      iaGuardar('assistant',IA_ILEGAL,null,IA_ILEGAL);
+      if(porVoz){try{speakText(IA_ILEGAL);}catch(e){}}
+    } else {
+      if(v==='ERROR') iaAlertar(text,cat,false);   // no se pudo confirmar: queda como "sin confirmar" para el admin
+      _sendIA0();
+    }
+  });
+};
 
 _iaMsgs=[IA_WELCOME()];
 (function init(){
@@ -3409,6 +3592,7 @@ function onCallSig(p){
 }
 
 function callOnInvite(p){
+  if(p&&isBlocked(p.from)) return;
   if(_call || _incoming){ callSendTo(p.from, {t:'reject', reason:'busy'}); return; }
   _incoming = p;
   var nm = p.fromName || p.from;
@@ -3625,6 +3809,7 @@ function ringStop(){ clearInterval(_ringIv); _ringIv = null; }
 function updCallBtns(){
   var b = document.getElementById('cv-calls'); if(!b) return;
   b.style.display = (currentContact && !currentContact.group && currentContact.email && currentContact.email !== ADMIN) ? 'flex' : 'none';
+  var mn=document.getElementById('cv-menu'); if(mn) mn.style.display=(currentContact&&currentContact.email!==ADMIN)?'flex':'none';
 }
 
 // ══ ENGANCHE CON EL RESTO DE LA APP (sin tocar sus funciones) ══
