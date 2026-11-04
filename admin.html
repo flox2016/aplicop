@@ -188,6 +188,21 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 .al-msg{font-size:.82rem;line-height:1.5;margin-bottom:.5rem;word-break:break-word}
 .al-btns{display:flex;gap:6px;flex-wrap:wrap}
 .al-empty{text-align:center;color:#9CA3AF;font-size:.82rem;padding:1.2rem}
+
+.sub-lbl{display:block;font-size:.72rem;font-weight:700;color:#9CA3AF;margin-bottom:5px}
+.sub-in{flex:1;width:100%;background:#242424;border:1.5px solid #2E2E2E;color:#fff;border-radius:10px;padding:.65rem .9rem;font-family:Poppins,sans-serif;font-size:.85rem;outline:none;box-sizing:border-box}
+.sub-in:focus{border-color:#FF6B00}
+.sub-ico{width:44px;height:44px;border-radius:10px;background:#242424;border:1px solid #2E2E2E;display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;flex-shrink:0}
+.sub-ico img{width:100%;height:100%;object-fit:cover}
+.sub-item{display:flex;align-items:center;gap:12px;background:#242424;border-radius:10px;padding:.7rem .85rem;margin-bottom:.55rem;flex-wrap:wrap}
+.sub-info{flex:1;min-width:180px}
+.sub-t{font-weight:700;font-size:.88rem}
+.sub-u{font-size:.74rem;color:#FF6B00;word-break:break-all}
+.sub-m{font-size:.68rem;color:#6B7280;margin-top:2px}
+.sub-btns{display:flex;gap:6px;flex-wrap:wrap}
+.bimg-item{display:flex;align-items:center;gap:12px;background:#242424;border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem}
+.bimg-item img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#fff}
+.bimg-item span{flex:1;font-size:.85rem;font-weight:600;word-break:break-all}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -237,6 +252,7 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
     <div class="nav-link" onclick="showPanel('chat',this)"><span class="nl-ico">💬</span> Chat<span class="nl-badge" id="b-chat"></span></div>
     <div class="nav-link" onclick="showPanel('users',this)"><span class="nl-ico">👥</span> Usuarios</div>
     <div class="nav-link" onclick="showPanel('updates',this)"><span class="nl-ico">📢</span> Actualizaciones</div>
+    <div class="nav-link" onclick="showPanel('subidos',this)"><span class="nl-ico">📤</span> Subir/Subidos</div>
     <div class="nav-link" onclick="openBotPanel(this)"><span class="nl-ico">🤖</span> Bot IA<span style="font-size:.6rem;background:#FF6B00;color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px;">🔒</span><span class="nl-badge" id="b-bot"></span></div>
     <div class="sb-bottom"><button class="logout-admin" onclick="adminLogout()">🚪 Cerrar sesión</button></div>
   </div>
@@ -341,6 +357,41 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
       </div>
 
       <!-- ========== BOT IA PANEL ========== -->
+      <div class="panel" id="panel-subidos">
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-head"><h3 id="sub-form-title">📤 Subir una página</h3><span style="font-size:.78rem;color:#9CA3AF" id="sub-mode"></span></div>
+          <div class="card-body">
+            <p style="font-size:.8rem;color:#9CA3AF;margin-bottom:1rem;line-height:1.5">Elegí el nombre del link y subí el archivo HTML. Queda publicado en <b style="color:#fff">aplicop.com.ar/nombre</b>. En la pestaña del navegador se ve el ícono y el nombre de la app.</p>
+            <label class="sub-lbl">Nombre del link</label>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:.9rem"><span style="color:#9CA3AF;font-size:.82rem;white-space:nowrap">aplicop.com.ar/</span><input type="text" id="sub-name" maxlength="40" placeholder="mi-tienda" class="sub-in"></div>
+            <label class="sub-lbl">Nombre de la app (el que se ve en la pestaña)</label>
+            <input type="text" id="sub-title" maxlength="60" placeholder="Mi Tienda" class="sub-in" style="margin-bottom:.9rem">
+            <label class="sub-lbl">Ícono de la app (opcional)</label>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:.9rem">
+              <div id="sub-icon-prev" class="sub-ico">📄</div>
+              <input type="file" id="sub-icon-file" accept="image/*" style="display:none" onchange="subPickIcon(this)">
+              <button class="admin-btn btn-chat" onclick="document.getElementById('sub-icon-file').click()">🖼️ Elegir ícono</button>
+              <span style="font-size:.72rem;color:#6B7280">Si no elegís, se usa el que tenga el HTML o el de APLI COP</span>
+            </div>
+            <label class="sub-lbl">Archivo HTML</label>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+              <input type="file" id="sub-html-file" accept=".html,.htm,text/html" style="display:none" onchange="subPickHtml(this)">
+              <button class="admin-btn btn-chat" onclick="document.getElementById('sub-html-file').click()">📂 Elegir archivo</button>
+              <span style="font-size:.78rem;color:#9CA3AF" id="sub-file-name">Ningún archivo</span>
+            </div>
+            <div id="sub-msg" style="font-size:.8rem;min-height:1.1em;margin-bottom:.7rem"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="admin-btn" id="sub-go" onclick="subSubmit()" style="background:#FF6B00;color:#fff;padding:.7rem 1.4rem;font-size:.85rem">📤 Subir</button>
+              <button class="admin-btn" id="sub-cancel" onclick="subReset()" style="display:none;background:#2E2E2E;color:#fff;padding:.7rem 1.1rem;font-size:.85rem">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>📁 Subidos</h3><span style="font-size:.78rem;color:#9CA3AF" id="sub-count"></span></div>
+          <div class="card-body" id="sub-list"></div>
+        </div>
+      </div>
+
       <div class="panel" id="panel-bot">
 
         <!-- ALERTAS DEL BOT -->
@@ -498,6 +549,17 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
                 style="background:#FF6B00;color:#fff;border:none;border-radius:10px;padding:.7rem 1.25rem;font-family:Poppins,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.75rem;">
                 💾 Guardar personalidad
               </button>
+            </div>
+          </div>
+
+          <!-- IMÁGENES QUE PUEDE ENVIAR EL BOT -->
+          <div class="card" style="margin-bottom:1rem">
+            <div class="card-head"><h3>🖼️ Imágenes que puede enviar el bot</h3></div>
+            <div class="card-body">
+              <p style="font-size:.8rem;color:#9CA3AF;margin-bottom:1rem;line-height:1.5">Subí imágenes con un nombre (por ejemplo "mapa" o "precios"). Cuando el cliente pida algo que tenga que ver, el bot la muestra en el chat. Máximo 5 imágenes por tanda.</p>
+              <div id="bot-imgs" style="margin-bottom:.75rem"></div>
+              <input type="file" id="bot-img-file" accept="image/*" multiple style="display:none" onchange="botImgPick(this)">
+              <button onclick="document.getElementById('bot-img-file').click()" style="background:#FF6B00;color:#fff;border:none;border-radius:10px;padding:.7rem 1.25rem;font-family:Poppins,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer">📥 Subir imágenes</button>
             </div>
           </div>
 
@@ -1195,12 +1257,202 @@ function adminSendImg(event){
 // ══════════════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// BOT: IMÁGENES QUE PUEDE ENVIAR (la app las lee de la clave "bot_imagenes")
+// ══════════════════════════════════════════════════════════════
+function botImgList(){try{return JSON.parse(_botCfg.bot_imagenes||'[]')||[];}catch(e){return [];}}
+function botImgName(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 -]+/g,'').trim().replace(/\s+/g,'-').substring(0,30);}
+function renderBotImgs(){
+  var box=document.getElementById('bot-imgs'); if(!box) return;
+  var list=botImgList();
+  box.innerHTML=list.length?list.map(function(x){
+    return '<div class="bimg-item"><img src="'+esc(x.data)+'" alt=""><span>'+esc(x.nombre)+'</span><button class="admin-btn" data-n="'+esc(x.nombre)+'" onclick="botImgDel(this.dataset.n)" style="background:none;border:1px solid #EF4444;color:#EF4444">Borrar</button></div>';
+  }).join(''):'<div style="font-size:.8rem;color:#6B7280;padding:.4rem 0">Todavía no hay imágenes.</div>';
+}
+function botImgPick(inp){
+  var all=Array.prototype.slice.call(inp.files||[]); inp.value='';
+  if(!all.length) return;
+  var files=all.slice(0,5);
+  if(all.length>5) toast('ℹ️','Máximo 5 por tanda: se toman las primeras 5');
+  var list=botImgList(), chain=Promise.resolve(), cambios=0;
+  files.forEach(function(f){
+    chain=chain.then(function(){
+      var nom=prompt('Nombre para esta imagen (ej: mapa, precios):',botImgName(f.name.replace(/\.[^.]+$/,'')));
+      if(nom===null) return;
+      nom=botImgName(nom);
+      if(!nom){toast('⚠️','Esa imagen necesita un nombre');return;}
+      return compressImage(f,900,0.78).then(function(d){
+        list=list.filter(function(x){return x.nombre!==nom;}); list.push({nombre:nom,data:d}); cambios++;
+      });
+    });
+  });
+  chain.then(function(){
+    if(!cambios) return;
+    return saveBotConfig('bot_imagenes',JSON.stringify(list),'Imágenes guardadas');
+  }).then(function(){renderBotImgs();});
+}
+function botImgDel(nombre){
+  if(!confirm('¿Borrar la imagen "'+nombre+'"?')) return;
+  var list=botImgList().filter(function(x){return x.nombre!==nombre;});
+  saveBotConfig('bot_imagenes',JSON.stringify(list),'Imagen borrada').then(function(){renderBotImgs();});
+}
+
+// ══════════════════════════════════════════════════════════════
+// SUBIR / SUBIDOS: páginas publicadas en aplicop.com.ar/nombre (las muestra 404.html)
+// ══════════════════════════════════════════════════════════════
+var PUB_BASE='https://aplicop.com.ar/', _subs=[], _subEdit=null, _subHtml='', _subIcon='', _subIconAuto='';
+var SUB_RESERVED=['index','admin','404','sw','manifest','icon-192','icon-512','favicon','robots','sitemap','cop','api','assets','static'];
+function subSlug(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,40).replace(/-+$/,'');}
+function subTablaFalta(e){return /does not exist|schema cache|42P01|PGRST205|Could not find the table/i.test(((e&&e.message)||'')+((e&&e.code)||''));}
+function subKb(n){return n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';}
+function subAgo(ts){
+  var s=(Date.now()-new Date(ts).getTime())/1000;
+  if(!(s>=0)) return '';
+  if(s<60) return 'recién'; if(s<3600) return 'hace '+Math.floor(s/60)+' min';
+  if(s<86400) return 'hace '+Math.floor(s/3600)+' h'; return 'hace '+Math.floor(s/86400)+' días';
+}
+function subMsg(t,err){var m=document.getElementById('sub-msg');if(m){m.textContent=t||'';m.style.color=err?'#F87171':'#4ADE80';}}
+function paintSubIcon(src){
+  var p=document.getElementById('sub-icon-prev');
+  p.innerHTML=src?'<img src="'+esc(src)+'" alt="">':'📄';
+}
+function loadSubidos(){
+  SB.from('subidos').select('nombre,titulo,icono,tam,creado_en,actualizado_en').order('actualizado_en',{ascending:false}).limit(500).then(function(r){
+    if(r.error){renderSubidos(r.error);return;}
+    _subs=r.data||[]; renderSubidos();
+  });
+}
+function renderSubidos(err){
+  var box=document.getElementById('sub-list'); if(!box) return;
+  if(err){
+    box.innerHTML='<div class="al-empty">'+(subTablaFalta(err)?'Falta crear la tabla <b>subidos</b> en Supabase (corré el archivo apli-sql.sql).':'No se pudo cargar: '+esc(errDB(err)))+'</div>';
+    document.getElementById('sub-count').textContent=''; return;
+  }
+  document.getElementById('sub-count').textContent=_subs.length+(_subs.length===1?' página':' páginas');
+  if(!_subs.length){box.innerHTML='<div class="al-empty">Todavía no subiste ninguna página. Subí la primera arriba ☝️</div>';return;}
+  box.innerHTML=_subs.map(function(s){
+    var url=PUB_BASE+s.nombre;
+    return '<div class="sub-item">'
+      +'<div class="sub-ico">'+(s.icono?'<img src="'+esc(s.icono)+'" alt="">':'📄')+'</div>'
+      +'<div class="sub-info"><div class="sub-t">'+esc(s.titulo||s.nombre)+'</div><div class="sub-u">aplicop.com.ar/'+esc(s.nombre)+'</div>'
+      +'<div class="sub-m">'+subKb(s.tam||0)+' · '+esc(subAgo(s.actualizado_en||s.creado_en))+'</div></div>'
+      +'<div class="sub-btns">'
+      +'<button class="admin-btn btn-resolve" data-n="'+esc(s.nombre)+'" onclick="subOpen(this.dataset.n)">↗ Abrir</button>'
+      +'<button class="admin-btn btn-chat" data-n="'+esc(s.nombre)+'" onclick="subCopy(this.dataset.n)">📋 Copiar link</button>'
+      +'<button class="admin-btn btn-chat" data-n="'+esc(s.nombre)+'" onclick="subReplace(this.dataset.n)">🔄 Reemplazar</button>'
+      +'<button class="admin-btn btn-del" data-n="'+esc(s.nombre)+'" onclick="subDelete(this.dataset.n)">🗑️ Borrar</button>'
+      +'</div></div>';
+  }).join('');
+}
+function subOpen(n){window.open(PUB_BASE+n,'_blank');}
+function subCopy(n){
+  var url=PUB_BASE+n;
+  var ok=function(){toast('📋','Link copiado: aplicop.com.ar/'+n);};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(ok,function(){prompt('Copiá el link:',url);});
+  else prompt('Copiá el link:',url);
+}
+function subReset(){
+  _subEdit=null; _subHtml=''; _subIcon=''; _subIconAuto='';
+  ['sub-name','sub-title'].forEach(function(i){var e=document.getElementById(i);e.value='';e.readOnly=false;});
+  document.getElementById('sub-html-file').value=''; document.getElementById('sub-icon-file').value='';
+  document.getElementById('sub-file-name').textContent='Ningún archivo';
+  document.getElementById('sub-form-title').textContent='📤 Subir una página';
+  document.getElementById('sub-mode').textContent='';
+  document.getElementById('sub-go').textContent='📤 Subir';
+  document.getElementById('sub-cancel').style.display='none';
+  paintSubIcon(''); subMsg('');
+}
+function subReplace(n){
+  var s=_subs.find(function(x){return x.nombre===n;}); if(!s) return;
+  subReset(); _subEdit=n;
+  var ni=document.getElementById('sub-name'); ni.value=n; ni.readOnly=true;
+  document.getElementById('sub-title').value=s.titulo||n;
+  if(s.icono){_subIconAuto=s.icono;paintSubIcon(s.icono);}
+  document.getElementById('sub-form-title').textContent='🔄 Reemplazar aplicop.com.ar/'+n;
+  document.getElementById('sub-mode').textContent='Elegí el archivo nuevo (o cambiá solo el nombre o el ícono)';
+  document.getElementById('sub-go').textContent='💾 Guardar cambios';
+  document.getElementById('sub-cancel').style.display='';
+  window.scrollTo(0,0); var m=document.querySelector('.main'); if(m) m.scrollTop=0;
+}
+function subIconFromHtml(t){
+  var m=t.match(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]*>/i); if(!m) return '';
+  var h=(m[0].match(/href=["']([^"']+)["']/i)||[])[1]||'';
+  if(/^data:image\//i.test(h)&&h.length<80000) return h;
+  if(/^https:\/\//i.test(h)&&h.length<500) return h;
+  return '';
+}
+function subPickHtml(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  if(f.size>5*1024*1024){subMsg('El archivo pesa más de 5 MB. Probá achicar las imágenes que lleva adentro.',true);inp.value='';return;}
+  var r=new FileReader();
+  r.onload=function(){
+    var t=String(r.result||'');
+    if(!/<\s*(html|body|head|script|div)\b/i.test(t)){subMsg('Ese archivo no parece un HTML.',true);inp.value='';return;}
+    _subHtml=t;
+    document.getElementById('sub-file-name').textContent=f.name+' · '+subKb(f.size);
+    var title=((t.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'').replace(/\s+/g,' ').trim();
+    var ti=document.getElementById('sub-title'); if(!ti.value&&title) ti.value=title.substring(0,60);
+    var ni=document.getElementById('sub-name'); if(!ni.value&&!_subEdit) ni.value=subSlug(title||f.name.replace(/\.[^.]+$/,''));
+    if(!_subIcon){var ic=subIconFromHtml(t); if(ic){_subIconAuto=ic;paintSubIcon(ic);}}
+    subMsg('');
+  };
+  r.readAsText(f);
+}
+function subPickIcon(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return; inp.value='';
+  var fr=new FileReader();
+  fr.onload=function(ev){
+    var im=new Image();
+    im.onload=function(){
+      var s=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=96;
+      c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,96,96);
+      _subIcon=c.toDataURL('image/png'); paintSubIcon(_subIcon);
+    };
+    im.onerror=function(){subMsg('No se pudo leer esa imagen.',true);};
+    im.src=ev.target.result;
+  };
+  fr.readAsDataURL(f);
+}
+function subSubmit(){
+  var nombre=subSlug(document.getElementById('sub-name').value);
+  if(nombre.length<2){subMsg('Poné un nombre para el link (letras, números y guiones).',true);return;}
+  if(SUB_RESERVED.indexOf(nombre)>=0){subMsg('"'+nombre+'" es un nombre reservado. Elegí otro.',true);return;}
+  var titulo=document.getElementById('sub-title').value.trim().substring(0,60)||nombre;
+  var icono=_subIcon||_subIconAuto||null, ahora=new Date().toISOString();
+  var go=document.getElementById('sub-go');
+  var done=function(r,msg){
+    go.disabled=false;
+    if(r.error){subMsg(subTablaFalta(r.error)?'Falta crear la tabla "subidos" en Supabase (corré apli-sql.sql).':'No se pudo guardar: '+errDB(r.error),true);return;}
+    toast('✅',msg); subReset(); loadSubidos();
+  };
+  if(_subEdit&&!_subHtml){
+    go.disabled=true;
+    sbSafe('subidos','update',{titulo:titulo,icono:icono,actualizado_en:ahora},{eq:['nombre',nombre]}).then(function(r){done(r,'Cambios guardados');});
+    return;
+  }
+  if(!_subHtml){subMsg('Elegí el archivo HTML.',true);return;}
+  if(!_subEdit&&_subs.some(function(s){return s.nombre===nombre;})&&!confirm('Ya existe aplicop.com.ar/'+nombre+'. ¿Querés reemplazarlo?')) return;
+  go.disabled=true; subMsg('Subiendo…');
+  var row={nombre:nombre,titulo:titulo,icono:icono,html:_subHtml,tam:new Blob([_subHtml]).size,actualizado_en:ahora};
+  sbSafe('subidos','upsert',row,{upsert:{onConflict:'nombre'}}).then(function(r){done(r,'Publicado: aplicop.com.ar/'+nombre);});
+}
+function subDelete(n){
+  if(!confirm('¿Borrar aplicop.com.ar/'+n+'? Va a mostrar la pantalla 404.')) return;
+  SB.from('subidos').delete().eq('nombre',n).select().then(function(r){
+    if(r.error||!(r.data&&r.data.length)){toast('❌','No se pudo borrar'+(r.error?': '+errDB(r.error):''));return;}
+    _subs=_subs.filter(function(s){return s.nombre!==n;}); renderSubidos();
+    if(_subEdit===n) subReset();
+    toast('🗑️','Borrado: '+n);
+  });
+}
+
 var panelTitles={
   dashboard:['Dashboard','Resumen general de APLI COP'],
   pedidos:['Pedidos','Todos los pedidos recibidos'],
   chat:['Chat con usuarios','Conversaciones en tiempo real'],
   users:['Usuarios','Todos los usuarios registrados'],
   updates:['Actualizaciones','Publicar novedades para los usuarios'],
+  subidos:['📤 Subir/Subidos','Publicá páginas en aplicop.com.ar/nombre'],
   bot:['🤖 Bot IA','Control del asistente virtual de APLI COP']
 };
 function showPanel(name,el){
@@ -1217,6 +1469,7 @@ function showPanel(name,el){
   if(name==='pedidos') renderPeds();
   if(name==='updates') renderUpdates();
   if(name==='dashboard') renderDash();
+  if(name==='subidos') loadSubidos();
 }
 
 function renderAll(){renderDash();renderPeds();renderChatUsers();renderUsersTable();renderUpdates();renderBadges();}
@@ -1611,6 +1864,7 @@ function saveGeminiKey(){
 function maskKey(k){k=String(k||'');return k.length>10?k.slice(0,4)+'••••••••'+k.slice(-4):(k?'••••':'');}
 
 function loadBotSettings(){
+  renderBotImgs();
   paintImgService(_botCfg.img_service||'pollinations');
   // Ya no se muestra ninguna clave escrita en el código: solo la que esté guardada en la base
   var key=_botCfg.bot_api_key||_botCfg.clave_api_bot||'';
