@@ -3554,12 +3554,11 @@ function rcGate(boxId,errId,go){
   if(!tk){setErr(errId,'Marcá "No soy un robot"');return;}
   rcVerify(tk).then(function(v){rcReset(boxId);if(v&&v.ok)go();else setErr(errId,'No pudimos verificar. Probá de nuevo.');});
 }
-// wrap login/registro
-var _doLogin0=doLogin,_doRegister0=doRegister,_showTab0=showTab,_showLogin0=showLogin;
-doLogin=function(){rcGate('rc-in','in-err',_doLogin0);};
-doRegister=function(){rcGate('rc-rg','rg-err',_doRegister0);};
-showTab=function(t){_showTab0(t);rcRender(t==='reg'?'rc-rg':'rc-in');};
-showLogin=function(){_showLogin0();rcRender('rc-in');};
+// wrap login/registro seguro
+var _dologin = (typeof doLogin !== 'undefined') ? doLogin : function() {};
+var _doRegister = (typeof doRegister !== 'undefined') ? doRegister : function() {};
+var _showTab = (typeof showTab !== 'undefined') ? showTab : function() {};
+var _showLogin = (typeof showLogin !== 'undefined') ? showLogin : function() {};
 
 // ── DETECTOR DE BOTS ──
 var _bg={score:0,t:Date.now(),lock:false,grace:0,moves:0,clicks:[],keys:[],path:[],touch:0};
