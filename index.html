@@ -284,6 +284,60 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
 
 /* texto sobre el color de acento (se oscurece si el color es muy claro) */
 .lbtn,.promo-banner,.price-box,.main-btn,.add-btn,.cunread,.convo-av,.img-dl-btn{color:var(--ac-on);}
+
+/* reCAPTCHA, bloqueo, Aplicaciones, descargar imágenes */
+.rc-box{display:flex;justify-content:center;margin:.4rem 0;min-height:0;max-width:100%;overflow:hidden}
+.rc-lock{position:fixed;inset:0;z-index:2147483000;background:rgba(10,10,22,.94);display:none;align-items:center;justify-content:center;padding:1.2rem;font-family:inherit}
+.rc-lock.on{display:flex}
+.rc-card{background:#fff;color:#1A1A2E;border-radius:20px;max-width:380px;width:100%;padding:1.6rem 1.3rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.rc-card img{width:64px;height:64px;border-radius:16px;object-fit:cover;margin-bottom:.7rem}
+.rc-card h2{font-size:1.1rem;font-weight:800;margin-bottom:.4rem;color:#1A1A2E}
+.rc-card p{font-size:.8rem;color:#6B7280;line-height:1.5;margin-bottom:1rem}
+.rc-w{display:flex;justify-content:center;min-height:78px;overflow:hidden}
+.rc-err{color:#DC2626;font-size:.78rem;margin-top:.6rem;min-height:1em}
+.rc-card .rc-btn{margin-top:.6rem;background:var(--ac);color:var(--ac-on);border:none;border-radius:12px;padding:.65rem 1.3rem;font-weight:700;cursor:pointer;font-family:inherit;font-size:.88rem}
+.oa-empty{text-align:center;color:#9CA3AF;font-size:.82rem;padding:1.2rem}
+.oa-app{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:.75rem .9rem;margin-bottom:.6rem;cursor:pointer}
+.oa-logo-sq{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.3rem;color:#fff}
+.oa-logo-sq img{width:100%;height:100%;object-fit:cover}
+.oa-app .oa-n{font-weight:700;font-size:.9rem;color:#1A1A2E}
+.oa-app .oa-s{font-size:.72rem;color:#9CA3AF}
+.oa-ov{display:none;position:fixed;inset:0;z-index:9100;background:#F7F8FA;overflow-y:auto;flex-direction:column}
+.oa-ov.on{display:flex}
+.oa-body{padding:1rem 1.1rem calc(2rem + env(safe-area-inset-bottom,0px));max-width:560px;width:100%;margin:0 auto;box-sizing:border-box}
+.oa-sec{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:1rem;margin-bottom:.9rem}
+.oa-sec h3{font-size:.85rem;font-weight:800;margin-bottom:.6rem;color:#1A1A2E}
+.oa-f{margin-bottom:.8rem}
+.oa-f label{display:block;font-size:.72rem;font-weight:700;color:#4A4A6A;margin-bottom:4px}
+.oa-f input[type=text],.oa-f textarea{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:.6rem .75rem;font-family:inherit;font-size:.88rem;box-sizing:border-box}
+.oa-f small{display:block;color:#9CA3AF;font-size:.68rem;margin-top:3px}
+.oa-uri{display:flex;gap:6px;margin-bottom:6px}
+.oa-uri input{flex:1;border:1.5px solid #E5E7EB;border-radius:10px;padding:.55rem .7rem;font-family:inherit;font-size:.84rem;box-sizing:border-box}
+.oa-mini{border:1px solid #E5E7EB;background:#fff;border-radius:8px;padding:.4rem .7rem;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;color:#1A1A2E}
+.oa-mini.red{color:#DC2626;border-color:#FCA5A5}
+.oa-mini.pri{background:var(--ac);color:var(--ac-on);border-color:var(--ac)}
+.oa-mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;background:#F3F4F6;border-radius:8px;padding:.5rem .6rem;word-break:break-all;color:#1A1A2E}
+.oa-secret{display:flex;align-items:center;gap:8px;justify-content:space-between;border:1px solid #E5E7EB;border-radius:10px;padding:.55rem .7rem;margin-bottom:6px;font-size:.78rem}
+.oa-reveal{background:#ECFDF5;border:1.5px solid #34D399;border-radius:10px;padding:.7rem;margin:.6rem 0;font-size:.76rem}
+.oa-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:.4rem}
+.oa-c-card{max-width:420px;width:100%;margin:auto;background:#fff;border-radius:20px;padding:1.6rem 1.3rem;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.12);box-sizing:border-box}
+.oa-c-logos{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:1rem;color:#9CA3AF}
+.oa-c-logo{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:1.6rem;color:#fff}
+.oa-c-logo img{width:100%;height:100%;object-fit:cover}
+.oa-c-card h2{font-size:1.1rem;font-weight:800;line-height:1.35;margin-bottom:.5rem;color:#1A1A2E}
+.oa-c-desc{font-size:.8rem;color:#6B7280;margin-bottom:.8rem}
+.oa-c-box{text-align:left;background:#F7F8FA;border-radius:12px;padding:.8rem .95rem;font-size:.82rem;margin-bottom:.7rem;color:#1A1A2E}
+.oa-c-box ul{margin:.3rem 0 .4rem 1.2rem}
+.oa-c-box small{color:#6B7280}
+.oa-c-host{font-size:.74rem;color:#6B7280;margin-bottom:1rem;word-break:break-all}
+.oa-c-btns{display:flex;gap:8px}
+.oa-c-btns button{flex:1;border:none;border-radius:12px;padding:.8rem;font-weight:800;font-size:.9rem;cursor:pointer;font-family:inherit}
+.oa-c-no{background:#F3F4F6;color:#1A1A2E}
+.oa-c-ok{background:var(--ac);color:var(--ac-on)}
+.oa-c-sw{margin-top:.8rem;background:none;border:none;color:#6B7280;font-size:.76rem;text-decoration:underline;cursor:pointer;font-family:inherit}
+.img-wrap{position:relative;display:inline-block;line-height:0}
+.img-dl{position:absolute;right:6px;bottom:6px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.lb-dl{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--ac-on);border:none;border-radius:24px;padding:.75rem 1.5rem;font-weight:800;font-size:.9rem;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -297,7 +351,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
 </div>
 
 <div class="toast" id="toast"><span id="toast-ico"></span><span id="toast-msg"></span></div>
-<div class="lb" id="lb" onclick="closeLB()"><button class="lb-close">✕</button><img id="lb-img" src="" alt=""></div>
+<div class="lb" id="lb" onclick="closeLB()"><button class="lb-close">✕</button><img id="lb-img" src="" alt=""><button class="lb-dl" onclick="event.stopPropagation();imgDownload(document.getElementById('lb-img').src)">⬇️ Descargar</button></div>
 
 <!-- LOGIN -->
 <div class="page" id="pg-login">
@@ -315,6 +369,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
       <div id="f-in">
         <div class="lfield"><label>Gmail</label><input type="email" id="in-email" placeholder="tucorreo@gmail.com" onkeydown="if(event.key===&#39;Enter&#39;)doLogin()"></div>
         <div class="lfield"><label>Contraseña</label><input type="password" id="in-pass" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;)doLogin()"></div>
+        <div class="rc-box" id="rc-in"></div>
         <div class="lerr" id="in-err"></div>
         <button class="lbtn" onclick="doLogin()">Entrar</button>
       </div>
@@ -325,6 +380,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
         </div>
         <div class="lfield"><label>Gmail</label><input type="email" id="rg-email" placeholder="tu.correo@gmail.com"></div>
         <div class="lfield"><label>Contraseña</label><input type="password" id="rg-pass" placeholder="Mínimo 6 caracteres"></div>
+        <div class="rc-box" id="rc-rg"></div>
         <div class="lerr" id="rg-err"></div>
         <button class="lbtn" onclick="doRegister()">Crear cuenta</button>
       </div>
@@ -458,7 +514,8 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
       <div class="cfg-item" onclick="goScr(&#39;cfg-notif&#39;)"><span class="cfg-ico">🔔</span><span class="cfg-lbl">Notificaciones</span><span class="cfg-arr">›</span></div>
       <div class="cfg-item" onclick="goScr(&#39;cfg-apariencia&#39;)"><span class="cfg-ico">🎨</span><span class="cfg-lbl">Apariencia</span><span class="cfg-arr">›</span></div>
       <div class="cfg-item" onclick="goScr(&#39;cfg-voz&#39;)"><span class="cfg-ico">🎙️</span><span class="cfg-lbl">Asistente Micrófono</span><span class="cfg-arr">›</span></div>
-      <div class="cfg-item" onclick="goScr(&#39;cfg-soporte&#39;)"><span class="cfg-ico">📞</span><span class="cfg-lbl">Soporte</span><span class="cfg-arr">›</span></div>
+      <div class="cfg-item" onclick="goScr('cfg-apps')"><span class="cfg-ico">🔑</span><span class="cfg-lbl">Aplicaciones</span><span class="cfg-arr">›</span></div>
+      <div class="cfg-item" onclick="goScr('cfg-soporte')"><span class="cfg-ico">📞</span><span class="cfg-lbl">Soporte</span><span class="cfg-arr">›</span></div>
       <div class="cfg-item" onclick="goScr(&#39;cfg-acerca&#39;)"><span class="cfg-ico">❓</span><span class="cfg-lbl">Cómo funciona</span><span class="cfg-arr">›</span></div>
       <div class="cfg-item" onclick="window.open('https://www.aplicop.com.ar/docs.html','_blank')"><span class="cfg-ico">📄</span><span class="cfg-lbl">Entrar a Docs-APLI COP</span><span class="cfg-arr">↗</span></div>
     </div>
@@ -468,6 +525,15 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
   <div class="scr" id="scr-notifs" style="flex-direction:column;">
     <div class="oheader"><button class="back-btn" onclick="goScr(&#39;home&#39;)">←</button><h2>🔔 Notificaciones</h2></div>
     <div class="pad" id="notifs-list" style="overflow-y:auto;flex:1"></div>
+  </div>
+
+  <div class="scr" id="scr-cfg-apps" style="flex-direction:column;">
+    <div class="oheader"><button class="back-btn" onclick="goScr('cfg')">←</button><h2>🔑 Aplicaciones</h2></div>
+    <div class="pad" style="overflow-y:auto;flex:1">
+      <p style="font-size:.8rem;color:#6B7280;line-height:1.5;margin-bottom:.9rem">Registrá tus apps para que la gente pueda tocar <b>"Entrar con APLI COP"</b> en ellas. Cada app tiene su Client ID y sus Client secrets.</p>
+      <button class="add-btn" style="width:100%;margin-bottom:.9rem;padding:.8rem" onclick="oaOpen(null)">➕ Registrar una app</button>
+      <div id="oa-list"></div>
+    </div>
   </div>
 
   <div class="scr" id="scr-cfg-notif" style="flex-direction:column;">
@@ -787,6 +853,7 @@ function goScr(name){
   if(name==='cfg'){document.getElementById('cfg-name').textContent=CU?CU.name:'';document.getElementById('cfg-email').textContent=CU?CU.email:'';}
   if(name==='notifs') renderNotifs();
   if(name==='cfg-voz') syncVoiceUI();
+  if(name==='cfg-apps') oaLoad();
   if(name==='home'){
     var pb=document.getElementById('promo-banner');
     if(pb) pb.style.display=_pedidos.length===0?'block':'none';
@@ -1650,7 +1717,7 @@ function renderMsgs(){
     var content;
     if(m.del) content='<span class="msg-del">🚫 Mensaje eliminado</span>';
     else if(m.type==='text') content=escBr(m.text);
-    else if(m.type==='image') content=src?'<img class="msg-img" src="'+esc(src)+'" onclick="openLB(this.src)">':'🖼️ Imagen no disponible';
+    else if(m.type==='image') content=src?'<div class="img-wrap"><img class="msg-img" src="'+esc(src)+'" onclick="openLB(this.src)"><button class="img-dl" onclick="event.stopPropagation();imgDownloadFrom(this)" title="Descargar">⬇️</button></div>':'🖼️ Imagen no disponible';
     else if(m.type==='video') content=src?'<video style="max-width:200px;border-radius:8px" controls src="'+esc(src)+'"></video>':'🎥 Video no disponible';
     else if(m.type==='audio') content=src?'<audio controls preload="metadata" src="'+esc(src)+'" style="max-width:220px"></audio>':'🎤 Audio no disponible';
     else content='<a '+(src?'href="'+esc(src)+'" download="'+esc(m.filename||'archivo')+'"':'')+' style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.05);border-radius:8px;padding:8px;color:#1A1A2E;text-decoration:none">📎 '+esc(m.filename||'archivo')+'</a>';
@@ -3423,6 +3490,278 @@ sendIA=function(){
   });
 };
 
+
+// ═══════════════════════════════════════════════
+// DESCARGAR IMÁGENES DEL CHAT
+// ═══════════════════════════════════════════════
+function imgDownload(src,name){
+  src=String(src||'');if(!src)return;
+  var ext=(src.match(/^data:image\/([a-z0-9+.-]+)/i)||[])[1]||(src.match(/\.(png|jpe?g|webp|gif)(\?|$)/i)||[])[1]||'jpg';
+  ext=ext.toLowerCase().replace('jpeg','jpg').replace('svg+xml','svg');
+  var nom=name||('imagen-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+ext);
+  var guardar=function(href,rev){
+    var a=document.createElement('a');a.href=href;a.download=nom;a.rel='noopener';
+    document.body.appendChild(a);a.click();a.remove();
+    if(rev)setTimeout(function(){URL.revokeObjectURL(href);},4000);
+  };
+  try{
+    if(/^data:/i.test(src)||/^blob:/i.test(src)){guardar(src,false);return;}
+    fetch(src).then(function(r){return r.blob();}).then(function(b){guardar(URL.createObjectURL(b),true);})
+      .catch(function(){window.open(src,'_blank');});
+  }catch(e){window.open(src,'_blank');}
+}
+function imgDownloadFrom(btn){
+  var im=btn&&btn.parentNode&&btn.parentNode.querySelector('img');
+  if(im)imgDownload(im.src);
+}
+
+// ═══════════════════════════════════════════════
+// reCAPTCHA ("No soy un robot") + DETECTOR DE BOTS
+// ═══════════════════════════════════════════════
+var RC_SITE='6LeuPxIuAAAAAP2KaddWLWUXY-bwwAIh14kyerwg';
+var _rcP=null,_rcW={};
+function rcLoad(){
+  if(_rcP)return _rcP;
+  _rcP=new Promise(function(res,rej){
+    if(window.grecaptcha&&grecaptcha.render){res();return;}
+    var s=document.createElement('script');s.src='https://www.google.com/recaptcha/api.js?render=explicit';s.async=true;
+    s.onload=function(){var t=0;(function w(){if(window.grecaptcha&&grecaptcha.render)res();else if(t++>60)rej(new Error('timeout'));else setTimeout(w,150);})();};
+    s.onerror=function(){rej(new Error('blocked'));};document.head.appendChild(s);
+  });
+  _rcP.catch(function(){_rcP=null;});return _rcP;
+}
+function rcRender(boxId,opts){
+  var box=document.getElementById(boxId);if(!box)return Promise.resolve('clave');
+  if(_rcW[boxId]!==undefined)return Promise.resolve('ok');
+  return rcLoad().then(function(){
+    if(_rcW[boxId]!==undefined)return 'ok';
+    try{var o={sitekey:RC_SITE,theme:'light'};for(var k in(opts||{}))o[k]=opts[k];_rcW[boxId]=grecaptcha.render(box,o);return 'ok';}
+    catch(e){console.warn('[RC]',e&&e.message);return 'clave';}
+  },function(){return 'red';});
+}
+function rcToken(id){try{return _rcW[id]!==undefined?grecaptcha.getResponse(_rcW[id]):'';}catch(e){return '';}}
+function rcReset(id){try{if(_rcW[id]!==undefined)grecaptcha.reset(_rcW[id]);}catch(e){}}
+function rcVerify(token){
+  return fetch(SUPABASE_URL+'/functions/v1/recaptcha-verify',{method:'POST',
+    headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY},
+    body:JSON.stringify({token:token})})
+    .then(function(r){if(r.status===404||r.status>=500){console.warn('[RC] servidor no disponible');return {ok:true};}return r.json().catch(function(){return {ok:true};});})
+    .catch(function(){return {ok:true};});
+}
+function rcGate(boxId,errId,go){
+  if(_rcW[boxId]===undefined){go();return;}
+  var tk=rcToken(boxId);
+  if(!tk){setErr(errId,'Marcá "No soy un robot"');return;}
+  rcVerify(tk).then(function(v){rcReset(boxId);if(v&&v.ok)go();else setErr(errId,'No pudimos verificar. Probá de nuevo.');});
+}
+// wrap login/registro
+var _doLogin0=doLogin,_doRegister0=doRegister,_showTab0=showTab,_showLogin0=showLogin;
+doLogin=function(){rcGate('rc-in','in-err',_doLogin0);};
+doRegister=function(){rcGate('rc-rg','rg-err',_doRegister0);};
+showTab=function(t){_showTab0(t);rcRender(t==='reg'?'rc-rg':'rc-in');};
+showLogin=function(){_showLogin0();rcRender('rc-in');};
+
+// ── DETECTOR DE BOTS ──
+var _bg={score:0,t:Date.now(),lock:false,grace:0,moves:0,clicks:[],keys:[],path:[],touch:0};
+function bgDecay(n){_bg.score*=Math.pow(.5,(n-_bg.t)/10000);_bg.t=n;}
+function bgAdd(pts,why){var n=Date.now();bgDecay(n);_bg.score+=pts;if(_bg.score>=100&&!_bg.lock&&n>_bg.grace)bgLock(why);}
+function bgStrong(){
+  try{if(navigator.webdriver===true)return 'webdriver';}catch(e){}
+  if(/HeadlessChrome|PhantomJS/i.test(navigator.userAgent||''))return 'headless';
+  return '';
+}
+function bgLock(why){
+  if(_bg.lock)return;_bg.lock=true;
+  try{localStorage.setItem('apli_rc_lock','1');}catch(e){}
+  var im=document.querySelector('.llogo img'),lg=document.getElementById('rc-lock-logo');
+  if(im&&lg)lg.src=im.src;
+  document.getElementById('rc-lock').classList.add('on');
+  document.getElementById('rc-lock-err').textContent='';
+  document.getElementById('rc-lock-retry').style.display='none';
+  console.warn('[RC] bloqueo:',why);
+  bgShowChallenge();
+}
+function bgShowChallenge(){
+  rcRender('rc-lock-w',{callback:bgSolved,'expired-callback':function(){}}).then(function(r){
+    if(r==='ok'){rcReset('rc-lock-w');return;}
+    if(r==='clave'){console.warn('[RC] clave no sirve para casilla, liberando');bgRelease(15000);return;}
+    document.getElementById('rc-lock-err').textContent='No se pudo cargar la verificación. Revisá tu conexión.';
+    document.getElementById('rc-lock-retry').style.display='inline-block';
+  });
+}
+function bgRetry(){document.getElementById('rc-lock-retry').style.display='none';document.getElementById('rc-lock-err').textContent='';bgShowChallenge();}
+function bgRelease(graceMs){
+  _bg.lock=false;_bg.score=0;_bg.grace=Date.now()+(graceMs||30000);
+  try{localStorage.removeItem('apli_rc_lock');}catch(e){}
+  document.getElementById('rc-lock').classList.remove('on');
+}
+function bgSolved(token){rcVerify(token).then(function(v){if(v&&v.ok){rcReset('rc-lock-w');bgRelease(30000);}else{document.getElementById('rc-lock-err').textContent='No pudimos verificarlo. Probá de nuevo.';rcReset('rc-lock-w');}});}
+(function(){
+  var s=bgStrong();if(s)bgAdd(100,s);
+  try{if(localStorage.getItem('apli_rc_lock'))bgLock('bloqueo anterior');}catch(e){}
+  ['mousemove','mousedown','mouseup','pointerdown','pointermove','keydown','keyup','touchstart'].forEach(function(t){
+    document.addEventListener(t,function(e){if(e.isTrusted===false)bgAdd(50,'isTrusted=false');},true);
+  });
+  document.addEventListener('touchstart',function(){_bg.touch=Date.now();},{passive:true,capture:true});
+  document.addEventListener('mousemove',function(e){
+    _bg.moves++;var p=_bg.path,n=Date.now();p.push({x:e.clientX,y:e.clientY,t:n});if(p.length>14)p.shift();
+    if(p.length===14){
+      var v=[],i;for(i=1;i<p.length;i++)v.push({dx:p[i].x-p[i-1].x,dy:p[i].y-p[i-1].y,dt:p[i].t-p[i-1].t});
+      var rect=v.every(function(a){return a.dt>0&&(a.dx!==0||a.dy!==0)&&Math.abs(a.dx*v[0].dy-a.dy*v[0].dx)<0.5&&Math.abs(a.dt-v[0].dt)<=1&&Math.abs(a.dx-v[0].dx)<=1&&Math.abs(a.dy-v[0].dy)<=1;});
+      if(rect){_bg.path=[];bgAdd(40,'movimiento recto perfecto');}
+    }
+  },{passive:true,capture:true});
+  document.addEventListener('click',function(e){
+    var n=Date.now();if(e.isTrusted&&e.detail>0&&_bg.moves===0&&n-_bg.touch>1500)bgAdd(50,'clic sin movimiento');
+    var c=_bg.clicks;c.push(n);while(c.length&&n-c[0]>1000)c.shift();
+    if(c.length>=12){_bg.clicks=[];bgAdd(60,'clics extremadamente rápidos');}
+  },true);
+  document.addEventListener('keydown',function(){
+    var n=Date.now(),k=_bg.keys;k.push(n);if(k.length>16)k.shift();
+    if(k.length===16){var ok=true,i;for(i=1;i<k.length;i++){if(k[i]-k[i-1]>3){ok=false;break;}}if(ok){_bg.keys=[];bgAdd(50,'teclado imposiblemente rápido');}}
+  },true);
+  setInterval(function(){if(_bg.lock||Date.now()<_bg.grace)return;var s=bgStrong();if(s){_bg.score=100;bgLock(s);}},5000);
+})();
+
+// ═══════════════════════════════════════════════
+// ENTRAR CON APLI COP – PANTALLA DE AUTORIZACIÓN
+// ═══════════════════════════════════════════════
+var _oaReq=(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    if(p.get('authorize')!=='1'||!p.get('client_id'))return null;
+    return {client_id:p.get('client_id'),redirect_uri:p.get('redirect_uri')||'',state:p.get('state')||'',code_challenge:p.get('code_challenge')||'',code_challenge_method:p.get('code_challenge_method')||''};
+  }catch(e){return null;}
+})();
+function oaCall(action,payload){
+  var body=Object.assign({action:action,token:(_sess&&_sess.token)||''},payload||{});
+  return fetch(SUPABASE_URL+'/functions/v1/oauth',{method:'POST',
+    headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY},
+    body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(d){return {status:r.status,data:d};});})
+    .catch(function(){return {status:0,data:{error:'Sin conexión'}};});
+}
+function oaFalta(r){return r.status===404;}
+function _oaErr(t){return '<div class="oa-c-logos"><div class="oa-c-logo" style="background:#DC2626">⚠️</div></div><h2 style="color:#1A1A2E">No se puede continuar</h2><p class="oa-c-desc">'+esc(t)+'</p><button class="oa-c-sw" onclick="_oaExit()">Ir a APLI COP</button>';}
+function _oaExit(){_oaReq=null;try{history.replaceState(null,'',location.pathname);}catch(e){}showPage('pg-app');goScr('home');}
+function oaConsentShow(){
+  if(!_oaReq||!CU)return;
+  showPage('pg-oauth');
+  var box=document.getElementById('oa-c-card');box.innerHTML='<div class="oa-c-desc">Cargando…</div>';
+  oaCall('authorize_info',{client_id:_oaReq.client_id,redirect_uri:_oaReq.redirect_uri}).then(function(r){
+    if(oaFalta(r)){box.innerHTML=_oaErr('La función "oauth" no está activada en Supabase.');return;}
+    if(!r.data||!r.data.ok){box.innerHTML=_oaErr((r.data&&r.data.error)||'Error al cargar la solicitud');return;}
+    var a=r.data.app,im=document.querySelector('.llogo img'),lg=im?im.src:'';
+    box.innerHTML='<div class="oa-c-logos"><div class="oa-c-logo" style="background:'+esc(a.badge_color)+'">'+(a.logo?'<img src="'+esc(a.logo)+'" alt="">':'🔑')+'</div><span>⇄</span><div class="oa-c-logo" style="background:#111">'+(lg?'<img src="'+esc(lg)+'" alt="">':'')+'</div></div>'
+      +'<h2><b>'+esc(a.nombre)+'</b> quiere acceder a tu cuenta</h2>'
+      +(a.descripcion?'<p class="oa-c-desc">'+esc(a.descripcion)+'</p>':'')
+      +'<div class="oa-c-box"><div>Esta app va a recibir:</div><ul><li>Tu nombre</li><li>Tu Gmail</li></ul><small>Sesión como <b>'+esc(CU.email)+'</b></small></div>'
+      +'<div class="oa-c-host">Al autorizar volvés a <b>'+esc(r.data.redirect_host)+'</b></div>'
+      +'<div class="oa-c-btns"><button class="oa-c-no" onclick="_oaNo()">Cancelar</button><button class="oa-c-ok" id="oa-c-ok" onclick="_oaOk()">Autorizar</button></div>'
+      +'<button class="oa-c-sw" onclick="doLogout()">Usar otra cuenta</button>';
+  });
+}
+function _oaOk(){var b=document.getElementById('oa-c-ok');if(b){b.disabled=true;b.textContent='Autorizando…';}oaCall('authorize_grant',_oaReq).then(function(r){if(r.data&&r.data.ok&&r.data.redirect){location.href=r.data.redirect;return;}document.getElementById('oa-c-card').innerHTML=_oaErr((r.data&&r.data.error)||'No se pudo autorizar');});}
+function _oaNo(){oaCall('authorize_deny',_oaReq).then(function(r){if(r.data&&r.data.redirect){location.href=r.data.redirect;return;}_oaExit();});}
+var _enterApp1=enterApp;
+enterApp=function(e,n){_enterApp1(e,n);if(_oaReq)setTimeout(oaConsentShow,80);};
+
+// ═══════════════════════════════════════════════
+// CONFIGURACIÓN > APLICACIONES (como OAuth Apps de GitHub)
+// ═══════════════════════════════════════════════
+var _oaApps=[],_oa=null;
+function oaCopy(t){var ok=function(){toast('📋','Copiado');};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt('Copiá esto:',t);});else prompt('Copiá esto:',t);}
+function oaAgo(ts){if(!ts)return 'Nunca usado';var s=(Date.now()-new Date(ts).getTime())/1000;if(s<3600)return 'Usado hace '+Math.max(1,Math.floor(s/60))+' min';if(s<86400)return 'Usado hace '+Math.floor(s/3600)+' h';return 'Usado hace '+Math.floor(s/86400)+' días';}
+function oaLoad(){
+  var box=document.getElementById('oa-list');if(!box)return;box.innerHTML='<div class="oa-empty">Cargando…</div>';
+  oaCall('app_list').then(function(r){
+    if(oaFalta(r)){box.innerHTML='<div class="oa-empty">Falta crear la función <b>oauth</b> en Supabase.</div>';return;}
+    if(!r.data||!r.data.ok){box.innerHTML='<div class="oa-empty">'+esc((r.data&&r.data.error)||'No se pudo cargar')+'</div>';return;}
+    _oaApps=r.data.apps||[];oaRenderList();
+  });
+}
+function oaRenderList(){
+  var box=document.getElementById('oa-list');if(!box)return;
+  if(!_oaApps.length){box.innerHTML='<div class="oa-empty">Todavía no registraste ninguna app.</div>';return;}
+  box.innerHTML=_oaApps.map(function(a){
+    return '<div class="oa-app" data-id="'+esc(a.id)+'" onclick="oaOpen(this.dataset.id)">'
+      +'<div class="oa-logo-sq" style="background:'+esc(a.badge_color||'#000')+'">'+(a.logo?'<img src="'+esc(a.logo)+'" alt="">':'🔑')+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="oa-n">'+esc(a.nombre)+'</div><div class="oa-s">'+(a.usuarios||0)+' usuario'+(a.usuarios===1?'':'s')+'</div></div>'
+      +'<span style="color:#9CA3AF">›</span></div>';
+  }).join('');
+}
+function oaOpen(id){
+  var a=id?_oaApps.find(function(x){return x.id===id;}):null;
+  _oa=a?JSON.parse(JSON.stringify(a)):{id:null,nombre:'',logo:'',badge_color:'#000000',homepage:'',descripcion:'',redirect_uris:[''],secrets:[],usuarios:0};
+  if(!Array.isArray(_oa.redirect_uris)||!_oa.redirect_uris.length)_oa.redirect_uris=[''];
+  _oa.reveal='';oaRenderForm();document.getElementById('oa-ov').classList.add('on');
+}
+function oaClose(){document.getElementById('oa-ov').classList.remove('on');_oa=null;}
+function oaSync(){
+  if(!_oa)return;
+  var g=function(i){var e=document.getElementById(i);return e?e.value:'';};
+  _oa.nombre=g('oa-nom');_oa.homepage=g('oa-home');_oa.descripcion=g('oa-desc');
+  var col=g('oa-color');if(col)_oa.badge_color=col;
+  var uris=document.querySelectorAll('.oa-uri input');if(uris.length)_oa.redirect_uris=Array.prototype.map.call(uris,function(i){return i.value;});
+}
+function oaRenderForm(){
+  var a=_oa,nuevo=!a.id;
+  var base=location.origin+'/',fn=SUPABASE_URL+'/functions/v1/oauth';
+  var secs=(a.secrets||[]).map(function(s){
+    return '<div class="oa-secret"><div><div class="oa-mono" style="background:none;padding:0">••••••••••••'+esc(s.sufijo)+'</div><div style="color:#9CA3AF;font-size:.68rem;margin-top:2px">'+esc(new Date(s.creado_en).toLocaleDateString('es-AR'))+' · '+esc(oaAgo(s.ultimo_uso))+'</div></div>'
+      +'<button class="oa-mini red" data-sid="'+esc(String(s.id))+'" onclick="oaDelSecret(this.dataset.sid)">Borrar</button></div>';
+  }).join('');
+  document.getElementById('oa-form').innerHTML=
+    '<div class="oheader"><button class="back-btn" onclick="oaClose()">←</button><h2>'+(nuevo?'Nueva aplicación':esc(a.nombre||'Aplicación'))+'</h2></div>'
+    +'<div class="oa-body">'
+    +'<div class="oa-sec"><h3>Aplicación</h3>'
+      +'<div class="oa-f"><label>Logo</label><div style="display:flex;align-items:center;gap:12px">'
+        +'<div class="oa-logo-sq" style="width:72px;height:72px;border-radius:16px;background:'+esc(a.badge_color)+'">'+(a.logo?'<img src="'+esc(a.logo)+'" alt="">':'🔑')+'</div>'
+        +'<div><input type="file" id="oa-logo-f" accept="image/*" style="display:none" onchange="oaPickLogo(this)"><button class="oa-mini" onclick="document.getElementById(\'oa-logo-f\').click()">Subir logo</button>'+(a.logo?' <button class="oa-mini red" onclick="oaSync();_oa.logo=\'\';oaRenderForm()">Quitar</button>':'')+'<small>Se achica a 128×128.</small></div></div></div>'
+      +'<div class="oa-f"><label>Color de fondo del logo</label><input type="color" id="oa-color" value="'+esc(a.badge_color)+'" oninput="oaSync();oaRenderForm()" style="width:56px;height:36px;border:none;padding:0;background:none"></div>'
+      +'<div class="oa-f"><label>Nombre *</label><input type="text" id="oa-nom" maxlength="40" value="'+esc(a.nombre)+'" placeholder="Mi App"><small>Es lo que ve la gente al autorizar.</small></div>'
+      +'<div class="oa-f"><label>URL de inicio *</label><input type="text" id="oa-home" maxlength="300" value="'+esc(a.homepage)+'" placeholder="https://miapp.com"></div>'
+      +'<div class="oa-f"><label>Descripción (opcional)</label><textarea id="oa-desc" rows="2" maxlength="200">'+esc(a.descripcion)+'</textarea></div>'
+    +'</div>'
+    +'<div class="oa-sec"><h3>Redirect URIs</h3>'
+      +'<p style="font-size:.72rem;color:#6B7280;margin-bottom:.6rem;line-height:1.5">Tiene que coincidir <b>exacto</b> con la que usa tu app. Máximo 10.</p>'
+      +a.redirect_uris.map(function(u,i){return '<div class="oa-uri"><input type="text" value="'+esc(u)+'" placeholder="https://miapp.com/callback"><button class="oa-mini red" data-i="'+i+'" onclick="oaUriDel(this.dataset.i)">Borrar</button></div>';}).join('')
+      +(a.redirect_uris.length<10?'<button class="oa-mini" onclick="oaUriAdd()">Agregar URI</button>':'')
+    +'</div>'
+    +(nuevo?'':
+      '<div class="oa-sec"><h3>Credenciales</h3>'
+        +'<div class="oa-f"><label>Client ID</label><div style="display:flex;gap:6px;align-items:center"><div class="oa-mono" style="flex:1">'+esc(a.client_id)+'</div><button class="oa-mini" data-t="'+esc(a.client_id)+'" onclick="oaCopy(this.dataset.t)">Copiar</button></div></div>'
+        +'<div class="oa-f"><label>Client secrets</label>'+(secs||'<div style="color:#9CA3AF;font-size:.78rem;margin-bottom:6px">Todavía no generaste ninguno.</div>')
+          +(a.reveal?'<div class="oa-reveal"><b>Copialo ahora — no lo vas a poder ver de nuevo:</b><div class="oa-mono" style="margin:.4rem 0">'+esc(a.reveal)+'</div><button class="oa-mini pri" data-t="'+esc(a.reveal)+'" onclick="oaCopy(this.dataset.t)">Copiar</button></div>':'')
+          +'<div class="oa-btns"><button class="oa-mini pri" onclick="oaNewSecret()">Generar client secret</button></div></div>'
+        +'<div class="oa-f"><label>Usuarios</label><b>'+(a.usuarios||0)+'</b> usuario'+(a.usuarios===1?'':'s')+'<div class="oa-btns" style="margin-top:4px"><button class="oa-mini red" onclick="oaRevoke()">Revocar todos los tokens</button></div></div>'
+      +'</div>'
+      +'<div class="oa-sec"><h3>Cómo conectar tu app</h3>'
+        +'<div class="oa-f"><label>1) Redirigí a la persona acá</label><div class="oa-mono">'+esc(base)+'?authorize=1&amp;client_id='+esc(a.client_id)+'&amp;redirect_uri=TU_REDIRECT&amp;state=ALEATORIO</div></div>'
+        +'<div class="oa-f"><label>2) Cambiá el código por un token (POST)</label><div class="oa-mono">'+esc(fn)+'/token</div><small>grant_type=authorization_code · code · client_id · client_secret · redirect_uri</small></div>'
+        +'<div class="oa-f"><label>3) Pedí los datos (GET · Authorization: Bearer TOKEN)</label><div class="oa-mono">'+esc(fn)+'/userinfo</div></div>'
+      +'</div>')
+    +'<div id="oa-err" style="color:#DC2626;font-size:.8rem;margin-bottom:.6rem"></div>'
+    +'<div class="oa-btns"><button class="oa-mini pri" style="padding:.7rem 1.4rem;font-size:.88rem" onclick="oaSave()">'+(nuevo?'Registrar app':'Guardar cambios')+'</button>'
+    +(nuevo?'':'<button class="oa-mini red" style="padding:.7rem 1.1rem;font-size:.88rem" onclick="oaDelApp()">Eliminar app</button>')+'</div></div>';
+}
+function oaUriAdd(){oaSync();if(_oa.redirect_uris.length<10){_oa.redirect_uris.push('');oaRenderForm();}}
+function oaUriDel(i){oaSync();_oa.redirect_uris.splice(parseInt(i,10),1);if(!_oa.redirect_uris.length)_oa.redirect_uris=[''];oaRenderForm();}
+function oaPickLogo(inp){var f=inp.files&&inp.files[0];inp.value='';if(!f)return;var fr=new FileReader();fr.onload=function(ev){var im=new Image();im.onload=function(){var s=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=128;c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);oaSync();_oa.logo=c.toDataURL('image/png');oaRenderForm();};im.src=ev.target.result;};fr.readAsDataURL(f);}
+function oaSave(){
+  oaSync();var e=document.getElementById('oa-err');e.textContent='';
+  oaCall('app_save',{id:_oa.id,nombre:_oa.nombre,logo:_oa.logo,badge_color:_oa.badge_color,homepage:_oa.homepage,descripcion:_oa.descripcion,redirect_uris:_oa.redirect_uris.map(function(u){return u.trim();}).filter(Boolean)}).then(function(r){
+    if(oaFalta(r)){e.textContent='Falta crear la función oauth en Supabase.';return;}
+    if(!r.data||!r.data.ok){e.textContent=(r.data&&r.data.error)||'No se pudo guardar';return;}
+    var nuevo=!_oa.id,id=r.data.id;toast('✅',nuevo?'App registrada':'Cambios guardados');
+    oaCall('app_list').then(function(r2){if(r2.data&&r2.data.ok){_oaApps=r2.data.apps||[];oaRenderList();}if(nuevo)oaOpen(id);else oaClose();});
+  });
+}
+function oaReload(rev){var id=_oa&&_oa.id;return oaCall('app_list').then(function(r){if(r.data&&r.data.ok){_oaApps=r.data.apps||[];oaRenderList();var a=_oaApps.find(function(x){return x.id===id;});if(a&&_oa){var old=_oa;_oa=JSON.parse(JSON.stringify(a));_oa.reveal=rev||'';_oa.nombre=old.nombre;_oa.homepage=old.homepage;_oa.descripcion=old.descripcion;_oa.badge_color=old.badge_color;_oa.logo=old.logo;_oa.redirect_uris=old.redirect_uris;oaRenderForm();}}});}
+function oaNewSecret(){oaCall('secret_new',{id:_oa.id}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'No se pudo generar';return;}oaSync();oaReload(r.data.secret);});}
+function oaDelSecret(sid){oaCall('secret_delete',{id:_oa.id,secret_id:sid}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'No se pudo borrar';return;}oaSync();oaReload(_oa.reveal);});}
+function oaRevoke(){openSheet('¿Revocar todos los tokens?',[{t:'Revocar',sub:'Los usuarios van a tener que autorizar de nuevo',danger:true,fn:function(){oaCall('tokens_revoke',{id:_oa.id}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'Error';return;}toast('✅','Tokens revocados');oaSync();oaReload(_oa.reveal);});}}]);}
+function oaDelApp(){openSheet('¿Eliminar "'+(_oa.nombre||'esta app')+'"?',[{t:'Eliminar app',sub:'No se puede deshacer',danger:true,fn:function(){oaCall('app_delete',{id:_oa.id}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'Error';return;}toast('🗑️','App eliminada');oaClose();oaLoad();});}}]);}
 _iaMsgs=[IA_WELCOME()];
 (function init(){
   var acc=null; try{acc=localStorage.getItem('apli_accent');}catch(e){}
@@ -3867,4 +4206,19 @@ recUI = function(on){
   <div class="sheet-btns"><button class="sheet-btn" onclick="grpClose()">Cerrar</button><button class="sheet-btn pri" id="grp-save" onclick="grpSave()">Crear grupo</button></div>
   <button class="sheet-link" id="grp-leave" onclick="grpLeave()" style="display:none">Salir del grupo</button>
 </div></div>
+
+<div id="rc-lock" class="rc-lock"><div class="rc-card">
+  <img id="rc-lock-logo" src="" alt="">
+  <h2>Verificá que no sos un robot</h2>
+  <p>Detectamos actividad automática. Resolvé la verificación para seguir usando APLI COP.</p>
+  <div class="rc-w" id="rc-lock-w"></div>
+  <div class="rc-err" id="rc-lock-err"></div>
+  <button class="rc-btn" id="rc-lock-retry" style="display:none" onclick="bgRetry()">Reintentar</button>
+</div></div>
+
+<div class="page" id="pg-oauth" style="align-items:center;justify-content:center;background:#F0F4FF">
+  <div class="oa-c-card" id="oa-c-card"></div>
+</div>
+
+<div class="oa-ov" id="oa-ov"><div id="oa-form"></div></div>
 </body></html>
