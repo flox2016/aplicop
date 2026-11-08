@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/png" href="COP.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>APLI COP Trámite</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -499,6 +498,7 @@ window.addEventListener('DOMContentLoaded', iniciar);
 async function iniciar() {
   mostrarPantalla('screen-splash');
   setTimeout(async () => {
+    if (await procesarRetornoOAuth()) return;
     try {
       const { data: { session }, error } = await supa.auth.getSession();
       if (error) throw error;
@@ -514,8 +514,101 @@ async function iniciar() {
   }, 900);
 }
 
-// OAuth Popup
-document.getElementById('btn-continuar-aplicop').addEventListener('click', abrirOAuthPopup);
+
+// ══ LOGIN OFICIAL CON APLI COP (OAuth) ══
+const APLI_OAUTH = {
+  authorize: 'https://aplicop.com.ar/',
+  clientId: 'apli_af7f11de2bc4f7a0f766',
+  redirectUri: 'https://www.aplicop.com.ar/tramite.html',
+  exchangeFn: SUPABASE_URL + '/functions/v1/tramite-auth',
+};
+
+function mostrarErrorOAuth(msg) {
+  mostrarPantalla('screen-login');
+  let el = document.getElementById('oauth-login-msg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'oauth-login-msg';
+    el.className = 'oauth-error';
+    el.style.textAlign = 'center';
+    el.style.marginTop = '12px';
+    document.getElementById('btn-continuar-aplicop').parentElement.appendChild(el);
+  }
+  el.textContent = msg;
+}
+
+function iniciarOAuthAPLI() {
+  const buf = new Uint32Array(4);
+  crypto.getRandomValues(buf);
+  const state = Array.from(buf, x => x.toString(36)).join('');
+  sessionStorage.setItem('apli_oauth_state', state);
+  window.location.href = APLI_OAUTH.authorize
+    + '?authorize=1'
+    + '&client_id=' + encodeURIComponent(APLI_OAUTH.clientId)
+    + '&redirect_uri=' + encodeURIComponent(APLI_OAUTH.redirectUri)
+    + '&state=' + encodeURIComponent(state);
+}
+
+// Se ejecuta al volver de APLI COP con ?code=...&state=...
+async function procesarRetornoOAuth() {
+  const p = new URLSearchParams(window.location.search);
+  const code = p.get('code');
+  const state = p.get('state');
+  const err = p.get('error');
+  if (!code && !err) return false;
+
+  history.replaceState({}, '', window.location.pathname);
+  const esperado = sessionStorage.getItem('apli_oauth_state');
+  sessionStorage.removeItem('apli_oauth_state');
+
+  if (err || !code || !state || !esperado || state !== esperado) {
+    mostrarErrorOAuth('No se pudo validar el acceso con APLI COP. Intentá de nuevo.');
+    return true;
+  }
+
+  try {
+    const r = await fetch(APLI_OAUTH.exchangeFn, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ code })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.email) throw new Error(d.error || 'exchange_failed');
+    await entrarConUsuarioAPLI(d.email, d.name);
+  } catch (e) {
+    console.error(e);
+    mostrarErrorOAuth('Error al validar con APLI COP. Intentá de nuevo.');
+  }
+  return true;
+}
+
+// APLI COP ya validó la contraseña: solo chequeamos que tenga cuenta en la app
+async function entrarConUsuarioAPLI(email, nombreAPLI) {
+  const results = await Promise.all([
+    supa.from('usuarios').select('*').eq('email', email).limit(1),
+    supa.from('usuarios').select('*').eq('correo_electronico', email).limit(1)
+  ]);
+  const usuarios = results[0].data?.length > 0 ? results[0].data : (results[1].data?.length > 0 ? results[1].data : []);
+  if (!usuarios || usuarios.length === 0) {
+    mostrarPantalla('screen-sin-cuenta');
+    return;
+  }
+  const u = usuarios[0];
+  sesion = { esAdmin: false, email: email, nombre: u.name || u.nombre || nombreAPLI || email };
+  supa.from('usuarios')
+    .update({ 'ultima vez visto': new Date().toISOString(), 'en linea': 'true' })
+    .eq('email', email)
+    .then(() => {})
+    .catch(() => {});
+  entrarAlMenu();
+}
+
+// OAuth Popup (ya no se usa)
+document.getElementById('btn-continuar-aplicop').addEventListener('click', iniciarOAuthAPLI);
 
 function abrirOAuthPopup() {
   document.getElementById('oauth-email').value = '';
