@@ -203,6 +203,12 @@ body{font-family:Poppins,sans-serif;background:#0D0D0D;color:#fff;min-height:100
 .bimg-item{display:flex;align-items:center;gap:12px;background:#242424;border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem}
 .bimg-item img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#fff}
 .bimg-item span{flex:1;font-size:.85rem;font-weight:600;word-break:break-all}
+
+.arr-admin{margin-top:10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.45);border-radius:10px;padding:.6rem .8rem}
+.arr-h{font-size:.76rem;font-weight:800;color:#FB923C;margin-bottom:.4rem}
+.arr-r{font-size:.74rem;color:#9CA3AF;line-height:1.45;margin-bottom:6px;word-break:break-word}
+.arr-r div{color:#fff;font-size:.82rem;margin-top:2px}
+.arr-m{font-size:.68rem;color:#6B7280}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -960,7 +966,7 @@ function sbPedToLocal(p){
     pay:p.pay||'Mercado Pago', price:p.precio||10000,
     status:p.estado||'pending', credits:(p.credits!==undefined&&p.credits!==null)?p.credits:10,
     resolved:!!p.resolved||p.estado==='resolved', firstPurchase:!!p.first_purchase,
-    imgs:parseImgs(p.imgs),
+    imgs:parseImgs(p.imgs), arreglos:parseImgs(p.arreglos),
     date:fecha?new Date(fecha).toLocaleDateString('es-AR'):'',
     sortKey:fecha?new Date(fecha).getTime():(Number(p.id)||Number(p.numero)||0),
     _owner:(p.owner_email||'').toLowerCase(), _ownerName:p.owner_name||''
@@ -1534,6 +1540,10 @@ function pedAdminHTML(p){
   var priceTxt=p.price?('$'+Number(p.price).toLocaleString('es-AR')+' ARS'+(p.firstPurchase?' 🎉 70% OFF':'')):'$10.000 ARS';
   var uid=esc(pedUid(p));
   var owner=esc(p._owner), oname=esc(p._ownerName||nameOf(p._owner));
+  var arr=(p.arreglos||[]), tieneArr=arr.length>0;
+  var arrHtml=tieneArr?'<div class="arr-admin"><div class="arr-h">🔧 Pidió arreglo · '+arr.length+' de 10 créditos usados</div>'
+    +arr.slice(-5).reverse().map(function(x){return '<div class="arr-r"><b>#'+esc(x.n)+'</b> · '+esc(new Date(x.fecha).toLocaleString('es-AR'))+'<div>'+escBr(x.texto)+'</div></div>';}).join('')
+    +(arr.length>5?'<div class="arr-m">+'+(arr.length-5)+' anteriores</div>':'')+'</div>':'';
   return '<div class="ped-row">'
     +'<div class="ped-row-top"><div class="ped-row-ico">'+esc(p.icon)+'</div>'
     +'<div class="ped-row-info">'
@@ -1543,9 +1553,10 @@ function pedAdminHTML(p){
     +(p.style?'<div class="ped-row-desc">🎨 '+esc(p.style)+'</div>':'')
     +'<div class="ped-row-date">📅 '+esc(p.date||'-')+' · 📞 '+esc(p.phone||'-')+' · 💳 '+esc(p.pay)+' · 💰 '+esc(priceTxt)+'</div>'
     +'</div>'
-    +'<span class="ped-badge '+(sm[p.status]||'pb-pend')+'">'+(ST_LABELS[p.status]||'⏳ Pendiente')+'</span>'
+    +'<span class="ped-badge '+(sm[p.status]||'pb-pend')+'">'+((p.status==='pending'&&tieneArr&&!p.resolved)?'🔧 Arreglo pendiente':(ST_LABELS[p.status]||'⏳ Pendiente'))+'</span>'
     +'</div>'
     +mediaHTML
+    +arrHtml
     +'<div class="credits-info"><div class="cdots-admin">'+dots+'</div>'+cr+'/10 créditos restantes</div>'
     +'<div class="ped-row-acts">'
     +(p.resolved?'<button class="admin-btn" style="background:#242424;color:#9CA3AF" data-uid="'+uid+'" onclick="reopenPed(this.dataset.uid)">↩️ Reabrir</button>'
