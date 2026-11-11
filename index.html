@@ -338,6 +338,20 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
 .img-wrap{position:relative;display:inline-block;line-height:0}
 .img-dl{position:absolute;right:6px;bottom:6px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
 .lb-dl{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--ac-on);border:none;border-radius:24px;padding:.75rem 1.5rem;font-weight:800;font-size:.9rem;cursor:pointer;font-family:inherit}
+
+.req-sec{font-size:.72rem;font-weight:800;color:#4A4A6A;margin:.2rem 0 .45rem;text-transform:uppercase;letter-spacing:.04em}
+.req-card{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--ac);border-radius:14px;padding:.7rem .8rem;margin-bottom:.5rem;flex-wrap:wrap}
+.req-card.out{border:1px solid #E5E7EB}
+.req-t{flex:1;min-width:160px;font-size:.82rem;line-height:1.35;color:#1A1A2E}
+.req-m{font-size:.68rem;color:#9CA3AF;word-break:break-all}
+.req-b{display:flex;gap:6px}
+.req-b button{border:none;border-radius:9px;padding:.5rem .85rem;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit}
+.req-ok{background:var(--ac);color:var(--ac-on)}
+.req-no{background:#F3F4F6;color:#1A1A2E}
+.arr-list{margin-top:8px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.5rem .65rem}
+.arr-i{font-size:.74rem;color:#7C2D12;line-height:1.4;margin-bottom:5px;word-break:break-word}
+.arr-i div{color:#1A1A2E;margin-top:1px}
+.arr-more{font-size:.68rem;color:#9CA3AF}
 </style>
 </head>
 <body>
@@ -487,6 +501,7 @@ body.lock .page.on>:not(.scr):not(.msgs){flex-shrink:0;}
       </div>
       <div id="chat-err" style="color:#DC2626;font-size:.75rem;margin-top:6px;display:none"></div>
     </div>
+    <div id="req-box"></div>
     <button class="add-btn" style="width:100%;margin-bottom:.85rem;padding:.8rem" onclick="grpOpen('new')">👥 Nuevo grupo</button>
     <div class="sec-title">Tus chats</div>
     <div style="background:#fff;border-radius:14px;padding:.85rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1.5px solid rgba(var(--ac-rgb),.35);" onclick="openAdminChat()">
@@ -1261,7 +1276,7 @@ function chatOk(){_chatFails=0;_chatPausaHasta=0;}
 function pollChats(force){
   if(!CU) return;
   if(!force&&Date.now()<_chatPausaHasta) return;
-  loadGroups(); if(Date.now()-_avAt>60000){_avAt=Date.now();loadAvatars();}
+  loadGroups(); reqLoad(); if(Date.now()-_avAt>60000){_avAt=Date.now();loadAvatars();}
   var keys=[getChatKey(ADMIN,CU.email)].concat(_contacts.map(function(c){return getChatKey(CU.email,c.email);})).concat(Object.keys(_groups).map(function(id){return 'g:'+id;}));
   SB.from(T_CHATS).select('llave,mensajes').in('llave',keys).then(function(r){
     if(r.error){chatFallo(r.error);return;}
@@ -1373,7 +1388,7 @@ function sbPedToLocal(p){
     icon:p.icon||'✨',name:p.app_name||p.titulo||'App',
     desc:p.descripcion||'',style:p.style||'',phone:p.phone||'',
     pay:p.pay||'Mercado Pago',price:p.precio||10000,
-    status:p.estado||'pending',credits:(p.credits!==undefined&&p.credits!==null)?p.credits:10,
+    status:p.estado||'pending',credits:(p.credits!==undefined&&p.credits!==null)?p.credits:10,arreglos:parseImgs(p.arreglos),
     resolved:!!p.resolved||p.estado==='resolved',firstPurchase:!!p.first_purchase,
     imgs:parseImgs(p.imgs),
     date:fecha?new Date(fecha).toLocaleDateString('es-AR'):'',
@@ -1530,6 +1545,7 @@ function pedHTML(p){
   var imgs=(p.imgs||[]).map(safeSrc).filter(Boolean).map(function(s){return '<img style="width:60px;height:60px;border-radius:8px;object-fit:cover;border:1.5px solid #E5E7EB;cursor:pointer" src="'+esc(s)+'" onclick="openLB(this.src)">';}).join('');
   var priceTxt=p.price?('$'+Number(p.price).toLocaleString('es-AR')+' ARS'+(p.firstPurchase?' 🎉':'')):'';
   var uid=esc(pedUid(p));
+  var arr=(p.arreglos||[]), arrHtml=arr.length?'<div class="arr-list">'+arr.slice(-3).reverse().map(function(a){return '<div class="arr-i">🔧 <b>Arreglo #'+esc(a.n)+'</b> · '+esc(new Date(a.fecha).toLocaleDateString('es-AR'))+'<div>'+escBr(a.texto)+'</div></div>';}).join('')+(arr.length>3?'<div class="arr-more">+'+(arr.length-3)+' anteriores</div>':'')+'</div>':'';
   return '<div class="ped-card"><div class="ped-top"><div class="ped-ico">'+esc(p.icon)+'</div>'
     +'<div class="ped-info"><div class="ped-name">'+esc(p.name)+'</div>'
     +'<div class="ped-date">'+esc(p.date)+(priceTxt?' · '+esc(priceTxt):'')+'</div>'
@@ -1538,8 +1554,9 @@ function pedHTML(p){
     +'<span class="ped-status '+(sm[p.status]||'ps-pend')+'">'+(sl[p.status]||'⏳ Pendiente')+'</span></div>'
     +(imgs?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+imgs+'</div>':'')
     +'<div class="credits-bar"><div class="credits-dots">'+dots+'</div><span class="credits-lbl">'+cr+'/10 créditos</span></div>'
+    +arrHtml
     +'<div class="ped-acts">'
-    +(p.resolved?'':'<button class="pa-btn pa-cred" data-uid="'+uid+'" onclick="useCredit(this.dataset.uid)" '+(cr<=0?'disabled style="opacity:.4"':'')+'>🔧 Crédito ('+cr+')</button>'
+    +(p.resolved?'':'<button class="pa-btn pa-cred" data-uid="'+uid+'" onclick="useCredit(this.dataset.uid)" '+(cr<=0?'disabled style="opacity:.4"':'')+'>🔧 Arreglar error ('+cr+')</button>'
     +'<button class="pa-btn pa-res" data-uid="'+uid+'" onclick="markRes(this.dataset.uid)">✅ Resuelto</button>')
     +'<button class="pa-btn pa-del" data-uid="'+uid+'" onclick="delPed(this.dataset.uid)">🗑️ Borrar</button>'
     +'</div></div>';
@@ -1589,12 +1606,7 @@ function addContact(){
       if(r.status===0){err.textContent='❌ Error de conexión';err.style.display='block';return;}
       if(!r.data||!r.data.ok){err.textContent='❌ Gmail no registrado en APLI COP';err.style.display='block';return;}
       var name=(r.data.nombre||email.split('@')[0]).trim();
-      _contacts.push({email:email,name:name});
-      _unread[email]=0;
-      input.value='';
-      loadChat(CU.email,email,function(){renderContacts();});
-      renderContacts();
-      toast('✅','Contacto agregado');
+      reqSendContact(email,name,input,err);
     });
 }
 
@@ -1621,6 +1633,7 @@ function contactShown(c){
 }
 function renderContacts(){
   var list=document.getElementById('contacts-list');if(!list||!CU)return;
+  renderRequests();
   var gids=Object.keys(_groups);
   var shown=_contacts.map(function(c,i){return {c:c,i:i};}).filter(function(x){return contactShown(x.c);});
   if(!shown.length&&!gids.length){list.innerHTML='<div class="empty" style="padding:1rem"><div class="ei">💬</div><p>Agregá un Gmail registrado</p></div>';return;}
@@ -1650,6 +1663,7 @@ function renderContacts(){
 
 function updateBadges(){
   var total=Object.keys(_unread).reduce(function(a,k){return a+(_unread[k]||0);},0);
+  total+=(typeof reqIncoming==='function'?reqIncoming().length:0);   // las solicitudes pendientes también suman en el aviso de Chat
   var b=document.getElementById('chat-badge');if(b){b.textContent=total>99?'99+':total;b.classList.toggle('on',total>0);}
 }
 
@@ -3172,7 +3186,7 @@ function loadGroups(force){
   if(!CU||_groupsOff) return;
   if(!force&&Date.now()-_groupsAt<15000) return;
   _groupsAt=Date.now();
-  SB.from('grupos').select('*').contains('miembros',[CU.email]).then(function(r){
+  SB.from('grupos').select('*').contains('miembros',JSON.stringify([CU.email])).then(function(r){
     if(r.error){if(avTablaFalta(r.error))_groupsOff=true;return;}
     var next={}, nuevos=false, todos=[];
     (r.data||[]).forEach(function(g){
@@ -3234,19 +3248,19 @@ function grpOpen(mode,id){
   $g('grp-name').value=g?g.nombre:''; $g('grp-name').disabled=view;
   var modo=g?g.modo:'todos';
   document.querySelectorAll('input[name=grp-modo]').forEach(function(r){r.checked=(r.value===modo);r.disabled=view;});
-  var creador=g?g.creador:CU.email, sel=g?g.miembros:[CU.email], people=[];
+  var creador=g?g.creador:CU.email, pendG=g?_reqs.filter(function(q){return q.tipo==='grupo'&&q.grupo_id===g.id&&q.estado==='pendiente';}).map(function(q){return q.para;}):[], sel=g?g.miembros.concat(pendG):[CU.email], people=[];
   _contacts.forEach(function(c){people.push(c.email);});
-  if(g) g.miembros.forEach(function(e){if(people.indexOf(e)<0&&e!==CU.email) people.push(e);});
+  if(g) g.miembros.concat(pendG).forEach(function(e){if(people.indexOf(e)<0&&e!==CU.email) people.push(e);});
   var rows='<label class="grp-row"><input type="checkbox" checked disabled> '+(creador===CU.email?'Vos (creador)':'Vos')+'</label>';
   if(g&&creador!==CU.email) rows+='<label class="grp-row"><input type="checkbox" class="grp-p" value="'+esc(creador)+'" checked disabled> '+esc(nameOf(creador))+' (creador)</label>';
   rows+=people.filter(function(e){return e!==CU.email&&e!==creador;}).map(function(e){
-    return '<label class="grp-row"><input type="checkbox" class="grp-p" value="'+esc(e)+'" onchange="grpRefreshWriters()" '+(sel.indexOf(e)>=0?'checked':'')+(view?' disabled':'')+'> '+esc(nameOf(e))+'</label>';
+    return '<label class="grp-row"><input type="checkbox" class="grp-p" value="'+esc(e)+'" onchange="grpRefreshWriters()" '+(sel.indexOf(e)>=0?'checked':'')+(view?' disabled':'')+'> '+esc(nameOf(e))+(pendG.indexOf(e)>=0?' <small style="color:#9CA3AF">⏳ invitación pendiente</small>':'')+'</label>';
   }).join('');
   $g('grp-people').innerHTML=rows;
   $g('grp-writers').innerHTML='';
   grpRefreshWriters();
   $g('grp-save').style.display=view?'none':'';
-  $g('grp-save').textContent=mode==='new'?'Crear grupo':'Guardar cambios';
+  $g('grp-save').textContent=mode==='new'?'Crear y enviar invitaciones':'Guardar cambios';
   $g('grp-leave').style.display=(g&&!canEditGroup(g))?'block':'none';
   $g('grp-ov').classList.add('on');
 }
@@ -3254,14 +3268,20 @@ function grpSave(){
   var nombre=$g('grp-name').value.trim();
   if(!nombre){grpErr('Poné un nombre para el grupo');return;}
   var g=_grpId?_groups[_grpId]:null, creador=g?g.creador:CU.email;
-  var miembros=[creador].concat(grpChecked('grp-p').filter(function(e){return e!==creador;}));
-  if(miembros.length<2){grpErr('Elegí al menos una persona');return;}
+  var sel=grpChecked('grp-p').filter(function(e){return e!==creador;});
+  var actuales=g?g.miembros.filter(function(e){return e!==creador;}):[];
+  var pend=g?_reqs.filter(function(q){return q.tipo==='grupo'&&q.grupo_id===g.id&&q.estado==='pendiente';}).map(function(q){return q.para;}):[];
+  var miembros=[creador].concat(sel.filter(function(e){return actuales.indexOf(e)>=0;}));
+  var invitar=sel.filter(function(e){return actuales.indexOf(e)<0&&pend.indexOf(e)<0;});
+  var cancelar=pend.filter(function(e){return sel.indexOf(e)<0;});
+  if(miembros.length+invitar.length+pend.length-cancelar.length<2){grpErr('Elegí al menos una persona');return;}
   var modo=(document.querySelector('input[name=grp-modo]:checked')||{}).value||'todos';
-  var escritores=modo==='elegidos'?grpChecked('grp-w').filter(function(e){return miembros.indexOf(e)>=0;}):[];
+  var posibles=miembros.concat(invitar).concat(pend);
+  var escritores=modo==='elegidos'?grpChecked('grp-w').filter(function(e){return posibles.indexOf(e)>=0;}):[];
   var ahora=new Date().toISOString(), p;
   if(_grpMode==='new'){
     var id=newMsgId();
-    var row={id:id,nombre:nombre,creador:CU.email,miembros:miembros,modo:modo,escritores:escritores,actualizado_en:ahora};
+    var row={id:id,nombre:nombre,creador:CU.email,miembros:[CU.email],modo:modo,escritores:escritores,actualizado_en:ahora};
     p=sbSafe('grupos','insert',row).then(function(r){if(!r.error){_groups[id]=row;}return {r:r,id:id};});
   } else {
     var upd={nombre:nombre,miembros:miembros,modo:modo,escritores:escritores,actualizado_en:ahora};
@@ -3271,6 +3291,8 @@ function grpSave(){
   p.then(function(o){
     $g('grp-save').disabled=false;
     if(o.r.error){grpErr(avTablaFalta(o.r.error)?'Falta crear la tabla de grupos en Supabase (SQL).':'No se pudo guardar: '+errDB(o.r.error));return;}
+    cancelar.forEach(function(e){var q=_reqs.find(function(x){return x.tipo==='grupo'&&x.grupo_id===o.id&&x.para===e&&x.estado==='pendiente';});if(q)reqSetEstado(q.id,'cancelada');});
+    reqSendGroup(o.id,nombre,invitar);
     grpClose(); renderContacts();
     if(_grpMode==='new') openGroup(o.id); else refreshGroupHeader();
   });
@@ -3536,8 +3558,8 @@ function rcRender(boxId,opts){
   return rcLoad().then(function(){
     if(_rcW[boxId]!==undefined)return 'ok';
     try{var o={sitekey:RC_SITE,theme:'light'};for(var k in(opts||{}))o[k]=opts[k];_rcW[boxId]=grecaptcha.render(box,o);return 'ok';}
-    catch(e){console.warn('[RC]',e&&e.message);return 'clave';}
-  },function(){return 'red';});
+    catch(e){console.warn('[RC]',e&&e.message);if(/^rc-(in|rg)$/.test(boxId))box.innerHTML='<div style="font-size:.7rem;color:#9CA3AF;text-align:center;line-height:1.4">No se pudo cargar el "No soy un robot".<br>Revisá la clave y el dominio en reCAPTCHA.</div>';return 'clave';}
+  },function(){if(/^rc-(in|rg)$/.test(boxId))box.innerHTML='<div style="font-size:.7rem;color:#9CA3AF;text-align:center">No se pudo cargar el "No soy un robot" (revisá tu conexión).</div>';return 'red';});
 }
 function rcToken(id){try{return _rcW[id]!==undefined?grecaptcha.getResponse(_rcW[id]):'';}catch(e){return '';}}
 function rcReset(id){try{if(_rcW[id]!==undefined)grecaptcha.reset(_rcW[id]);}catch(e){}}
@@ -3554,11 +3576,14 @@ function rcGate(boxId,errId,go){
   if(!tk){setErr(errId,'Marcá "No soy un robot"');return;}
   rcVerify(tk).then(function(v){rcReset(boxId);if(v&&v.ok)go();else setErr(errId,'No pudimos verificar. Probá de nuevo.');});
 }
-// wrap login/registro seguro
-var _dologin = (typeof doLogin !== 'undefined') ? doLogin : function() {};
-var _doRegister = (typeof doRegister !== 'undefined') ? doRegister : function() {};
-var _showTab = (typeof showTab !== 'undefined') ? showTab : function() {};
-var _showLogin = (typeof showLogin !== 'undefined') ? showLogin : function() {};
+// wrap login/registro
+var _doLogin0=doLogin,_doRegister0=doRegister,_showTab0=showTab;
+doLogin=function(){rcGate('rc-in','in-err',_doLogin0);};
+doRegister=function(){rcGate('rc-rg','rg-err',_doRegister0);};
+showTab=function(t){_showTab0(t);rcRender(t==='reg'?'rc-rg':'rc-in');};
+var _doLogout0=doLogout;
+doLogout=function(){_doLogout0.apply(this,arguments);rcReset('rc-in');rcReset('rc-rg');setTimeout(function(){rcRender('rc-in');},400);};
+setTimeout(function(){if(!CU)rcRender('rc-in');},500);   // el reCAPTCHA se dibuja apenas aparece el login
 
 // ── DETECTOR DE BOTS ──
 var _bg={score:0,t:Date.now(),lock:false,grace:0,moves:0,clicks:[],keys:[],path:[],touch:0};
@@ -3761,6 +3786,238 @@ function oaNewSecret(){oaCall('secret_new',{id:_oa.id}).then(function(r){if(!r.d
 function oaDelSecret(sid){oaCall('secret_delete',{id:_oa.id,secret_id:sid}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'No se pudo borrar';return;}oaSync();oaReload(_oa.reveal);});}
 function oaRevoke(){openSheet('¿Revocar todos los tokens?',[{t:'Revocar',sub:'Los usuarios van a tener que autorizar de nuevo',danger:true,fn:function(){oaCall('tokens_revoke',{id:_oa.id}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'Error';return;}toast('✅','Tokens revocados');oaSync();oaReload(_oa.reveal);});}}]);}
 function oaDelApp(){openSheet('¿Eliminar "'+(_oa.nombre||'esta app')+'"?',[{t:'Eliminar app',sub:'No se puede deshacer',danger:true,fn:function(){oaCall('app_delete',{id:_oa.id}).then(function(r){if(!r.data||!r.data.ok){document.getElementById('oa-err').textContent=(r.data&&r.data.error)||'Error';return;}toast('🗑️','App eliminada');oaClose();oaLoad();});}}]);}
+
+// ══════════════════════════════════════════════════════════════
+// SOLICITUDES: contactos nuevos e invitaciones a grupos (hay que aceptarlas)
+// ══════════════════════════════════════════════════════════════
+var _reqs=[], _reqOff=false, _reqAt=0, _reqFirst=true;
+function reqSeen(){try{return JSON.parse(localStorage.getItem('apli_req_seen_'+(CU?CU.email:''))||'{}');}catch(e){return {};}}
+function reqMark(id,est){var s=reqSeen();s[id]=est;try{localStorage.setItem('apli_req_seen_'+CU.email,JSON.stringify(s));}catch(e){}}
+function reqIncoming(){return _reqs.filter(function(q){return CU&&q.para===CU.email&&q.estado==='pendiente'&&!isBlocked(q.de);});}
+function reqOutgoing(){return _reqs.filter(function(q){return CU&&q.de===CU.email&&q.estado==='pendiente';});}
+function reqLoad(force){
+  if(!CU||_reqOff) return;
+  if(!force&&Date.now()-_reqAt<12000) return; _reqAt=Date.now();
+  SB.from('solicitudes').select('*').or('para.eq.'+CU.email+',de.eq.'+CU.email).order('creado_en',{ascending:false}).limit(200).then(function(r){
+    if(r.error){if(avTablaFalta(r.error))_reqOff=true;return;}
+    var seen=reqSeen(), before={}; _reqs.forEach(function(q){before[q.id]=q.estado;});
+    _reqs=r.data||[];
+    var nuevas=reqIncoming().filter(function(q){return !seen[q.id];});
+    if(nuevas.length){
+      if(_reqFirst||nuevas.length>1) toast('📨','Tenés '+nuevas.length+' solicitud'+(nuevas.length>1?'es':'')+' en Chat');
+      else toast('📨',(nuevas[0].de_nombre||nuevas[0].de)+(nuevas[0].tipo==='grupo'?' te invitó a un grupo':' te envió una solicitud'));
+      nuevas.forEach(function(q){reqMark(q.id,q.estado);});
+    }
+    // respuestas a lo que yo mandé
+    var recargar=false;
+    _reqs.filter(function(q){return q.de===CU.email&&(q.estado==='aceptada'||q.estado==='rechazada')&&!seen[q.id+':r'];}).forEach(function(q){
+      reqMark(q.id+':r',q.estado);
+      var quien=nameOf(q.para);
+      if(q.estado==='aceptada'){recargar=true;if(!_reqFirst)toast('✅',quien+' aceptó '+(q.tipo==='grupo'?'tu invitación':'tu solicitud'));}
+      else if(!_reqFirst) toast('❌',quien+' rechazó '+(q.tipo==='grupo'?'tu invitación':'tu solicitud'));
+    });
+    _reqFirst=false;
+    if(recargar){loadContacts();loadGroups(true);}
+    resolveNames(_reqs.map(function(q){return q.de===CU.email?q.para:q.de;})).then(function(){renderRequests();});
+    renderRequests(); updateBadges();
+  });
+}
+function reqStart(){
+  _reqs=[]; _reqOff=false; _reqAt=0; _reqFirst=true;
+  reqLoad(true);
+  var safe=CU.email.replace(/[^a-zA-Z0-9]/g,'-');
+  var ch=SB.channel('solic-'+safe).on('postgres_changes',{event:'*',schema:'public',table:'solicitudes'},function(){reqLoad(true);}).subscribe();
+  _sbChannels.push(ch);
+}
+function reqSetEstado(id,estado){
+  return SB.from('solicitudes').update({estado:estado,respondido_en:new Date().toISOString()}).eq('id',id).select().then(function(r){
+    if(r.error||!(r.data&&r.data.length)){toast('❌','No se pudo actualizar la solicitud');return false;}
+    var q=_reqs.find(function(x){return x.id===id;});if(q)q.estado=estado;
+    renderRequests();updateBadges();return true;
+  });
+}
+function reqErrTabla(r){return r&&r.error&&avTablaFalta(r.error);}
+function reqSendContact(email,name,input,err){
+  var show=function(t){if(err){err.textContent=t;err.style.display='block';}else toast('⚠️',t);};
+  var dup=_reqs.find(function(q){return q.tipo==='contacto'&&q.estado==='pendiente'&&((q.de===CU.email&&q.para===email)||(q.de===email&&q.para===CU.email));});
+  if(dup){
+    if(dup.para===CU.email){input.value='';reqAccept(dup.id);return;}   // esa persona ya te había enviado una: se acepta
+    show('⏳ Ya le enviaste una solicitud a '+name);return;
+  }
+  var row={id:newMsgId(),tipo:'contacto',de:CU.email,de_nombre:(CU.name||''),para:email,estado:'pendiente'};
+  SB.from('solicitudes').insert(row).select().then(function(r){
+    if(r.error){show(avTablaFalta(r.error)?'🛠️ Falta crear la tabla de solicitudes en Supabase (SQL).':'❌ No se pudo enviar: '+errDB(r.error));return;}
+    _reqs.unshift((r.data&&r.data[0])||row); _names[email]=name;
+    input.value=''; renderRequests(); toast('📨','Solicitud enviada a '+name);
+  });
+}
+function reqSendGroup(gid,gnombre,lista){
+  if(!lista.length) return;
+  var rows=lista.map(function(e){return {id:newMsgId(),tipo:'grupo',de:CU.email,de_nombre:(CU.name||''),para:e,grupo_id:gid,grupo_nombre:gnombre,estado:'pendiente'};});
+  SB.from('solicitudes').insert(rows).select().then(function(r){
+    if(r.error){toast('❌',avTablaFalta(r.error)?'Falta crear la tabla de solicitudes en Supabase (SQL).':'No se pudieron enviar las invitaciones: '+errDB(r.error));return;}
+    _reqs=(r.data||rows).concat(_reqs); renderRequests();
+    toast('📨','Invitación enviada a '+lista.length+(lista.length===1?' persona':' personas'));
+  });
+}
+function reqAccept(id){
+  var q=_reqs.find(function(x){return x.id===id;}); if(!q||q.estado!=='pendiente') return;
+  if(q.tipo==='contacto'){
+    var key=getChatKey(q.de,CU.email);
+    SB.from(T_CHATS).select('llave').eq('llave',key).maybeSingle().then(function(r){
+      if(r.data&&r.data.llave) return {};
+      return sbSafe(T_CHATS,'upsert',{llave:key,mensajes:[],participantes:[q.de,CU.email],actualizado_en:new Date().toISOString()},{upsert:{onConflict:'llave'}});
+    }).then(function(r2){
+      if(r2&&r2.error) throw r2.error;
+      return reqSetEstado(id,'aceptada');
+    }).then(function(ok){
+      if(!ok) return;
+      loadContacts(); toast('✅','Ahora podés chatear con '+(q.de_nombre||nameOf(q.de)));
+    }).catch(function(e){toast('❌','No se pudo aceptar: '+errDB(e));});
+  } else if(q.tipo==='grupo'){
+    SB.from('grupos').select('*').eq('id',q.grupo_id).maybeSingle().then(function(r){
+      var g=r.data;
+      if(!g){reqSetEstado(id,'rechazada');toast('ℹ️','Ese grupo ya no existe');return null;}
+      var miembros=Array.isArray(g.miembros)?g.miembros.slice():[];
+      if(miembros.indexOf(CU.email)<0) miembros.push(CU.email);
+      return SB.from('grupos').update({miembros:miembros,actualizado_en:new Date().toISOString()}).eq('id',g.id).select().then(function(u){
+        if(u.error||!(u.data&&u.data.length)) throw (u.error||new Error('sin permiso'));
+        return reqSetEstado(id,'aceptada').then(function(ok){if(ok){loadGroups(true);toast('✅','Te uniste a "'+g.nombre+'"');}});
+      });
+    }).catch(function(e){toast('❌','No se pudo unir: '+errDB(e));});
+  }
+}
+function reqReject(id){reqSetEstado(id,'rechazada').then(function(ok){if(ok)toast('🚫','Solicitud rechazada');});}
+function reqCancel(id){reqSetEstado(id,'cancelada').then(function(ok){if(ok)toast('↩️','Solicitud cancelada');});}
+function renderRequests(){
+  var box=document.getElementById('req-box'); if(!box||!CU) return;
+  var inc=reqIncoming(), out=reqOutgoing();
+  if(!inc.length&&!out.length){box.innerHTML='';return;}
+  var h='';
+  if(inc.length){
+    h+='<div class="req-sec">📨 Solicitudes ('+inc.length+')</div>'+inc.map(function(q){
+      var quien=q.de_nombre||nameOf(q.de);
+      return '<div class="req-card"><div class="req-t"><b>'+esc(quien)+'</b> '+(q.tipo==='grupo'?'te invitó al grupo <b>«'+esc(q.grupo_nombre||'Grupo')+'»</b>':'quiere agregarte como contacto')+'<div class="req-m">'+esc(q.de)+'</div></div>'
+        +'<div class="req-b"><button class="req-no" data-id="'+esc(q.id)+'" onclick="reqReject(this.dataset.id)">Rechazar</button><button class="req-ok" data-id="'+esc(q.id)+'" onclick="reqAccept(this.dataset.id)">'+(q.tipo==='grupo'?'Unirme':'Aceptar')+'</button></div></div>';
+    }).join('');
+  }
+  if(out.length){
+    var corte=out.slice(0,6);
+    h+='<div class="req-sec" style="margin-top:.5rem">⏳ Enviadas</div>'+corte.map(function(q){
+      return '<div class="req-card out"><div class="req-t">'+(q.tipo==='grupo'?'Invitación a <b>'+esc(nameOf(q.para))+'</b> · «'+esc(q.grupo_nombre||'Grupo')+'»':'Solicitud a <b>'+esc(nameOf(q.para))+'</b>')+'</div>'
+        +'<div class="req-b"><button class="req-no" data-id="'+esc(q.id)+'" onclick="reqCancel(this.dataset.id)">Cancelar</button></div></div>';
+    }).join('')+(out.length>6?'<div class="req-m" style="text-align:center">y '+(out.length-6)+' más…</div>':'');
+  }
+  box.innerHTML=h;
+}
+var _startOrig5=startListeners;
+startListeners=function(){_startOrig5();reqStart();};
+var _stopOrig5=stopAllListeners;
+stopAllListeners=function(){_stopOrig5();_reqs=[];};
+
+// ══════════════════════════════════════════════════════════════
+// ARREGLAR ERROR (créditos gratis): se escribe qué arreglar y le llega al admin
+// ══════════════════════════════════════════════════════════════
+function openAsk(title,hint,okLabel,cb){
+  var box=$g('sheet-box');
+  box.innerHTML='<div class="sheet-title">'+esc(title)+'</div><textarea id="sheet-ta" maxlength="1000" placeholder="'+esc(hint||'')+'"></textarea><div class="sheet-btns"><button class="sheet-btn" id="sh-c">Cancelar</button><button class="sheet-btn pri" id="sh-s">'+esc(okLabel||'Enviar')+'</button></div>';
+  var ta=$g('sheet-ta');
+  $g('sh-c').onclick=function(){$g('sheet-ov').classList.remove('on');};
+  $g('sh-s').onclick=function(){
+    var v=ta.value.trim();
+    if(v.length<3){ta.style.borderColor='#DC2626';ta.placeholder='Contanos qué querés arreglar';return;}
+    $g('sheet-ov').classList.remove('on'); cb(v);
+  };
+  $g('sheet-ov').classList.add('on');
+  setTimeout(function(){try{ta.focus();}catch(e){}},60);
+}
+useCredit=function(uid){
+  var p=findPed(uid); if(!p||p.credits<=0) return;
+  openAsk('¿Qué querés arreglar?','Contanos el error o el cambio que necesitás en "'+p.name+'"…','Enviar (usa 1 crédito)',function(texto){
+    var before=p.credits, antes=(p.arreglos||[]).slice(), estAntes=p.status;
+    var nuevo={n:11-before,texto:texto.substring(0,1000),fecha:new Date().toISOString()};
+    p.credits=before-1; p.arreglos=antes.concat([nuevo]); p.status='pending'; renderPedidos();
+    pedQuery(SB.from(T_PEDS).update({credits:p.credits,estado:'pending',resolved:false,arreglos:p.arreglos}),p).then(function(r){
+      if(r.error){
+        p.credits=before; p.arreglos=antes; p.status=estAntes; renderPedidos();
+        toast('❌',/arreglos/i.test(r.error.message||'')?'Falta actualizar la base (SQL) para pedir arreglos.':'No se pudo enviar: '+errDB(r.error));
+        return;
+      }
+      toast('🔧','Pedido de arreglo enviado. Te quedan '+p.credits+' crédito'+(p.credits===1?'':'s')+'.');
+    });
+  });
+};
+
+// ══════════════════════════════════════════════════════════════
+// LINKS: aplicop.com.ar/#chat/lucas@gmail.com · #chat/ia · #chat/admin · #pedidos · #config/voz …
+// ══════════════════════════════════════════════════════════════
+var _hash0=location.hash.replace(/^#/,''), _routing=false;
+function setHash(h){
+  if(_routing) return;
+  try{ if(location.hash.replace(/^#/,'')===h) return; history.pushState(null,'','#'+h); }catch(e){}
+}
+function hashMail(e){return encodeURIComponent(e).replace(/%40/g,'@');}
+var _goScr1=goScr;
+goScr=function(name){
+  var r=_goScr1.apply(this,arguments);
+  var m={home:'inicio',order:'nuevo-pedido',confirm:'pedidos',pedidos:'pedidos',chat:'chat',cfg:'config',notifs:'notificaciones'};
+  var n=String(name);
+  setHash(m[n]||(n.indexOf('cfg-')===0?'config/'+n.slice(4):n));
+  return r;
+};
+var _openConvo1=openConvo;
+openConvo=function(i){var r=_openConvo1.apply(this,arguments);var c=_contacts[i];if(c)setHash('chat/'+hashMail(c.email));return r;};
+var _openAdmin1=openAdminChat;
+openAdminChat=function(){var r=_openAdmin1.apply(this,arguments);setHash('chat/admin');return r;};
+var _openIA1=openIA;
+openIA=function(){var r=_openIA1.apply(this,arguments);setHash('chat/ia');return r;};
+var _openGroup1=openGroup;
+openGroup=function(id){var r=_openGroup1.apply(this,arguments);setHash('chat/g-'+id);return r;};
+function routeApply(h){
+  var p=String(h||'').split('/').map(function(x){try{return decodeURIComponent(x);}catch(e){return x;}});
+  var a=p[0], b=p.slice(1).join('/');
+  if(!a||a==='inicio'){goScr('home');return true;}
+  if(a==='nuevo-pedido'){goScr('order');return true;}
+  if(a==='pedidos'){goScr('pedidos');return true;}
+  if(a==='notificaciones'){goScr('notifs');return true;}
+  if(a==='config'){goScr(b&&document.getElementById('scr-cfg-'+b)?'cfg-'+b:'cfg');return true;}
+  if(a==='chat'){
+    if(!b){goScr('chat');return true;}
+    if(b==='ia'){openIA();return true;}
+    if(b==='admin'){openAdminChat();return true;}
+    if(b.indexOf('g-')===0){var g=b.slice(2);if(_groups[g]){openGroup(g);return true;}return false;}
+    var i=_contacts.findIndex(function(c){return c.email===b.toLowerCase();});
+    if(i>=0){openConvo(i);return true;}
+    return false;
+  }
+  goScr('home');return true;
+}
+function routeGo(h,tries){
+  if(!CU) return;
+  _routing=true;
+  var ok=false; try{ok=routeApply(h);}catch(e){ok=true;}
+  _routing=false;
+  if(!ok){
+    if((tries||0)<14) setTimeout(function(){routeGo(h,(tries||0)+1);},500);   // todavía se están cargando los contactos o los grupos
+    else{_routing=true;try{goScr('chat');}catch(e){}_routing=false;}
+  } else {
+    try{ if(location.hash.replace(/^#/,'')!==h&&h) history.replaceState(null,'','#'+h); }catch(e){}
+  }
+}
+window.addEventListener('hashchange',function(){routeGo(location.hash.replace(/^#/,''),0);});
+window.addEventListener('popstate',function(){routeGo(location.hash.replace(/^#/,''),0);});
+var _enterApp2=enterApp;
+enterApp=function(e,n){
+  if(_hash0&&!_oaReq) _routing=true;       // mientras arranca no se pisa el link con el que se entró
+  _enterApp2(e,n);
+  if(_hash0&&!_oaReq){
+    var h=_hash0; _hash0='';
+    setTimeout(function(){_routing=false;routeGo(h,0);},250);
+  } else { _hash0=''; }
+};
+var _doLogout1=doLogout;
+doLogout=function(){_doLogout1.apply(this,arguments);try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}};
+
 _iaMsgs=[IA_WELCOME()];
 (function init(){
   var acc=null; try{acc=localStorage.getItem('apli_accent');}catch(e){}
