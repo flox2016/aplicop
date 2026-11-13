@@ -1097,15 +1097,15 @@ function startListeners(){
   loadContacts();
   updateBadges();
 
-  // Revisión periódica: mensajes cada 5 s, pedidos/novedades/presencia cada 15 s
+  // Revisión periódica: mensajes cada 10 s, pedidos/novedades/presencia cada 15 s
   var tick=0;
   _pollTimer=setInterval(function(){
     if(!CU||document.hidden) return;
     pollChats(); tick++;
     if(tick%3===0){loadPedidos();loadUpdates();loadPresence();}
-  },5000);
+  },10000);
   // Latido: "estoy en línea"
-  _hbTimer=setInterval(function(){if(CU&&!document.hidden)heartbeat(true);},60000);
+  _hbTimer=setInterval(function(){if(CU&&!document.hidden)heartbeat(true);},10000);
 }
 
 // Bot config state
