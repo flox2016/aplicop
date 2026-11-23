@@ -1,0 +1,14 @@
+'use strict';
+
+var TablesDBIndexType = /* @__PURE__ */ ((TablesDBIndexType2) => {
+  TablesDBIndexType2["Key"] = "key";
+  TablesDBIndexType2["Fulltext"] = "fulltext";
+  TablesDBIndexType2["Unique"] = "unique";
+  TablesDBIndexType2["Spatial"] = "spatial";
+  TablesDBIndexType2["Trigram"] = "trigram";
+  return TablesDBIndexType2;
+})(TablesDBIndexType || {});
+
+exports.TablesDBIndexType = TablesDBIndexType;
+//# sourceMappingURL=tables-db-index-type.js.map
+//# sourceMappingURL=tables-db-index-type.js.map
