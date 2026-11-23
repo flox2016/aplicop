@@ -1,0 +1,226 @@
+{
+  "projectId": "akjkf",
+  "databaseId": "aplicop",
+  "collections": [
+    {
+      "name": "usuarios",
+      "$id": "usuarios",
+      "attributes": [
+        {"key":"email","type":"string","size":254,"required":true},
+        {"key":"nombre","type":"string","size":80,"required":true},
+        {"key":"password_hash","type":"string","size":64,"required":true},
+        {"key":"en_linea","type":"boolean","required":false,"default":false},
+        {"key":"ultima_vez_visto","type":"datetime","required":false},
+        {"key":"creado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"email_idx","type":"unique","attributes":["email"]}]
+    },
+    {
+      "name": "pedidos",
+      "$id": "pedidos",
+      "attributes": [
+        {"key":"owner_email","type":"string","size":254,"required":true},
+        {"key":"tipo","type":"string","size":60,"required":false},
+        {"key":"estilo","type":"string","size":60,"required":false},
+        {"key":"descripcion","type":"string","size":5000,"required":false},
+        {"key":"estado","type":"string","size":40,"required":false,"default":"pending"},
+        {"key":"credits","type":"integer","required":false,"default":10},
+        {"key":"imgs","type":"string","size":500000,"required":false},
+        {"key":"arreglos","type":"string","size":100000,"required":false},
+        {"key":"resolved","type":"boolean","required":false,"default":false},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"owner_idx","type":"key","attributes":["owner_email"]}]
+    },
+    {
+      "name": "conversaciones",
+      "$id": "conversaciones",
+      "attributes": [
+        {"key":"usuario","type":"string","size":254,"required":true},
+        {"key":"titulo","type":"string","size":80,"required":false,"default":"Nueva conversación"},
+        {"key":"mensajes","type":"string","size":1000000,"required":false,"default":"[]"},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"usuario_idx","type":"key","attributes":["usuario"]}]
+    },
+    {
+      "name": "presencia",
+      "$id": "presencia",
+      "attributes": [
+        {"key":"email","type":"string","size":254,"required":true},
+        {"key":"en_linea","type":"boolean","required":false,"default":false},
+        {"key":"ultima_vez_visto","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"email_idx","type":"unique","attributes":["email"]}]
+    },
+    {
+      "name": "actualizaciones",
+      "$id": "actualizaciones",
+      "attributes": [
+        {"key":"titulo","type":"string","size":200,"required":true},
+        {"key":"cuerpo","type":"string","size":5000,"required":false},
+        {"key":"tipo","type":"string","size":40,"required":false},
+        {"key":"creado_en","type":"datetime","required":false}
+      ],
+      "indexes":[]
+    },
+    {
+      "name": "config_bot",
+      "$id": "config_bot",
+      "attributes": [
+        {"key":"clave","type":"string","size":80,"required":true},
+        {"key":"valor","type":"string","size":500000,"required":false}
+      ],
+      "indexes":[{"key":"clave_idx","type":"unique","attributes":["clave"]}]
+    },
+    {
+      "name": "perfiles",
+      "$id": "perfiles",
+      "attributes": [
+        {"key":"email","type":"string","size":254,"required":true},
+        {"key":"avatar","type":"string","size":200000,"required":false},
+        {"key":"bloqueos","type":"string","size":100000,"required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"email_idx","type":"unique","attributes":["email"]}]
+    },
+    {
+      "name": "conversaciones_chat",
+      "$id": "conversaciones_chat",
+      "attributes": [
+        {"key":"llave","type":"string","size":500,"required":true},
+        {"key":"mensajes","type":"string","size":5000000,"required":false,"default":"[]"},
+        {"key":"participantes","type":"string","size":5000,"required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"llave_idx","type":"unique","attributes":["llave"]}]
+    },
+    {
+      "name": "grupos",
+      "$id": "grupos",
+      "attributes": [
+        {"key":"nombre","type":"string","size":40,"required":true},
+        {"key":"creador","type":"string","size":254,"required":true},
+        {"key":"miembros","type":"string","size":50000,"required":false,"default":"[]"},
+        {"key":"modo","type":"string","size":20,"required":false,"default":"todos"},
+        {"key":"escritores","type":"string","size":50000,"required":false,"default":"[]"},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"creador_idx","type":"key","attributes":["creador"]}]
+    },
+    {
+      "name": "solicitudes",
+      "$id": "solicitudes",
+      "attributes": [
+        {"key":"tipo","type":"string","size":20,"required":true},
+        {"key":"de","type":"string","size":254,"required":true},
+        {"key":"de_nombre","type":"string","size":80,"required":false},
+        {"key":"para","type":"string","size":254,"required":true},
+        {"key":"grupo_id","type":"string","size":36,"required":false},
+        {"key":"grupo_nombre","type":"string","size":40,"required":false},
+        {"key":"estado","type":"string","size":20,"required":false,"default":"pendiente"},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"respondido_en","type":"datetime","required":false}
+      ],
+      "indexes":[
+        {"key":"para_idx","type":"key","attributes":["para"]},
+        {"key":"de_idx","type":"key","attributes":["de"]}
+      ]
+    },
+    {
+      "name": "alertas_bot",
+      "$id": "alertas_bot",
+      "attributes": [
+        {"key":"usuario","type":"string","size":254,"required":true},
+        {"key":"nombre","type":"string","size":80,"required":false},
+        {"key":"mensaje","type":"string","size":500,"required":false},
+        {"key":"categoria","type":"string","size":60,"required":false},
+        {"key":"confirmada","type":"boolean","required":false,"default":false},
+        {"key":"visto","type":"boolean","required":false,"default":false},
+        {"key":"creado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"visto_idx","type":"key","attributes":["visto"]}]
+    },
+    {
+      "name": "subidos",
+      "$id": "subidos",
+      "attributes": [
+        {"key":"nombre","type":"string","size":40,"required":true},
+        {"key":"titulo","type":"string","size":60,"required":false},
+        {"key":"icono","type":"string","size":100000,"required":false},
+        {"key":"html","type":"string","size":5242880,"required":true},
+        {"key":"tam","type":"integer","required":false},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"nombre_idx","type":"unique","attributes":["nombre"]}]
+    },
+    {
+      "name": "oauth_apps",
+      "$id": "oauth_apps",
+      "attributes": [
+        {"key":"client_id","type":"string","size":40,"required":true},
+        {"key":"owner","type":"string","size":254,"required":true},
+        {"key":"nombre","type":"string","size":40,"required":true},
+        {"key":"logo","type":"string","size":100000,"required":false},
+        {"key":"badge_color","type":"string","size":7,"required":false,"default":"#000000"},
+        {"key":"homepage","type":"string","size":500,"required":true},
+        {"key":"descripcion","type":"string","size":200,"required":false},
+        {"key":"redirect_uris","type":"string","size":10000,"required":false,"default":"[]"},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"actualizado_en","type":"datetime","required":false}
+      ],
+      "indexes":[
+        {"key":"client_id_idx","type":"unique","attributes":["client_id"]},
+        {"key":"owner_idx","type":"key","attributes":["owner"]}
+      ]
+    },
+    {
+      "name": "oauth_secrets",
+      "$id": "oauth_secrets",
+      "attributes": [
+        {"key":"app_id","type":"string","size":36,"required":true},
+        {"key":"hash","type":"string","size":64,"required":true},
+        {"key":"sufijo","type":"string","size":4,"required":true},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"ultimo_uso","type":"datetime","required":false}
+      ],
+      "indexes":[{"key":"app_id_idx","type":"key","attributes":["app_id"]}]
+    },
+    {
+      "name": "oauth_codes",
+      "$id": "oauth_codes",
+      "attributes": [
+        {"key":"code_hash","type":"string","size":64,"required":true},
+        {"key":"app_id","type":"string","size":36,"required":true},
+        {"key":"user_email","type":"string","size":254,"required":true},
+        {"key":"user_name","type":"string","size":80,"required":false},
+        {"key":"redirect_uri","type":"string","size":500,"required":true},
+        {"key":"code_challenge","type":"string","size":128,"required":false},
+        {"key":"expira","type":"datetime","required":true},
+        {"key":"usado","type":"boolean","required":false,"default":false}
+      ],
+      "indexes":[{"key":"code_hash_idx","type":"unique","attributes":["code_hash"]}]
+    },
+    {
+      "name": "oauth_tokens",
+      "$id": "oauth_tokens",
+      "attributes": [
+        {"key":"token_hash","type":"string","size":64,"required":true},
+        {"key":"app_id","type":"string","size":36,"required":true},
+        {"key":"user_email","type":"string","size":254,"required":true},
+        {"key":"user_name","type":"string","size":80,"required":false},
+        {"key":"creado_en","type":"datetime","required":false},
+        {"key":"expira","type":"datetime","required":true},
+        {"key":"revocado","type":"boolean","required":false,"default":false}
+      ],
+      "indexes":[
+        {"key":"token_hash_idx","type":"unique","attributes":["token_hash"]},
+        {"key":"app_id_idx","type":"key","attributes":["app_id"]}
+      ]
+    }
+  ]
+}
