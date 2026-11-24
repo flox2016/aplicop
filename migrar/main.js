@@ -15,12 +15,12 @@
 
 const { Client, Databases, ID, Query } = require('./index.js');
 
-const PROJECT_ID  = process.env.'APPWRITE_FUNCTION_PROJECT_ID') || '';
-const API_KEY     = process.env.'APPWRITE_API_KEY') || '';
-const GROQ_KEY    = process.env.'GROQ_API_KEY') || '';
+const PROJECT_ID  = process.env.APPWRITE_FUNCTION_PROJECT_ID || '';
+const API_KEY     = process.env.APPWRITE_API_KEY || '';
+const GROQ_KEY    = process.env.GROQ_API_KEY || '';
 const RC_SECRET   = process.env.'reCAPTCHA_SECRET') || '';
-const JWT_SECRET  = process.env.'JWT_SECRET') || '';
-const ADMIN_EMAIL = (process.env.'ADMIN_EMAIL') || '').toLowerCase();
+const JWT_SECRET  = process.env.JWT_SECRET || '';
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').toLowerCase();
 const AW_ENDPOINT = 'https://sfo.cloud.appwrite.io/v1';
 const DB_ID       = 'aplicop';   // ID del database en Appwrite (ver instrucciones)
 
