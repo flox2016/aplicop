@@ -19,7 +19,7 @@ const PROJECT_ID  = Deno.env.get('APPWRITE_FUNCTION_PROJECT_ID') || '';
 const API_KEY     = Deno.env.get('APPWRITE_API_KEY') || '';
 const GROQ_KEY    = Deno.env.get('GROQ_API_KEY') || '';
 const RC_SECRET   = Deno.env.get('reCAPTCHA_SECRET') || '';
-const JWT_SECRET  = Deno.env.get('JWT_SECRET') || 'cambiar-esto';
+const JWT_SECRET  = Deno.env.get('JWT_SECRET') || '';
 const ADMIN_EMAIL = (Deno.env.get('ADMIN_EMAIL') || '').toLowerCase();
 const AW_ENDPOINT = 'https://sfo.cloud.appwrite.io/v1';
 const DB_ID       = 'aplicop';   // ID del database en Appwrite (ver instrucciones)
@@ -100,6 +100,7 @@ export default async ({ req, res }) => {
 
   const path  = (req.path || '/').replace(/^\/+/,'');
   const action= body.action || path;
+  if (!PROJECT_ID || !API_KEY || !JWT_SECRET || JWT_SECRET.length < 32) return json({ error:'Configuración incompleta: revisá PROJECT_ID, API_KEY y JWT_SECRET (mínimo 32 caracteres).' }, 500);
 
   // ── Rutas públicas de OAuth (GET) ──
   if (path === 'token')    return await oauthToken(body, req);
@@ -107,6 +108,14 @@ export default async ({ req, res }) => {
 
   try {
     switch(action) {
+      // ───── administración APLI COP ─────
+      case 'admin_login': return await adminLogin(body);
+      case 'admin_data':  return await adminData(body);
+
+      // ───── trámites ─────
+      case 'tramite_auth': return await tramiteAuth(body);
+      case 'tramite_data': return await tramiteData(body);
+
       // ───── app-auth ─────
       case 'register':    return await authRegister(body);
       case 'login':       return await authLogin(body);
@@ -145,7 +154,180 @@ export default async ({ req, res }) => {
   }
 };
 
+// ═══════════════════════════════════════════════// ═══════════════════════════════════════════════
+//  ADMINISTRACIÓN Y DATOS DEL PANEL
+//  admin_login y admin_data son acciones de la función.
 // ═══════════════════════════════════════════════
+const ADMIN_TABLES = new Set([
+  'usuarios','presencia','conversaciones','pedidos','actualizaciones',
+  'config_bot','configuracion_del_bot','perfiles','grupos','solicitudes',
+  'alertas_bot','subidos','tramites','tramite_mensajes'
+]);
+
+function normalizeTable(name) {
+  const n = String(name || '');
+  if (n === 'configuracion_del_bot') return T.config_bot;
+  return ADMIN_TABLES.has(n) ? n : '';
+}
+
+async function adminUserByEmail(email) {
+  const db = mkDB();
+  const r = await db.listDocuments(DB_ID, T.usuarios, [
+    Query.equal('email', String(email || '').toLowerCase()), Query.limit(1)
+  ]);
+  return r.documents[0] || null;
+}
+
+async function adminLogin({ email='', password='' }) {
+  email = String(email || '').trim().toLowerCase();
+  password = String(password || '');
+  if (!email || !password) return json({ ok:false, error:'Completá el correo y la contraseña.' }, 400);
+  const u = await adminUserByEmail(email);
+  if (!u || u.password_hash !== await sha256hex(password + 'apli')) {
+    return json({ ok:false, error:'Correo o contraseña incorrectos.' }, 401);
+  }
+  const allowed = (ADMIN_EMAIL && email === ADMIN_EMAIL) || u.admin === true;
+  if (!allowed) return json({ ok:false, error:'Esta cuenta no tiene permisos de administrador.' }, 403);
+  const token = await sign({ email, nombre:u.nombre || '', role:'admin', exp:Math.floor(Date.now()/1000) + 8*60*60 });
+  return json({ ok:true, token, email, nombre:u.nombre || '' });
+}
+
+async function requireAdmin(token) {
+  const pl = await verify(token);
+  if (!pl || !pl.email || pl.role !== 'admin') return null;
+  const u = await adminUserByEmail(pl.email);
+  if (!u || !((ADMIN_EMAIL && pl.email === ADMIN_EMAIL) || u.admin === true)) return null;
+  return { email:pl.email, user:u };
+}
+
+function buildQueries(filters) {
+  const out = [];
+  for (const f of (Array.isArray(filters) ? filters : [])) {
+    if (!f || !f.field || f.field === 'id' || f.op === 'or') continue;
+    if (f.op === 'equal') out.push(Query.equal(f.field, f.value));
+    else if (f.op === 'notEqual') out.push(Query.notEqual(f.field, f.value));
+    else if (f.op === 'contains') out.push(Query.contains(f.field, f.value));
+  }
+  return out;
+}
+
+function matchesFilters(doc, filters) {
+  return (Array.isArray(filters) ? filters : []).every(f => {
+    if (!f || !f.field) return true;
+    const value = f.field === 'id' ? doc.$id : doc[f.field];
+    if (f.op === 'equal') return Array.isArray(f.value) ? f.value.includes(value) : value === f.value;
+    if (f.op === 'notEqual') return value !== f.value;
+    if (f.op === 'contains') return Array.isArray(value) ? value.includes(f.value) : String(value || '').includes(String(f.value));
+    if (f.op === 'or') return (f.filters || []).some(x => doc[x.field] === x.value);
+    return true;
+  });
+}
+
+async function listAllDocuments(db, collection, queries, max=500) {
+  const docs = [];
+  let offset = 0;
+  while (docs.length < max) {
+    const take = Math.min(100, max - docs.length);
+    const r = await db.listDocuments(DB_ID, collection, [...queries, Query.limit(take), Query.offset(offset)]);
+    docs.push(...r.documents);
+    if (r.documents.length < take || docs.length >= r.total) break;
+    offset += r.documents.length;
+  }
+  return docs;
+}
+
+async function adminData({ token='', table='', op='select', data={}, filters=[], limit=500, orderBy='', descending=true, id='', conflict='' }) {
+  const admin = await requireAdmin(token);
+  if (!admin) return json({ data:null, total:0, error:'Sesión de administrador inválida.' }, 401);
+  const collection = normalizeTable(table);
+  if (!collection) return json({ data:null, total:0, error:'Colección no permitida: ' + String(table) }, 400);
+  const db = mkDB();
+  const safeLimit = Math.max(1, Math.min(500, Number(limit) || 100));
+  const queries = buildQueries(filters);
+
+  if (op === 'select') {
+    let docs = await listAllDocuments(db, collection, queries, safeLimit);
+    docs = docs.filter(d => matchesFilters(d, filters));
+    if (orderBy) docs.sort((a,b) => {
+      const av = a[orderBy] ?? '', bv = b[orderBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return descending ? -cmp : cmp;
+    });
+    return json({ data:docs.map(d => ({ ...d, id:d.$id })), total:docs.length, count:docs.length });
+  }
+
+  const docs = await listAllDocuments(db, collection, queries, 500);
+  const matched = docs.filter(d => matchesFilters(d, filters));
+  if (op === 'insert') {
+    const created = await db.createDocument(DB_ID, collection, ID.unique(), data || {});
+    return json({ data:{ ...created, id:created.$id }, total:1 });
+  }
+  if (op === 'upsert') {
+    const field = String(conflict || (filters[0]?.field || ''));
+    const value = field ? (data || {})[field] : undefined;
+    const existing = field ? docs.find(d => d[field] === value) : null;
+    if (existing) {
+      const updated = await db.updateDocument(DB_ID, collection, existing.$id, data || {});
+      return json({ data:{ ...updated, id:updated.$id }, total:1 });
+    }
+    const created = await db.createDocument(DB_ID, collection, ID.unique(), data || {});
+    return json({ data:{ ...created, id:created.$id }, total:1 });
+  }
+  if (op === 'update' || op === 'delete') {
+    const targets = id ? docs.filter(d => d.$id === id) : matched;
+    const changed = [];
+    for (const d of targets) {
+      if (op === 'delete') await db.deleteDocument(DB_ID, collection, d.$id);
+      else changed.push(await db.updateDocument(DB_ID, collection, d.$id, data || {}));
+    }
+    return json({ data:changed.map(d => ({ ...d, id:d.$id })), total:targets.length });
+  }
+  return json({ data:null, total:0, error:'Operación no permitida.' }, 400);
+}
+
+// ═══════════════════════════════════════════════
+//  TRÁMITES
+// ═══════════════════════════════════════════════
+async function tramiteAuth({ token='' }) {
+  const u = await checkToken(token);
+  if (!u) return json({ ok:false, error:'Sesión inválida' }, 401);
+  return json({ ok:true, email:u.email, nombre:u.nombre });
+}
+
+async function tramiteData({ token='', op='select', table='tramites', data={}, filters=[], id='' }) {
+  const u = await checkToken(token);
+  if (!u) return json({ data:null, error:'No autorizado' }, 401);
+  const collection = (table === 'tramites' || table === 'tramite_mensajes') ? table : '';
+  if (!collection) return json({ data:null, error:'Colección no permitida' }, 400);
+  const db = mkDB();
+  const safeFilters = Array.isArray(filters) ? filters : [];
+  const queries = buildQueries(safeFilters);
+  const docs = await listAllDocuments(db, collection, queries, 200);
+  const own = docs.filter(d => {
+    const owner = String(d.owner_email || d.email || d.usuario || '').toLowerCase();
+    return owner === u.email && matchesFilters(d, safeFilters);
+  });
+  if (op === 'select') return json({ data:own.map(d => ({ ...d, id:d.$id })), total:own.length });
+  if (op === 'insert') {
+    const row = { ...(data || {}) };
+    if (collection === 'tramites') row.owner_email = u.email;
+    else row.email = u.email;
+    const created = await db.createDocument(DB_ID, collection, ID.unique(), row);
+    return json({ data:{ ...created, id:created.$id } });
+  }
+  if (op === 'update' || op === 'delete') {
+    const targets = id ? own.filter(d => d.$id === id) : own;
+    const changed = [];
+    for (const d of targets) {
+      if (op === 'delete') await db.deleteDocument(DB_ID, collection, d.$id);
+      else changed.push(await db.updateDocument(DB_ID, collection, d.$id, data || {}));
+    }
+    return json({ data:changed.map(d => ({ ...d, id:d.$id })), total:targets.length });
+  }
+  return json({ error:'Operación no permitida' }, 400);
+}
+
+
 //  AUTH
 // ═══════════════════════════════════════════════
 async function authRegister({ email='', password='', nombre='' }) {
