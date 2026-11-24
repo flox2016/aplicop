@@ -13,7 +13,7 @@
 //
 // Desplegá con: appwrite functions createDeployment --functionId=<id> --entrypoint=main.js --code=.
 
-const { Client, Databases, ID, Query } = require('./index.js');
+const { Client, Databases, ID, Query } = require('node-appwrite');
 
 const PROJECT_ID  = process.env.APPWRITE_FUNCTION_PROJECT_ID || '';
 const API_KEY     = process.env.APPWRITE_API_KEY || '';
